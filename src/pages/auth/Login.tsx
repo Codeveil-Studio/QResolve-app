@@ -39,7 +39,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen">
       {/* Left panel - Form */}
-      <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
+      <div className="flex flex-col justify-center px-4 py-12 sm:px-6 w-full lg:w-1/2 lg:px-20 xl:px-24">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -125,7 +125,7 @@ export default function Login() {
       </div>
 
       {/* Right panel - Decorative */}
-      <div className="relative hidden w-0 flex-1 lg:block">
+      <div className="relative hidden lg:block">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-accent">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.1),transparent_50%)]" />
           <div className="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center p-12">

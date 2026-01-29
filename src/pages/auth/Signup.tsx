@@ -64,9 +64,9 @@ export default function Signup() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="grid min-h-screen lg:grid-cols-2">
       {/* Left panel - Form */}
-      <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
+      <div className="flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -200,7 +200,7 @@ export default function Signup() {
       </div>
 
       {/* Right panel - Decorative */}
-      <div className="relative hidden w-0 flex-1 lg:block">
+      <div className="relative hidden lg:block">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-accent">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(255,255,255,0.1),transparent_50%)]" />
           <div className="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center p-12">
