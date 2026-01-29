@@ -164,7 +164,7 @@ export default function Landing() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20">
+      {/* <section className="py-20">
         <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -221,7 +221,7 @@ export default function Landing() {
             </div>
           </motion.div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-accent">
@@ -263,7 +263,7 @@ export default function Landing() {
               <span className="font-semibold">QResolve</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2025 QResolve. All rights reserved.
+              © 2026 QResolve. All rights reserved.
             </p>
           </div>
         </div>

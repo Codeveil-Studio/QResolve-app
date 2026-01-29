@@ -136,10 +136,6 @@ export default function Settings() {
                     {getInitials(profile?.full_name)}
                   </AvatarFallback>
                 </Avatar>
-                <Button type="button" variant="outline">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Change Photo
-                </Button>
               </div>
 
               <Separator />
