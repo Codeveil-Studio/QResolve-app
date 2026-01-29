@@ -32,6 +32,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
+  // Check for email verification
+  if (!user.email_confirmed_at) {
+    return (
+      <div className="flex min-h-screen items-center justify-center flex-col gap-4 p-4 text-center">
+        <h1 className="text-2xl font-bold">Email Verification Required</h1>
+        <p className="text-muted-foreground">Please check your email to verify your account before continuing.</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+        >
+          I've verified my email
+        </button>
+      </div>
+    );
+  }
+
   if (!organization) {
     return <Navigate to="/onboarding" replace />;
   }

@@ -55,6 +55,37 @@ export default function Onboarding() {
     );
   }
 
+  if (user && !user.email_confirmed_at) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 py-12 bg-muted/30">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md text-center"
+        >
+          <div className="rounded-2xl border border-border bg-card p-8 shadow-lg">
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
+                <QrCode className="h-7 w-7 text-primary-foreground" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-semibold tracking-tight mb-4">Email Verification Required</h2>
+            <p className="text-muted-foreground mb-6">
+              Please verify your email address to continue setting up your organization.
+            </p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="w-full"
+            >
+              I've verified my email
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12 bg-muted/30">
       <motion.div
