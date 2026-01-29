@@ -37,9 +37,9 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="grid min-h-screen lg:grid-cols-2">
       {/* Left panel - Form */}
-      <div className="flex flex-col justify-center px-4 py-12 sm:px-6 w-full lg:w-1/2 lg:px-20 xl:px-24">
+      <div className="flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
