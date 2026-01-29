@@ -79,13 +79,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <div className="flex h-8 w-8 items-center justify-center bg-primary">
               <QrCode className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-semibold text-sidebar-foreground">QResolve</span>
+            <span className="text-lg font-bold text-sidebar-foreground">QResolve</span>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="ml-auto rounded-lg p-1 hover:bg-sidebar-accent lg:hidden"
+              className="ml-auto p-1 hover:bg-sidebar-accent lg:hidden"
             >
               <X className="h-5 w-5 text-sidebar-foreground" />
             </button>
@@ -94,9 +94,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Organization selector */}
           {organization && (
             <div className="border-b border-sidebar-border px-4 py-3">
-              <div className="flex items-center gap-2 rounded-lg bg-sidebar-accent px-3 py-2">
+              <div className="flex items-center gap-2 bg-sidebar-accent px-3 py-2">
                 <Building2 className="h-4 w-4 text-sidebar-foreground" />
-                <span className="text-sm font-medium text-sidebar-foreground truncate">
+                <span className="text-sm font-bold text-sidebar-foreground truncate">
                   {organization.name}
                 </span>
               </div>
@@ -120,11 +120,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   )}
                 >
                   <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
+                  <span className="font-bold">{item.label}</span>
                   {isActive && (
                     <motion.div
                       layoutId="activeNav"
-                      className="absolute inset-0 rounded-lg bg-sidebar-primary -z-10"
+                      className="absolute inset-0 bg-sidebar-primary -z-10"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
@@ -137,15 +137,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="border-t border-sidebar-border p-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2 hover:bg-sidebar-accent transition-colors">
-                  <Avatar className="h-8 w-8">
+                <button className="flex w-full items-center gap-3 px-2 py-2 hover:bg-sidebar-accent transition-colors">
+                  <Avatar className="h-8 w-8 rounded-none">
                     <AvatarImage src={profile?.avatar_url || undefined} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs rounded-none">
                       {getInitials(profile?.full_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-sidebar-foreground truncate">
+                    <p className="text-sm font-bold text-sidebar-foreground truncate">
                       {profile?.full_name || 'User'}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">

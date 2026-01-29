@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Package, 
@@ -50,13 +50,7 @@ export default function Dashboard() {
   const [recentIssues, setRecentIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (organization) {
-      fetchDashboardData();
-    }
-  }, [organization]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     if (!organization) return;
 
     try {
@@ -102,7 +96,13 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [organization]);
+
+  useEffect(() => {
+    if (organization) {
+      fetchDashboardData();
+    }
+  }, [organization, fetchDashboardData]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();

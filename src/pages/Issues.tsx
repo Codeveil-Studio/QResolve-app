@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Search, Filter, AlertCircle, MoreHorizontal, Trash2, Edit, CheckCircle } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -55,14 +55,7 @@ export default function Issues() {
     priority: 'medium' as IssuePriority,
   });
 
-  useEffect(() => {
-    if (organization) {
-      fetchIssues();
-      fetchAssets();
-    }
-  }, [organization]);
-
-  const fetchIssues = async () => {
+  const fetchIssues = useCallback(async () => {
     if (!organization) return;
 
     try {
@@ -79,9 +72,9 @@ export default function Issues() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [organization]);
 
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
     if (!organization) return;
 
     try {
@@ -95,7 +88,14 @@ export default function Issues() {
     } catch (error) {
       console.error('Error fetching assets:', error);
     }
-  };
+  }, [organization]);
+
+  useEffect(() => {
+    if (organization) {
+      fetchIssues();
+      fetchAssets();
+    }
+  }, [organization, fetchIssues, fetchAssets]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, TrendingUp, TrendingDown, PieChart as PieIcon, Calendar } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -64,13 +64,7 @@ export default function Reports() {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (organization) {
-      fetchStats();
-    }
-  }, [organization]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!organization) return;
 
     try {
@@ -91,7 +85,13 @@ export default function Reports() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [organization]);
+
+  useEffect(() => {
+    if (organization) {
+      fetchStats();
+    }
+  }, [organization, fetchStats]);
 
   const cardStyle = {
     boxShadow: 'var(--shadow-card)',

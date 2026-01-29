@@ -163,7 +163,7 @@
   }
 
   .sidebar-link {
-    @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-all duration-200;
+    @apply flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-sidebar-foreground transition-all duration-200;
   }
 
   .sidebar-link:hover {

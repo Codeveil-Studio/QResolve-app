@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -56,13 +56,7 @@ export default function Assets() {
     status: 'active' as AssetStatus,
   });
 
-  useEffect(() => {
-    if (organization) {
-      fetchAssets();
-    }
-  }, [organization]);
-
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
     if (!organization) return;
 
     try {
@@ -79,7 +73,13 @@ export default function Assets() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [organization]);
+
+  useEffect(() => {
+    if (organization) {
+      fetchAssets();
+    }
+  }, [organization, fetchAssets]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
