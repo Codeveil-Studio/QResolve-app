@@ -17,7 +17,8 @@ function getUUID() {
     return crypto.randomUUID();
   }
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }
@@ -105,9 +106,10 @@ Contact: ${reporterEmail || 'N/A'}
 
         setSuccess(true);
         toast({ title: "Report submitted successfully" });
-    } catch (err: any) {
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to submit report.";
         console.error(err);
-        toast({ variant: "destructive", title: "Failed to submit report", description: err.message });
+        toast({ variant: "destructive", title: "Failed to submit report", description: message });
     } finally {
         setSubmitting(false);
     }

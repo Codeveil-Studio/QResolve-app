@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { IssuePriority } from "@/lib/supabase-types";
 
 interface ReportIssueFormProps {
   assetId: string;
@@ -21,8 +22,19 @@ export function ReportIssueForm({ assetId, orgId, onSuccess }: ReportIssueFormPr
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    priority: "medium",
+    priority: "medium" as IssuePriority,
   });
+
+  const getUUID = () => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0;
+      const v = c === "x" ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,18 +46,19 @@ export function ReportIssueForm({ assetId, orgId, onSuccess }: ReportIssueFormPr
             org_id: orgId,
             title: formData.title,
             description: formData.description,
-            priority: formData.priority as any,
+            priority: formData.priority,
             status: 'open',
-            reported_by: crypto.randomUUID(), // Anonymous reporter ID
+            reported_by: getUUID(),
         });
         
         if (error) throw error;
         
         toast({ title: "Issue reported successfully", description: "Thank you for your report." });
         onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Error reporting issue.";
         console.error(error);
-        toast({ variant: "destructive", title: "Error reporting issue", description: error.message });
+        toast({ variant: "destructive", title: "Error reporting issue", description: message });
     } finally {
         setLoading(false);
     }
@@ -68,7 +81,7 @@ export function ReportIssueForm({ assetId, orgId, onSuccess }: ReportIssueFormPr
         <Label htmlFor="priority">Urgency</Label>
         <Select 
             value={formData.priority} 
-            onValueChange={(val) => setFormData({...formData, priority: val})}
+            onValueChange={(val) => setFormData({...formData, priority: val as IssuePriority})}
         >
             <SelectTrigger>
                 <SelectValue placeholder="Select urgency" />

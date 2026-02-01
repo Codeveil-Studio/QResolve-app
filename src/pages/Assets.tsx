@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit, Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-// @ts-ignore
 import html2pdf from 'html2pdf.js';
 import { createRoot } from 'react-dom/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
