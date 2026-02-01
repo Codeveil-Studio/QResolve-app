@@ -1,7 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit } from 'lucide-react';
+import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit, Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
+import { createRoot } from 'react-dom/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -10,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { generateReportUrl } from '@/lib/assetUrl';
+import { AssetQRPDFTemplate } from '@/components/assets/AssetQRPDFTemplate';
 import {
   Dialog,
   DialogContent,
@@ -90,7 +95,7 @@ export default function Assets() {
         ...formData,
         org_id: organization.id,
         created_by: user.id,
-        qr_code: `${window.location.origin}/report/${crypto.randomUUID()}`,
+        // qr_code is not needed in DB as we generate it dynamically
       };
 
       const { error } = await supabase.from('assets').insert(assetData);
@@ -137,6 +142,47 @@ export default function Assets() {
   const showQRCode = (asset: Asset) => {
     setSelectedAsset(asset);
     setQrDialogOpen(true);
+  };
+
+  const downloadQR = async (asset: Asset) => {
+    const qrUrl = generateReportUrl(asset);
+    
+    // Create a temporary container
+    const container = document.createElement('div');
+    // Hide it but keep it in layout for rendering? 
+    // html2pdf needs it to be visible or at least rendered. 
+    // Absolute positioning off-screen is usually safe.
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    document.body.appendChild(container);
+    
+    const root = createRoot(container);
+    root.render(<AssetQRPDFTemplate asset={asset} qrUrl={qrUrl} />);
+    
+    // Wait for render
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const element = container.firstElementChild as HTMLElement;
+    
+    const opt = {
+      margin: 10,
+      filename: `${asset.name.replace(/\s+/g, '_')}-QR.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+    };
+
+    try {
+        await html2pdf().set(opt).from(element).save();
+        toast({ title: 'PDF Downloaded successfully' });
+    } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Failed to download PDF' });
+    } finally {
+        root.unmount();
+        document.body.removeChild(container);
+    }
   };
 
   const filteredAssets = assets.filter((asset) => {
@@ -210,6 +256,10 @@ export default function Assets() {
             <DropdownMenuItem onClick={() => showQRCode(asset)}>
               <QrCode className="mr-2 h-4 w-4" />
               View QR Code
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => downloadQR(asset)}>
+              <Download className="mr-2 h-4 w-4" />
+              Download PDF
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Edit className="mr-2 h-4 w-4" />
@@ -371,7 +421,7 @@ export default function Assets() {
               <>
                 <div className="rounded-xl border border-border bg-background p-4">
                   <QRCodeSVG
-                    value={selectedAsset.qr_code || `${window.location.origin}/report/${selectedAsset.id}`}
+                    value={selectedAsset ? generateReportUrl(selectedAsset) : ''}
                     size={200}
                     level="H"
                   />

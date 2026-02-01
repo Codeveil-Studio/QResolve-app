@@ -71,7 +71,7 @@ export interface Issue {
   description: string | null;
   status: IssueStatus;
   priority: IssuePriority;
-  reported_by: string;
+  reported_by: string | null;
   assigned_to: string | null;
   resolved_at: string | null;
   created_at: string;

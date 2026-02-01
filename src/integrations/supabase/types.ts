@@ -82,7 +82,7 @@ export type Database = {
           id: string
           org_id: string
           priority: Database["public"]["Enums"]["issue_priority"]
-          reported_by: string
+          reported_by: string | null
           resolved_at: string | null
           status: Database["public"]["Enums"]["issue_status"]
           title: string
@@ -96,7 +96,7 @@ export type Database = {
           id?: string
           org_id: string
           priority?: Database["public"]["Enums"]["issue_priority"]
-          reported_by: string
+          reported_by?: string | null
           resolved_at?: string | null
           status?: Database["public"]["Enums"]["issue_status"]
           title: string
@@ -110,7 +110,7 @@ export type Database = {
           id?: string
           org_id?: string
           priority?: Database["public"]["Enums"]["issue_priority"]
-          reported_by?: string
+          reported_by?: string | null
           resolved_at?: string | null
           status?: Database["public"]["Enums"]["issue_status"]
           title?: string

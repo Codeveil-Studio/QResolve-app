@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
 import Issues from "./pages/Issues";
 import Reports from "./pages/Reports";
+import ReportIssue from "./pages/ReportIssue";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/report/:assetId" element={<ReportIssue />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/assets" element={<ProtectedRoute><Assets /></ProtectedRoute>} />
             <Route path="/issues" element={<ProtectedRoute><Issues /></ProtectedRoute>} />

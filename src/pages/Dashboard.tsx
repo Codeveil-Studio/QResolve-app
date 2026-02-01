@@ -104,6 +104,31 @@ export default function Dashboard() {
     }
   }, [organization, fetchDashboardData]);
 
+  // Real-time subscription
+  useEffect(() => {
+    if (!organization) return;
+
+    const channel = supabase
+      .channel('dashboard-issues')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'issues',
+          filter: `org_id=eq.${organization.id}`,
+        },
+        () => {
+          fetchDashboardData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [organization, fetchDashboardData]);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
