@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Asset, AssetStatus } from '@/lib/supabase-types';
+import { Asset, AssetStatus, Issue } from '@/lib/supabase-types';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -46,11 +46,14 @@ export default function Assets() {
   const { toast } = useToast();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
+  const [issuesLoading, setIssuesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [assetDialogOpen, setAssetDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [assetIssues, setAssetIssues] = useState<Issue[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -143,6 +146,36 @@ export default function Assets() {
     setQrDialogOpen(true);
   };
 
+  const openAssetDetails = useCallback(
+    async (asset: Asset) => {
+      setSelectedAsset(asset);
+      setAssetDialogOpen(true);
+      if (!organization) return;
+
+      setIssuesLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('issues')
+          .select('*')
+          .eq('org_id', organization.id)
+          .eq('asset_id', asset.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setAssetIssues((data as Issue[]) || []);
+      } catch (error: unknown) {
+        toast({
+          variant: 'destructive',
+          title: 'Failed to load asset issues',
+          description: error instanceof Error ? error.message : 'Unknown error',
+        });
+      } finally {
+        setIssuesLoading(false);
+      }
+    },
+    [organization, toast]
+  );
+
   const downloadQR = async (asset: Asset) => {
     const qrUrl = generateReportUrl(asset);
     
@@ -165,11 +198,12 @@ export default function Assets() {
     const element = container.firstElementChild as HTMLElement;
     
     const opt = {
-      margin: 10,
+      margin: 0,
       filename: `${asset.name.replace(/\s+/g, '_')}-QR.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      html2canvas: { scale: 2, windowWidth: 794, windowHeight: 1122 },
+      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     try {
@@ -247,25 +281,43 @@ export default function Assets() {
       render: (asset: Asset) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={(event) => event.stopPropagation()}
+              >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => showQRCode(asset)}>
+            <DropdownMenuItem
+              onClick={(event) => {
+                event.stopPropagation();
+                showQRCode(asset);
+              }}
+            >
               <QrCode className="mr-2 h-4 w-4" />
               View QR Code
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => downloadQR(asset)}>
+            <DropdownMenuItem
+              onClick={(event) => {
+                event.stopPropagation();
+                downloadQR(asset);
+              }}
+            >
               <Download className="mr-2 h-4 w-4" />
               Download PDF
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={(event) => event.stopPropagation()}>
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => handleDelete(asset)}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleDelete(asset);
+              }}
               className="text-destructive"
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -405,8 +457,99 @@ export default function Assets() {
           columns={columns}
           isLoading={loading}
           emptyMessage="No assets found. Add your first asset to get started."
+          onRowClick={openAssetDetails}
         />
       </motion.div>
+
+      <Dialog
+        open={assetDialogOpen}
+        onOpenChange={(open) => {
+          setAssetDialogOpen(open);
+          if (!open) {
+            setAssetIssues([]);
+            setIssuesLoading(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Asset Details</DialogTitle>
+            <DialogDescription>{selectedAsset?.name}</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 sm:grid-cols-[1fr_1.2fr]">
+            <div className="rounded-xl border border-border/50 bg-card p-4">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Type</p>
+                  <p className="text-sm font-medium">{selectedAsset?.type || 'Not specified'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Location</p>
+                  <p className="text-sm font-medium">{selectedAsset?.location || 'Not specified'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Serial Number</p>
+                  <p className="text-sm font-medium">{selectedAsset?.serial_number || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Status</p>
+                  {selectedAsset && <StatusBadge status={selectedAsset.status} type="asset" />}
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Added</p>
+                  <p className="text-sm font-medium">
+                    {selectedAsset ? format(new Date(selectedAsset.created_at), 'MMM d, yyyy') : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Description</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedAsset?.description || 'No description'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-xl border border-border/50 bg-card p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-semibold">Reported Issues</p>
+                <span className="text-xs text-muted-foreground">{assetIssues.length}</span>
+              </div>
+              {issuesLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : assetIssues.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  No issues reported for this asset yet.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {assetIssues.map((issue) => (
+                    <div
+                      key={issue.id}
+                      className="flex items-start justify-between gap-4 rounded-lg border border-border/50 p-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium line-clamp-1">{issue.title}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {issue.description || 'No description'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(issue.created_at), 'MMM d, yyyy')}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <StatusBadge status={issue.priority} type="priority" />
+                        <StatusBadge status={issue.status} type="issue" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* QR Code Dialog */}
       <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
