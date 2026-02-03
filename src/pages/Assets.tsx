@@ -201,8 +201,8 @@ export default function Assets() {
       margin: 0,
       filename: `${asset.name.replace(/\s+/g, '_')}-QR.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, windowWidth: 794, windowHeight: 1122 },
-      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+      html2canvas: { scale: 2, windowWidth: 560, windowHeight: 794 },
+      jsPDF: { unit: 'mm' as const, format: 'a5' as const, orientation: 'portrait' as const },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
