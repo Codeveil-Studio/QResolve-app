@@ -37,7 +37,7 @@ export default function Login() {
   };
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
+    <div className="qresolve-auth grid min-h-screen lg:grid-cols-2 bg-white text-slate-900">
       {/* Left panel - Form */}
       <div className="flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24">
         <motion.div
@@ -48,9 +48,7 @@ export default function Login() {
         >
           {/* Logo */}
           <div className="flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-              <QrCode className="h-6 w-6 text-primary-foreground" />
-            </div>
+            <img src="/favicon.svg" alt="QResolve logo" className="h-10 w-10" />
             <span className="text-xl font-semibold">QResolve</span>
           </div>
 
@@ -135,7 +133,11 @@ export default function Login() {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="text-center text-primary-foreground"
             >
-              <QrCode className="mx-auto h-20 w-20 mb-6 opacity-90" />
+              <img
+                src="/favicon.svg"
+                alt="QResolve logo"
+                className="mx-auto h-20 w-20 mb-6 filter brightness-0 invert"
+              />
               <h3 className="text-3xl font-semibold mb-4">Asset Management Made Simple</h3>
               <p className="text-lg opacity-90 max-w-md">
                 Track assets, resolve issues, and gain insights with QR-powered management

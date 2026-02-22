@@ -72,15 +72,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-sidebar border-r border-sidebar-border transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 transform bg-[#050b18] border-r border-sidebar-border transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-            <div className="flex h-8 w-8 items-center justify-center bg-primary">
-              <QrCode className="h-5 w-5 text-primary-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <img src="/favicon.svg" alt="QResolve logo" className="h-5 w-5" />
             </div>
             <span className="text-lg font-bold text-sidebar-foreground">QResolve</span>
             <button
@@ -184,7 +184,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </Button>
           <div className="ml-3 flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-              <QrCode className="h-4 w-4 text-primary-foreground" />
+              <img src="/favicon.svg" alt="QResolve logo" className="h-5 w-5" />
             </div>
             <span className="font-semibold">QResolve</span>
           </div>
