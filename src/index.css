@@ -602,12 +602,14 @@
 .qresolve-landing .cat-grid {
   max-width: 1200px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1rem;
 }
 
 .qresolve-landing .cat-card {
+  flex: 0 1 220px;
   background: var(--card);
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
