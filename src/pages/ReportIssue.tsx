@@ -148,11 +148,23 @@ Contact: ${reporterEmail || 'N/A'}
         setSuccess(true);
         toast({ title: "Report submitted successfully" });
     } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to submit report.";
-        console.error(err);
-        toast({ variant: "destructive", title: "Failed to submit report", description: message });
+      let message = "Failed to submit report.";
+      if (err instanceof Error) {
+        message = err.message || message;
+      } else if (err && typeof err === "object") {
+        const anyErr = err as { message?: string; details?: string; hint?: string };
+        if (anyErr.message) message = anyErr.message;
+        else if (anyErr.details) message = anyErr.details;
+        else if (anyErr.hint) message = anyErr.hint;
+      }
+      console.error("Issue submit error:", err);
+      toast({
+        variant: "destructive",
+        title: "Failed to submit report",
+        description: message,
+      });
     } finally {
-        setSubmitting(false);
+      setSubmitting(false);
     }
   };
 
