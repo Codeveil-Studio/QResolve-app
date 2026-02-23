@@ -47,7 +47,18 @@ export default function ReportIssue() {
 
   useEffect(() => {
     async function loadAsset() {
-      if (!assetId) return;
+      if (!assetId) {
+        if (urlData.orgId) {
+          setAsset({
+            id: '' as Asset['id'],
+            name: urlData.name,
+            location: urlData.location,
+            org_id: urlData.orgId,
+            serial_number: null,
+          });
+        }
+        return;
+      }
       setLoading(true);
       try {
         const { data, error } = await supabase
@@ -57,14 +68,37 @@ export default function ReportIssue() {
           .single();
 
         if (error) {
-           console.error('Error fetching asset:', error);
-           setError('Could not verify asset details. Please scan the code again or try refreshing.');
+          console.error('Error fetching asset:', error);
+          if (urlData.orgId) {
+            setAsset({
+              id: assetId as Asset['id'],
+              name: urlData.name,
+              location: urlData.location,
+              org_id: urlData.orgId,
+              serial_number: null,
+            });
+            setError(null);
+          } else {
+            setError('Could not verify asset details. Please scan the code again or try refreshing.');
+          }
         } else {
           setAsset(data);
+          setError(null);
         }
       } catch (err) {
         console.error(err);
-        setError('Failed to load asset.');
+        if (assetId && urlData.orgId) {
+          setAsset({
+            id: assetId as Asset['id'],
+            name: urlData.name,
+            location: urlData.location,
+            org_id: urlData.orgId,
+            serial_number: null,
+          });
+          setError(null);
+        } else {
+          setError('Failed to load asset.');
+        }
       } finally {
         setLoading(false);
       }
@@ -74,9 +108,16 @@ export default function ReportIssue() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!asset || !asset.org_id) {
-        toast({ variant: "destructive", title: "Error", description: "Missing asset organization information." });
-        return;
+    const orgId = asset?.org_id || urlData.orgId;
+    const finalAssetId = asset?.id || (assetId as string | undefined);
+
+    if (!orgId || !finalAssetId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Missing asset information. Please scan the code again.",
+      });
+      return;
     }
 
     setSubmitting(true);
@@ -91,16 +132,16 @@ Contact: ${reporterEmail || 'N/A'}
         `.trim();
 
         const { error: submitError } = await supabase
-            .from('issues')
-            .insert({
-                org_id: asset.org_id,
-                asset_id: asset.id,
-                title: title,
-                description: finalDescription,
-                priority: priority,
-                status: 'open',
-                reported_by: getUUID(),
-            });
+          .from('issues')
+          .insert({
+            org_id: orgId,
+            asset_id: finalAssetId,
+            title: title,
+            description: finalDescription,
+            priority: priority,
+            status: 'open',
+            reported_by: getUUID(),
+          });
 
         if (submitError) throw submitError;
 
