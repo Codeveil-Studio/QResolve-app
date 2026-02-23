@@ -173,13 +173,14 @@ Contact: ${reporterEmail || 'N/A'}
                                 required 
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
+                                className="bg-white text-slate-900 placeholder:text-slate-500"
                             />
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="priority">Severity</Label>
                             <Select value={priority} onValueChange={(val) => setPriority(val as IssuePriority)}>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-white text-slate-900 border border-gray-200">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -197,7 +198,7 @@ Contact: ${reporterEmail || 'N/A'}
                                 id="description" 
                                 placeholder="Please describe the issue in detail..." 
                                 required 
-                                className="min-h-[100px]"
+                                className="min-h-[100px] bg-white text-slate-900 placeholder:text-slate-500"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                             />
@@ -211,6 +212,7 @@ Contact: ${reporterEmail || 'N/A'}
                                     placeholder="John Doe" 
                                     value={reporterName}
                                     onChange={(e) => setReporterName(e.target.value)}
+                                    className="bg-white text-slate-900 placeholder:text-slate-500"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -221,6 +223,7 @@ Contact: ${reporterEmail || 'N/A'}
                                     placeholder="john@example.com" 
                                     value={reporterEmail}
                                     onChange={(e) => setReporterEmail(e.target.value)}
+                                    className="bg-white text-slate-900 placeholder:text-slate-500"
                                 />
                             </div>
                         </div>
