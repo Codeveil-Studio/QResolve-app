@@ -13,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginType, setLoginType] = useState<'user' | 'admin'>('user');
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -21,7 +22,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email, password, loginType === 'admin');
 
     if (error) {
       toast({
@@ -30,7 +31,11 @@ export default function Login() {
         description: error.message,
       });
     } else {
-      navigate('/dashboard');
+      if (loginType === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     }
 
     setLoading(false);
@@ -62,7 +67,28 @@ export default function Login() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div className="mt-6 flex rounded-md bg-muted p-1">
+            <button
+              onClick={() => setLoginType('user')}
+              className={`flex-1 rounded-sm py-1.5 text-sm font-medium transition-all ${loginType === 'user'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+                }`}
+            >
+              User Login
+            </button>
+            <button
+              onClick={() => setLoginType('admin')}
+              className={`flex-1 rounded-sm py-1.5 text-sm font-medium transition-all ${loginType === 'admin'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+                }`}
+            >
+              Admin Login
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-6">
             <div className="space-y-4">
               <div>
                 <Label htmlFor="email">Email address</Label>

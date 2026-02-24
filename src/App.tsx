@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Landing from "./pages/Landing";
+
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import Onboarding from "./pages/auth/Onboarding";
@@ -15,6 +16,7 @@ import Reports from "./pages/Reports";
 import ReportIssue from "./pages/ReportIssue";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -39,8 +41,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen items-center justify-center flex-col gap-4 p-4 text-center">
         <h1 className="text-2xl font-bold">Email Verification Required</h1>
         <p className="text-muted-foreground">Please check your email to verify your account before continuing.</p>
-        <button 
-          onClick={() => window.location.reload()} 
+        <button
+          onClick={() => window.location.reload()}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
           I've verified my email
@@ -51,6 +53,24 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!organization) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -70,6 +90,7 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/report/:assetId" element={<ReportIssue />} />
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/assets" element={<ProtectedRoute><Assets /></ProtectedRoute>} />
               <Route path="/issues" element={<ProtectedRoute><Issues /></ProtectedRoute>} />

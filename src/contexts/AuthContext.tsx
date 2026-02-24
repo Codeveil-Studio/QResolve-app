@@ -10,8 +10,9 @@ interface AuthContextType {
   organization: Organization | null;
   membership: OrganizationMembership | null;
   loading: boolean;
+  isAdmin: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string, isAdminLogin?: boolean) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   createOrganization: (name: string) => Promise<{ error: Error | null; organization?: Organization }>;
   refreshOrganization: () => Promise<void>;
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [membership, setMembership] = useState<OrganizationMembership | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
@@ -46,14 +48,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (membershipData) {
       setMembership(membershipData as OrganizationMembership);
-      
+
       // Then get organization
       const { data: orgData } = await supabase
         .from('organizations')
         .select('*')
         .eq('id', membershipData.org_id)
         .single();
-      
+
       return orgData as Organization | null;
     }
     return null;
@@ -77,15 +79,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(async () => {
           const userProfile = await fetchProfile(session.user.id);
           setProfile(userProfile);
-          
+
           const org = await fetchOrganization(session.user.id);
           setOrganization(org);
+
+          // Check if admin
+          const { data: adminData } = await supabase
+            .from('admins')
+            .select('id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          setIsAdmin(!!adminData);
+
           setLoading(false);
         }, 0);
       } else {
         setProfile(null);
         setOrganization(null);
         setMembership(null);
+        setIsAdmin(false);
         setLoading(false);
       }
     });
@@ -126,9 +138,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+  const signIn = async (email: string, password: string, isAdminLogin: boolean = false) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error };
+
+    if (data.user) {
+      const { data: adminData } = await supabase
+        .from('admins')
+        .select('id')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (isAdminLogin) {
+        if (!adminData) {
+          await supabase.auth.signOut();
+          return { error: new Error('Unauthorized: Admin access required.') };
+        }
+      } else {
+        if (adminData) {
+          await supabase.auth.signOut();
+          return { error: new Error('You are an Admin. Please use the Admin Login tab.') };
+        }
+      }
+    }
+    return { error: null };
   };
 
   const signOut = async () => {
@@ -185,6 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       organization,
       membership,
       loading,
+      isAdmin,
       signUp,
       signIn,
       signOut,

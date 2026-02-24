@@ -1,0 +1,648 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    LayoutDashboard,
+    Users,
+    Building2,
+    Package,
+    AlertCircle,
+    Settings,
+    LogOut,
+    Menu,
+    X,
+    ChevronDown,
+    Activity,
+    ShieldAlert,
+    Search
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const TABS = {
+    OVERVIEW: 'overview',
+    USERS: 'users',
+    ORGANIZATIONS: 'organizations',
+    ASSETS: 'assets',
+    ISSUES: 'issues',
+    SETTINGS: 'settings'
+};
+
+const navItems = [
+    { id: TABS.OVERVIEW, label: 'Overview', icon: LayoutDashboard },
+    { id: TABS.USERS, label: 'Users', icon: Users },
+    { id: TABS.ORGANIZATIONS, label: 'Organizations', icon: Building2 },
+    { id: TABS.ASSETS, label: 'Assets', icon: Package },
+    { id: TABS.ISSUES, label: 'Issues', icon: AlertCircle },
+    { id: TABS.SETTINGS, label: 'Settings', icon: Settings },
+];
+
+export default function AdminDashboard() {
+    const [activeTab, setActiveTab] = useState(TABS.OVERVIEW);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const { user, profile, signOut } = useAuth();
+    const navigate = useNavigate();
+
+    const handleSignOut = async () => {
+        await signOut();
+        navigate('/login');
+    };
+
+    const getInitials = (name: string | null | undefined) => {
+        if (!name) return 'A';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    };
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case TABS.OVERVIEW: return <AdminOverviewTab />;
+            case TABS.USERS: return <AdminUsersTab />;
+            case TABS.ORGANIZATIONS: return <AdminOrganizationsTab />;
+            case TABS.ASSETS: return <AdminAssetsTab />;
+            case TABS.ISSUES: return <AdminIssuesTab />;
+            case TABS.SETTINGS: return <AdminSettingsTab />;
+            default: return <AdminOverviewTab />;
+        }
+    };
+
+    return (
+        <div className="flex h-screen bg-[#020817] text-slate-50">
+            {/* Mobile overlay */}
+            <AnimatePresence>
+                {sidebarOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSidebarOpen(false)}
+                        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Sidebar */}
+            <aside
+                className={cn(
+                    "fixed inset-y-0 left-0 z-50 w-64 transform bg-[#050b18] border-r border-slate-800 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 outline-none",
+                    sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                )}
+            >
+                <div className="flex h-full flex-col">
+                    {/* Logo */}
+                    <div className="flex h-16 items-center gap-3 border-b border-slate-800 px-6">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-md">
+                            <ShieldAlert className="h-5 w-5 text-primary-foreground" />
+                        </div>
+                        <span className="text-lg font-bold text-white tracking-tight">Admin Portal</span>
+                        <button
+                            onClick={() => setSidebarOpen(false)}
+                            className="ml-auto p-1 hover:bg-slate-800 rounded-md lg:hidden text-slate-400"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
+
+                    {/* Navigation */}
+                    <nav className="flex-1 space-y-1 px-3 py-6">
+                        {navItems.map((item) => {
+                            const isActive = activeTab === item.id;
+                            const Icon = item.icon;
+
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => {
+                                        setActiveTab(item.id);
+                                        setSidebarOpen(false);
+                                    }}
+                                    className={cn(
+                                        "w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative overflow-hidden group",
+                                        isActive ? "text-primary-foreground" : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/50"
+                                    )}
+                                >
+                                    <Icon className={cn("h-5 w-5 relative z-10 transition-colors", isActive ? "text-primary-foreground" : "text-slate-400 group-hover:text-slate-100")} />
+                                    <span className="font-semibold relative z-10 text-sm tracking-wide">{item.label}</span>
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="adminActiveNav"
+                                            className="absolute inset-0 bg-primary z-0 rounded-lg"
+                                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                        />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </nav>
+
+                    {/* User section */}
+                    <div className="border-t border-slate-800 p-4">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex w-full items-center gap-3 px-2 py-2 hover:bg-slate-800 transition-colors rounded-lg outline-none">
+                                    <Avatar className="h-9 w-9 border border-slate-700">
+                                        <AvatarImage src={profile?.avatar_url || undefined} />
+                                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                                            {getInitials(profile?.full_name)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 text-left overflow-hidden">
+                                        <p className="text-sm font-semibold text-slate-200 truncate">
+                                            System Admin
+                                        </p>
+                                        <p className="text-xs text-slate-500 truncate">
+                                            {user?.email}
+                                        </p>
+                                    </div>
+                                    <ChevronDown className="h-4 w-4 text-slate-500" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 bg-[#0f172a] border-slate-800 text-slate-200">
+                                <DropdownMenuItem onClick={handleSignOut} className="text-red-400 hover:text-red-300 hover:bg-slate-800 focus:bg-slate-800 focus:text-red-300 cursor-pointer font-medium">
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Sign out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main content */}
+            <div className="flex flex-1 flex-col overflow-hidden bg-[#020817]">
+                {/* Mobile header */}
+                <header className="flex h-16 items-center justify-between border-b border-slate-800 bg-[#020817] px-4 lg:px-8 shrink-0">
+                    <div className="flex items-center">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setSidebarOpen(true)}
+                            className="lg:hidden mr-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+                        >
+                            <Menu className="h-5 w-5" />
+                        </Button>
+                        <h1 className="text-xl font-bold tracking-tight text-slate-100 hidden sm:block capitalize">
+                            {activeTab} Management
+                        </h1>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs font-semibold tracking-wide uppercase text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-3 py-1.5 rounded-full">
+                        <Activity className="h-3.5 w-3.5" />
+                        System Live
+                    </div>
+                </header>
+
+                {/* Page content */}
+                <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                    <div className="mx-auto max-w-7xl animate-in fade-in duration-500">
+                        {renderContent()}
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
+}
+
+// --------------------------------------------------------------------------
+// SHARED SEARCH INPUT COMPONENT
+// --------------------------------------------------------------------------
+function SearchBar({ value, onChange, placeholder }: { value: string, onChange: (val: string) => void, placeholder: string }) {
+    return (
+        <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Input
+                type="text"
+                placeholder={placeholder}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="pl-9 bg-[#0f172a] border-slate-800 text-slate-200 placeholder:text-slate-500 focus-visible:ring-primary h-11"
+            />
+        </div>
+    );
+}
+
+
+// --------------------------------------------------------------------------
+// OVERVIEW TAB
+// --------------------------------------------------------------------------
+function AdminOverviewTab() {
+    const [stats, setStats] = useState({ users: 0, organizations: 0, assets: 0, issues: 0 });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function loadPlatformStats() {
+            try {
+                const [
+                    { count: usersCount },
+                    { count: orgsCount },
+                    { count: assetsCount },
+                    { count: issuesCount },
+                ] = await Promise.all([
+                    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+                    supabase.from('organizations').select('*', { count: 'exact', head: true }),
+                    supabase.from('assets').select('*', { count: 'exact', head: true }),
+                    supabase.from('issues').select('*', { count: 'exact', head: true }),
+                ]);
+
+                setStats({
+                    users: usersCount || 0,
+                    organizations: orgsCount || 0,
+                    assets: assetsCount || 0,
+                    issues: issuesCount || 0,
+                });
+            } catch (error) {
+                console.error('Error loading stats', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadPlatformStats();
+    }, []);
+
+    const statCards = [
+        { title: 'Total Users', value: stats.users, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+        { title: 'Organizations', value: stats.organizations, icon: Building2, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+        { title: 'Total Assets', value: stats.assets, icon: Package, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+        { title: 'Reported Issues', value: stats.issues, icon: AlertCircle, color: 'text-rose-400', bg: 'bg-rose-400/10' },
+    ];
+
+    return (
+        <div className="space-y-6">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {statCards.map((stat, index) => (
+                    <motion.div
+                        key={stat.title}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1, duration: 0.4 }}
+                    >
+                        <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                <CardTitle className="text-sm font-medium text-slate-400">{stat.title}</CardTitle>
+                                <div className={`p-2 rounded-lg ${stat.bg}`}>
+                                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                {loading ? (
+                                    <div className="h-8 w-16 bg-slate-800 animate-pulse rounded" />
+                                ) : (
+                                    <div className="text-3xl font-bold text-slate-100">{stat.value.toLocaleString()}</div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                ))}
+            </div>
+
+            <Card className="border-slate-800 bg-[#0f172a] shadow-md mt-8 col-span-4">
+                <CardHeader>
+                    <CardTitle className="text-slate-100">System Status Log</CardTitle>
+                    <CardDescription className="text-slate-400">Recent automated system events and alerts</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-4 py-3 border-b border-slate-800 text-sm">
+                            <div className="bg-emerald-400/10 text-emerald-400 p-2 rounded-full"><Activity className="w-4 h-4" /></div>
+                            <div className="flex-1 font-medium text-slate-300">Database automated backup completed</div>
+                            <div className="text-slate-500 font-medium">10 mins ago</div>
+                        </div>
+                        <div className="flex items-center gap-4 py-3 border-b border-slate-800 text-sm">
+                            <div className="bg-blue-400/10 text-blue-400 p-2 rounded-full"><Users className="w-4 h-4" /></div>
+                            <div className="flex-1 font-medium text-slate-300">New organization signed up</div>
+                            <div className="text-slate-500 font-medium">1 hr ago</div>
+                        </div>
+                        <div className="flex items-center gap-4 py-3 text-sm">
+                            <div className="bg-emerald-400/10 text-emerald-400 p-2 rounded-full"><Activity className="w-4 h-4" /></div>
+                            <div className="flex-1 font-medium text-slate-300">System performance OK</div>
+                            <div className="text-slate-500 font-medium">2 hrs ago</div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+// --------------------------------------------------------------------------
+// USERS TAB
+// --------------------------------------------------------------------------
+function AdminUsersTab() {
+    const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        const fetch = async () => {
+            const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+            setItems(data || []);
+            setLoading(false);
+        };
+        fetch();
+    }, []);
+
+    const filteredItems = useMemo(() => {
+        return items.filter(i =>
+            (i.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (i.email || '').toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [items, searchQuery]);
+
+    return (
+        <div className="space-y-6">
+            <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search users by name or email..." />
+
+            <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-slate-100">Platform Users</CardTitle>
+                    <CardDescription className="text-slate-400">A complete list of registered users across all organizations.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
+                        <div className="rounded-lg border border-slate-800 overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
+                                    <tr>
+                                        <th className="px-5 py-3">User</th>
+                                        <th className="px-5 py-3">Email</th>
+                                        <th className="px-5 py-3">User ID</th>
+                                        <th className="px-5 py-3 text-right">Joined</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    {filteredItems.map(item => (
+                                        <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                                            <td className="px-5 py-4 font-medium text-slate-200">{item.full_name || 'No Name'}</td>
+                                            <td className="px-5 py-4 text-slate-400">{item.email}</td>
+                                            <td className="px-5 py-4 text-xs text-slate-500 font-mono">{item.user_id}</td>
+                                            <td className="px-5 py-4 text-slate-400 text-right">{new Date(item.created_at).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))}
+                                    {filteredItems.length === 0 && (
+                                        <tr><td colSpan={4} className="px-5 py-8 text-center text-slate-500">No users found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+// --------------------------------------------------------------------------
+// ORGANIZATIONS TAB
+// --------------------------------------------------------------------------
+function AdminOrganizationsTab() {
+    const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        const fetch = async () => {
+            const { data } = await supabase.from('organizations').select('*').order('created_at', { ascending: false });
+            setItems(data || []);
+            setLoading(false);
+        };
+        fetch();
+    }, []);
+
+    const filteredItems = useMemo(() => {
+        return items.filter(i => (i.name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+    }, [items, searchQuery]);
+
+    return (
+        <div className="space-y-6">
+            <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search organizations by name..." />
+
+            <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-slate-100">Organizations</CardTitle>
+                    <CardDescription className="text-slate-400">Companies and teams using the platform.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
+                        <div className="rounded-lg border border-slate-800 overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
+                                    <tr>
+                                        <th className="px-5 py-3">Organization Name</th>
+                                        <th className="px-5 py-3">Owner ID</th>
+                                        <th className="px-5 py-3 text-right">Created At</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    {filteredItems.map(item => (
+                                        <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                                            <td className="px-5 py-4 font-medium text-slate-200 flex items-center gap-3">
+                                                <div className="p-2 bg-slate-800 rounded-md">
+                                                    <Building2 className="w-4 h-4 text-slate-400" />
+                                                </div>
+                                                {item.name}
+                                            </td>
+                                            <td className="px-5 py-4 text-xs text-slate-500 font-mono">{item.owner_id}</td>
+                                            <td className="px-5 py-4 text-slate-400 text-right">{new Date(item.created_at).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))}
+                                    {filteredItems.length === 0 && (
+                                        <tr><td colSpan={3} className="px-5 py-8 text-center text-slate-500">No organizations found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+// --------------------------------------------------------------------------
+// ASSETS TAB
+// --------------------------------------------------------------------------
+function AdminAssetsTab() {
+    const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        const fetch = async () => {
+            const { data } = await supabase.from('assets').select('*').order('created_at', { ascending: false });
+            setItems(data || []);
+            setLoading(false);
+        };
+        fetch();
+    }, []);
+
+    const filteredItems = useMemo(() => {
+        return items.filter(i =>
+            (i.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (i.location || '').toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [items, searchQuery]);
+
+    return (
+        <div className="space-y-6">
+            <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search assets by name or location..." />
+
+            <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-slate-100">Global Assets</CardTitle>
+                    <CardDescription className="text-slate-400">Every asset registered across the system.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredItems.map(item => (
+                                <div key={item.id} className="border border-slate-800 rounded-xl p-5 bg-[#1e293b]/50 shadow-sm flex flex-col gap-3 hover:border-slate-700 transition-colors">
+                                    <div className="flex justify-between items-start gap-2">
+                                        <div className="font-semibold text-slate-200 line-clamp-1">{item.name}</div>
+                                        <div className="text-xs px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 font-medium uppercase tracking-wider shrink-0">{item.status}</div>
+                                    </div>
+                                    <div className="text-sm text-slate-400 flex items-center gap-1.5"><Package className="w-3.5 h-3.5" />{item.location || 'No location specified'}</div>
+                                    <div className="text-xs text-slate-500 font-mono truncate mt-2 bg-slate-900/50 p-2 rounded">Org ID: {item.org_id}</div>
+                                </div>
+                            ))}
+                            {filteredItems.length === 0 && <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-slate-500 py-12 border border-slate-800 border-dashed rounded-xl">No assets match your search.</div>}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+// --------------------------------------------------------------------------
+// ISSUES TAB
+// --------------------------------------------------------------------------
+function AdminIssuesTab() {
+    const [items, setItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        const fetch = async () => {
+            // Join issues with assets to get the asset name. PostgREST does this via an embedded resource
+            const { data, error } = await supabase
+                .from('issues')
+                .select('*, asset:assets(name)')
+                .order('created_at', { ascending: false });
+
+            setItems(data || []);
+            setLoading(false);
+        };
+        fetch();
+    }, []);
+
+    const filteredItems = useMemo(() => {
+        return items.filter(i =>
+            (i.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (i.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [items, searchQuery]);
+
+    return (
+        <div className="space-y-6">
+            <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search issues by title or description..." />
+
+            <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-slate-100">Global Issues Log</CardTitle>
+                    <CardDescription className="text-slate-400">Tickets and issues from all organizations, showing related assets.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
+                        <div className="rounded-lg border border-slate-800 overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
+                                    <tr>
+                                        <th className="px-5 py-3">Issue Detail</th>
+                                        <th className="px-5 py-3">Asset</th>
+                                        <th className="px-5 py-3">Status</th>
+                                        <th className="px-5 py-3">Priority</th>
+                                        <th className="px-5 py-3 text-right">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    {filteredItems.map(item => (
+                                        <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                                            <td className="px-5 py-4">
+                                                <div className="font-semibold text-slate-200 line-clamp-1 max-w-[250px]">{item.title}</div>
+                                                <div className="text-xs text-slate-500 font-mono mt-1.5 truncate max-w-[200px]" title={item.org_id}>Org: {item.org_id}</div>
+                                            </td>
+                                            <td className="px-5 py-4">
+                                                <div className="font-medium text-slate-300 bg-slate-800/50 inline-flex px-2 py-1 rounded max-w-[200px] truncate">
+                                                    <Package className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                                                    {item.asset?.name || 'Unknown Asset'}
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-4">
+                                                <span className={`text-xs px-2.5 py-1 rounded-md font-medium uppercase tracking-wider shrink-0 ${item.status === 'open' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                                                        item.status === 'resolved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+                                                            'bg-slate-800 text-slate-300 border border-slate-700'
+                                                    }`}>
+                                                    {item.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-5 py-4">
+                                                <span className={`text-xs px-2.5 py-1 rounded-md font-medium uppercase tracking-wider shrink-0 ${item.priority === 'critical' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                                                        item.priority === 'high' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
+                                                            'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                                    }`}>
+                                                    {item.priority}
+                                                </span>
+                                            </td>
+                                            <td className="px-5 py-4 text-slate-400 text-right whitespace-nowrap">
+                                                {new Date(item.created_at).toLocaleDateString()}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {filteredItems.length === 0 && (
+                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-500">No issues found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+// --------------------------------------------------------------------------
+// SETTINGS TAB
+// --------------------------------------------------------------------------
+function AdminSettingsTab() {
+    return (
+        <Card className="border-slate-800 bg-[#0f172a] shadow-md max-w-2xl">
+            <CardHeader>
+                <CardTitle className="text-slate-100">System Settings</CardTitle>
+                <CardDescription className="text-slate-400">Global configurations for the platform.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="space-y-2 border-b border-slate-800 pb-5">
+                    <h4 className="font-semibold text-slate-200">Maintenance Mode</h4>
+                    <p className="text-sm text-slate-500">Prevent users from logging in during scheduled database updates.</p>
+                    <Button variant="outline" className="mt-3 text-red-400 border-red-900 bg-red-950/20 hover:bg-red-900/40 hover:text-red-300">Enable Maintenance Mode</Button>
+                </div>
+                <div className="space-y-2">
+                    <h4 className="font-semibold text-slate-200">Admin Email Notifications</h4>
+                    <p className="text-sm text-slate-500">Receive an email when a new organization is created.</p>
+                    <Button variant="secondary" className="mt-3 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition-colors" disabled>Notifications Configured Locally</Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}

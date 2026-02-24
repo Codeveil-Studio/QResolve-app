@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function Onboarding() {
   const [orgName, setOrgName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user, organization, createOrganization, loading: authLoading } = useAuth();
+  const { user, organization, createOrganization, isAdmin, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -19,10 +19,12 @@ export default function Onboarding() {
     if (!authLoading && !user) {
       navigate('/login');
     }
-    if (!authLoading && organization) {
+    if (!authLoading && isAdmin) {
+      navigate('/admin');
+    } else if (!authLoading && organization) {
       navigate('/dashboard');
     }
-  }, [user, organization, authLoading, navigate]);
+  }, [user, organization, isAdmin, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +47,11 @@ export default function Onboarding() {
     }
 
     setLoading(false);
+  };
+
+  const handleCancel = async () => {
+    await signOut();
+    navigate('/');
   };
 
   if (authLoading) {
@@ -74,8 +81,8 @@ export default function Onboarding() {
             <p className="text-muted-foreground mb-6">
               Please verify your email address to continue setting up your organization.
             </p>
-            <Button 
-              onClick={() => window.location.reload()} 
+            <Button
+              onClick={() => window.location.reload()}
               className="w-full"
             >
               I've verified my email
@@ -129,16 +136,21 @@ export default function Onboarding() {
               </p>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              ) : (
-                <>
-                  Continue to Dashboard
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                ) : (
+                  <>
+                    Continue to Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+              <Button type="button" variant="outline" className="w-full" onClick={handleCancel} disabled={loading}>
+                Cancel
+              </Button>
+            </div>
           </form>
         </div>
       </motion.div>
