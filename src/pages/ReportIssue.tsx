@@ -8,9 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertTriangle, Check } from 'lucide-react';
 import { getAssetDataFromUrl } from '@/lib/assetUrl';
 import { IssuePriority, Asset } from '@/lib/supabase-types';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 function getUUID() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -32,7 +34,7 @@ export default function ReportIssue() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [asset, setAsset] = useState<Pick<Asset, 'id' | 'name' | 'location' | 'org_id' | 'serial_number'> | null>(null);
+  const [asset, setAsset] = useState<(Pick<Asset, 'id' | 'name' | 'location' | 'org_id' | 'serial_number'> & { issue_types?: string[] }) | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Form state
@@ -41,6 +43,7 @@ export default function ReportIssue() {
   const [priority, setPriority] = useState<IssuePriority>('medium');
   const [reporterName, setReporterName] = useState('');
   const [reporterEmail, setReporterEmail] = useState('');
+  const [selectedIssueTags, setSelectedIssueTags] = useState<string[]>([]);
 
   // Optimistic data from URL
   const urlData = getAssetDataFromUrl(searchParams);
@@ -55,6 +58,7 @@ export default function ReportIssue() {
             location: urlData.location,
             org_id: urlData.orgId,
             serial_number: null,
+            issue_types: []
           });
         }
         return;
@@ -63,7 +67,7 @@ export default function ReportIssue() {
       try {
         const { data, error } = await supabase
           .from('assets')
-          .select('id, name, location, org_id, serial_number')
+          .select('id, name, location, org_id, serial_number, issue_types')
           .eq('id', assetId)
           .single();
 
@@ -76,6 +80,7 @@ export default function ReportIssue() {
               location: urlData.location,
               org_id: urlData.orgId,
               serial_number: null,
+              issue_types: []
             });
             setError(null);
           } else {
@@ -94,6 +99,7 @@ export default function ReportIssue() {
             location: urlData.location,
             org_id: urlData.orgId,
             serial_number: null,
+            issue_types: []
           });
           setError(null);
         } else {
@@ -105,6 +111,14 @@ export default function ReportIssue() {
     }
     loadAsset();
   }, [assetId, urlData.location, urlData.name, urlData.orgId]);
+
+  const toggleIssueTag = (tag: string) => {
+    setSelectedIssueTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag) 
+        : [...prev, tag]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,13 +134,33 @@ export default function ReportIssue() {
       return;
     }
 
+    // Validation: Require at least one tag if the asset has tags defined
+    if (asset?.issue_types && asset.issue_types.length > 0 && selectedIssueTags.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please select at least one issue type.",
+      });
+      return;
+    }
+
     setSubmitting(true);
     
     try {
+        // Auto-generate title from tags or use a default
+        let generatedTitle = "Issue Report";
+        if (selectedIssueTags.length > 0) {
+          generatedTitle = selectedIssueTags.join(', ');
+        } else if (title) {
+          // Fallback if title state still exists or for assets without tags
+          generatedTitle = title;
+        }
+
         const finalDescription = `
 ${description}
 
 ---
+Tags: ${selectedIssueTags.join(', ') || 'None'}
 Reported by: ${reporterName || 'Anonymous'}
 Contact: ${reporterEmail || 'N/A'}
         `.trim();
@@ -136,11 +170,12 @@ Contact: ${reporterEmail || 'N/A'}
           .insert({
             org_id: orgId,
             asset_id: finalAssetId,
-            title: title,
+            title: generatedTitle,
             description: finalDescription,
             priority: priority,
             status: 'open',
             reported_by: getUUID(),
+            issue_tags: selectedIssueTags
           });
 
         if (submitError) throw submitError;
@@ -218,17 +253,44 @@ Contact: ${reporterEmail || 'N/A'}
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="title">Issue Title</Label>
-                            <Input 
-                                id="title" 
-                                placeholder="e.g. Screen cracked, Not turning on" 
-                                required 
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                className="bg-white text-slate-900 placeholder:text-slate-500"
-                            />
-                        </div>
+                        {asset?.issue_types && asset.issue_types.length > 0 && (
+                            <div className="space-y-2">
+                                <Label className="text-slate-900">What type of issue is this?</Label>
+                                <div className="flex flex-wrap gap-2">
+                                    {asset.issue_types.map((tag) => (
+                                        <button
+                                            key={tag}
+                                            type="button"
+                                            onClick={() => toggleIssueTag(tag)}
+                                            className={cn(
+                                                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                                                selectedIssueTags.includes(tag)
+                                                    ? "border-transparent bg-primary text-primary-foreground hover:bg-primary/80"
+                                                    : "border-transparent bg-slate-100 text-slate-900 hover:bg-slate-200"
+                                            )}
+                                        >
+                                            {selectedIssueTags.includes(tag) && <Check className="mr-1 h-3 w-3" />}
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-slate-500">Select all that apply</p>
+                            </div>
+                        )}
+
+                        {!asset?.issue_types || asset.issue_types.length === 0 ? (
+                            <div className="space-y-2">
+                                <Label htmlFor="title">Issue Title</Label>
+                                <Input 
+                                    id="title" 
+                                    placeholder="e.g. Screen cracked, Not turning on" 
+                                    required 
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    className="bg-white text-slate-900 placeholder:text-slate-500"
+                                />
+                            </div>
+                        ) : null}
 
                         <div className="space-y-2">
                             <Label htmlFor="priority">Severity</Label>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit, Download } from 'lucide-react';
+import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit, Download, X as XIcon } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import html2pdf from 'html2pdf.js';
 import { createRoot } from 'react-dom/client';
@@ -40,6 +40,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Asset, AssetStatus, Issue } from '@/lib/supabase-types';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 export default function Assets() {
   const { organization, user } = useAuth();
@@ -61,7 +62,9 @@ export default function Assets() {
     location: '',
     serial_number: '',
     status: 'active' as AssetStatus,
+    issue_types: [] as string[],
   });
+  const [currentIssueType, setCurrentIssueType] = useState('');
 
   const fetchAssets = useCallback(async () => {
     if (!organization) return;
@@ -92,12 +95,26 @@ export default function Assets() {
     e.preventDefault();
     if (!organization || !user) return;
 
+    if (formData.issue_types.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Information',
+        description: 'Please add at least one Issue Type tag.',
+      });
+      return;
+    }
+
     try {
       const assetData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description.trim() || null, // Optional: Save as null if empty
+        type: formData.type, // We keep type for backward compatibility or generic classification
+        location: formData.location,
+        serial_number: formData.serial_number,
+        status: formData.status,
+        issue_types: formData.issue_types, // Save the dynamic tags
         org_id: organization.id,
         created_by: user.id,
-        // qr_code is not needed in DB as we generate it dynamically
       };
 
       const { error } = await supabase.from('assets').insert(assetData);
@@ -113,6 +130,7 @@ export default function Assets() {
         location: '',
         serial_number: '',
         status: 'active',
+        issue_types: [],
       });
       fetchAssets();
     } catch (error: unknown) {
@@ -123,6 +141,26 @@ export default function Assets() {
       });
     }
   };
+
+  const handleAddIssueType = () => {
+    if (currentIssueType.trim()) {
+      if (!formData.issue_types.includes(currentIssueType.trim())) {
+        setFormData({
+          ...formData,
+          issue_types: [...formData.issue_types, currentIssueType.trim()]
+        });
+      }
+      setCurrentIssueType('');
+    }
+  };
+
+  const handleRemoveIssueType = (tag: string) => {
+    setFormData({
+      ...formData,
+      issue_types: formData.issue_types.filter(t => t !== tag)
+    });
+  };
+
 
   const handleDelete = async (asset: Asset) => {
     if (!confirm('Are you sure you want to delete this asset?')) return;
@@ -363,14 +401,38 @@ export default function Assets() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="type">Type</Label>
-                  <Input
-                    id="type"
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    placeholder="e.g., Laptop"
-                    className="mt-1.5"
-                  />
+                  <Label htmlFor="issue_types">Issue Types (Tags)</Label>
+                  <div className="flex gap-2 mt-1.5">
+                    <Input
+                      id="issue_types"
+                      value={currentIssueType}
+                      onChange={(e) => setCurrentIssueType(e.target.value)}
+                      placeholder="e.g. Screen, Battery"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddIssueType();
+                        }
+                      }}
+                    />
+                    <Button type="button" onClick={handleAddIssueType} variant="outline" size="icon">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {formData.issue_types.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                        {tag}
+                        <XIcon 
+                          className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                          onClick={() => handleRemoveIssueType(tag)}
+                        />
+                      </Badge>
+                    ))}
+                    {formData.issue_types.length === 0 && (
+                      <span className="text-xs text-muted-foreground italic">No issue types added</span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="serial">Serial Number</Label>
@@ -380,6 +442,7 @@ export default function Assets() {
                     onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
                     placeholder="e.g., SN123456"
                     className="mt-1.5"
+                    required
                   />
                 </div>
               </div>
@@ -391,10 +454,11 @@ export default function Assets() {
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder="e.g., Office 3A, Building B"
                   className="mt-1.5"
+                  required
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Description <span className="text-xs font-normal text-muted-foreground">(Optional)</span></Label>
                 <Textarea
                   id="description"
                   value={formData.description}
