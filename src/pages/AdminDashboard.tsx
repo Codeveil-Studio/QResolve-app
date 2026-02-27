@@ -341,14 +341,21 @@ function AdminUsersTab() {
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        type: 'ban' | 'unban' | 'delete';
+        user: any;
+    }>({ open: false, type: 'ban', user: null });
+
+    const fetchUsers = async () => {
+        const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+        setItems(data || []);
+        setLoading(false);
+    };
 
     useEffect(() => {
-        const fetch = async () => {
-            const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-            setItems(data || []);
-            setLoading(false);
-        };
-        fetch();
+        fetchUsers();
     }, []);
 
     const filteredItems = useMemo(() => {
@@ -357,6 +364,38 @@ function AdminUsersTab() {
             (i.email || '').toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [items, searchQuery]);
+
+    const handleAction = async () => {
+        const { type, user } = confirmDialog;
+        if (!user) return;
+
+        setActionLoading(user.id);
+        setConfirmDialog({ ...confirmDialog, open: false });
+
+        try {
+            if (type === 'ban' || type === 'unban') {
+                const isBanned = type === 'ban';
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ is_banned: isBanned })
+                    .eq('id', user.id);
+                
+                if (error) throw error;
+            } else if (type === 'delete') {
+                // Call the security definer function to delete the user from auth.users
+                const { error } = await supabase.rpc('delete_user_by_admin', { target_user_id: user.user_id });
+                if (error) throw error;
+            }
+
+            // Refresh list
+            await fetchUsers();
+        } catch (error) {
+            console.error('Action failed:', error);
+            alert('Action failed. See console for details.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -375,8 +414,9 @@ function AdminUsersTab() {
                                     <tr>
                                         <th className="px-5 py-3">User</th>
                                         <th className="px-5 py-3">Email</th>
-                                        <th className="px-5 py-3">User ID</th>
+                                        <th className="px-5 py-3">Status</th>
                                         <th className="px-5 py-3 text-right">Joined</th>
+                                        <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-800">
@@ -384,12 +424,56 @@ function AdminUsersTab() {
                                         <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
                                             <td className="px-5 py-4 font-medium text-slate-200">{item.full_name || 'No Name'}</td>
                                             <td className="px-5 py-4 text-slate-400">{item.email}</td>
-                                            <td className="px-5 py-4 text-xs text-slate-500 font-mono">{item.user_id}</td>
+                                            <td className="px-5 py-4">
+                                                {item.is_banned ? (
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-400 border border-red-900/50">
+                                                        Banned
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-900/30 text-emerald-400 border border-emerald-900/50">
+                                                        Active
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="px-5 py-4 text-slate-400 text-right">{new Date(item.created_at).toLocaleDateString()}</td>
+                                            <td className="px-5 py-4 text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    {item.is_banned ? (
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-8 border-emerald-800 text-emerald-400 hover:bg-emerald-900/20 hover:text-emerald-300"
+                                                            onClick={() => setConfirmDialog({ open: true, type: 'unban', user: item })}
+                                                            disabled={actionLoading === item.id}
+                                                        >
+                                                            Unban
+                                                        </Button>
+                                                    ) : (
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-8 border-amber-800 text-amber-400 hover:bg-amber-900/20 hover:text-amber-300"
+                                                            onClick={() => setConfirmDialog({ open: true, type: 'ban', user: item })}
+                                                            disabled={actionLoading === item.id}
+                                                        >
+                                                            Ban
+                                                        </Button>
+                                                    )}
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="h-8 border-red-900 text-red-400 hover:bg-red-950/30 hover:text-red-300"
+                                                        onClick={() => setConfirmDialog({ open: true, type: 'delete', user: item })}
+                                                        disabled={actionLoading === item.id}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))}
                                     {filteredItems.length === 0 && (
-                                        <tr><td colSpan={4} className="px-5 py-8 text-center text-slate-500">No users found.</td></tr>
+                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-500">No users found.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -397,6 +481,69 @@ function AdminUsersTab() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Confirmation Dialog */}
+            <AnimatePresence>
+                {confirmDialog.open && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="w-full max-w-md bg-[#0f172a] border border-slate-800 rounded-xl shadow-xl overflow-hidden"
+                        >
+                            <div className="p-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className={`p-3 rounded-full ${
+                                        confirmDialog.type === 'delete' ? 'bg-red-900/20 text-red-400' : 
+                                        confirmDialog.type === 'ban' ? 'bg-amber-900/20 text-amber-400' : 
+                                        'bg-emerald-900/20 text-emerald-400'
+                                    }`}>
+                                        <ShieldAlert className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-slate-100 capitalize">
+                                            {confirmDialog.type} User
+                                        </h3>
+                                        <p className="text-slate-400 text-sm">
+                                            Are you sure you want to {confirmDialog.type} <strong>{confirmDialog.user?.full_name}</strong>?
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <p className="text-slate-500 text-sm mb-6">
+                                    {confirmDialog.type === 'delete' 
+                                        ? "This action is permanent and cannot be undone. All user data will be removed."
+                                        : confirmDialog.type === 'ban'
+                                        ? "The user will be immediately logged out and unable to sign in."
+                                        : "The user will regain access to the platform."
+                                    }
+                                </p>
+
+                                <div className="flex justify-end gap-3">
+                                    <Button 
+                                        variant="ghost" 
+                                        onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}
+                                        className="text-slate-400 hover:text-slate-200"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button 
+                                        className={`${
+                                            confirmDialog.type === 'delete' ? 'bg-red-600 hover:bg-red-700' : 
+                                            confirmDialog.type === 'ban' ? 'bg-amber-600 hover:bg-amber-700' : 
+                                            'bg-emerald-600 hover:bg-emerald-700'
+                                        } text-white`}
+                                        onClick={handleAction}
+                                    >
+                                        Confirm {confirmDialog.type.charAt(0).toUpperCase() + confirmDialog.type.slice(1)}
+                                    </Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

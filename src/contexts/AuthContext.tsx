@@ -143,6 +143,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) return { error };
 
     if (data.user) {
+      // Check if user is banned
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_banned')
+        .eq('user_id', data.user.id)
+        .maybeSingle();
+      
+      if (profileData?.is_banned) {
+        await supabase.auth.signOut();
+        return { error: new Error('Your account has been banned by the administrator. Please contact support.') };
+      }
+
       const { data: adminData } = await supabase
         .from('admins')
         .select('id')
