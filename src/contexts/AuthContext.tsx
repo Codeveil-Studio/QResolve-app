@@ -166,6 +166,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await supabase.auth.signOut();
           return { error: new Error('Unauthorized: Admin access required.') };
         }
+        // Explicitly set admin state to avoid race conditions with onAuthStateChange
+        setIsAdmin(true);
+        setUser(data.user);
+        setSession(data.session);
       } else {
         if (adminData) {
           await supabase.auth.signOut();
