@@ -28,6 +28,7 @@ export interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   email: string | null;
+  is_banned?: boolean | null;
   created_at: string;
   updated_at: string;
 }

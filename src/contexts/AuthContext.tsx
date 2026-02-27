@@ -143,7 +143,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) return { error };
 
     if (data.user) {
-      // Check if user is banned
       const { data: profileData } = await supabase
         .from('profiles')
         .select('is_banned')
@@ -166,7 +165,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await supabase.auth.signOut();
           return { error: new Error('Unauthorized: Admin access required.') };
         }
-        // Explicitly set admin state to avoid race conditions with onAuthStateChange
         setIsAdmin(true);
         setUser(data.user);
         setSession(data.session);

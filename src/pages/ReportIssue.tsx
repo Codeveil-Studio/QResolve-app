@@ -104,7 +104,7 @@ export default function ReportIssue() {
       }
     }
     loadAsset();
-  }, [assetId]);
+  }, [assetId, urlData.location, urlData.name, urlData.orgId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

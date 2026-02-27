@@ -17,18 +17,24 @@ import {
     ChevronDown,
     Activity,
     ShieldAlert,
-    Search
+    Search,
+    User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import type { Asset, Issue, Organization, Profile } from '@/lib/supabase-types';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+type OwnerProfile = Pick<Profile, 'user_id' | 'full_name' | 'email'>;
+type OrganizationWithOwner = Organization & { owner_profile: OwnerProfile | null };
+type IssueWithAsset = Issue & { asset?: { name: string } | null };
 
 const TABS = {
     OVERVIEW: 'overview',
@@ -338,19 +344,19 @@ function AdminOverviewTab() {
 // USERS TAB
 // --------------------------------------------------------------------------
 function AdminUsersTab() {
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [confirmDialog, setConfirmDialog] = useState<{
         open: boolean;
         type: 'ban' | 'unban' | 'delete';
-        user: any;
+        user: Profile | null;
     }>({ open: false, type: 'ban', user: null });
 
     const fetchUsers = async () => {
         const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-        setItems(data || []);
+        setItems((data as Profile[]) || []);
         setLoading(false);
     };
 
@@ -382,12 +388,10 @@ function AdminUsersTab() {
                 
                 if (error) throw error;
             } else if (type === 'delete') {
-                // Call the security definer function to delete the user from auth.users
                 const { error } = await supabase.rpc('delete_user_by_admin', { target_user_id: user.user_id });
                 if (error) throw error;
             }
 
-            // Refresh list
             await fetchUsers();
         } catch (error) {
             console.error('Action failed:', error);
@@ -552,15 +556,37 @@ function AdminUsersTab() {
 // ORGANIZATIONS TAB
 // --------------------------------------------------------------------------
 function AdminOrganizationsTab() {
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<OrganizationWithOwner[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; org: OrganizationWithOwner | null }>({ open: false, org: null });
+
+    const fetchOrganizations = async () => {
+        const { data: orgs } = await supabase.from('organizations').select('*').order('created_at', { ascending: false });
+        const orgList = (orgs as Organization[]) || [];
+
+        const ownerIds = Array.from(new Set(orgList.map((o) => o.owner_id).filter(Boolean)));
+        let ownerProfiles: OwnerProfile[] = [];
+        if (ownerIds.length > 0) {
+            const { data } = await supabase
+                .from('profiles')
+                .select('user_id, full_name, email')
+                .in('user_id', ownerIds);
+            ownerProfiles = (data as OwnerProfile[]) || [];
+        }
+
+        const ownerByUserId = new Map(ownerProfiles.map(p => [p.user_id, p]));
+        setItems(orgList.map((o) => ({
+            ...o,
+            owner_profile: ownerByUserId.get(o.owner_id) || null,
+        })));
+        setLoading(false);
+    };
 
     useEffect(() => {
         const fetch = async () => {
-            const { data } = await supabase.from('organizations').select('*').order('created_at', { ascending: false });
-            setItems(data || []);
-            setLoading(false);
+            await fetchOrganizations();
         };
         fetch();
     }, []);
@@ -568,6 +594,22 @@ function AdminOrganizationsTab() {
     const filteredItems = useMemo(() => {
         return items.filter(i => (i.name || '').toLowerCase().includes(searchQuery.toLowerCase()));
     }, [items, searchQuery]);
+
+    const handleDelete = async () => {
+        if (!confirmDialog.org) return;
+        setActionLoading(confirmDialog.org.id);
+        setConfirmDialog({ open: false, org: null });
+        try {
+            const { error } = await supabase.rpc('delete_organization_by_admin', { target_org_id: confirmDialog.org.id });
+            if (error) throw error;
+            await fetchOrganizations();
+        } catch (error) {
+            console.error('Failed to delete organization:', error);
+            alert('Failed to delete organization. See console for details.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -585,8 +627,10 @@ function AdminOrganizationsTab() {
                                 <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
                                     <tr>
                                         <th className="px-5 py-3">Organization Name</th>
+                                        <th className="px-5 py-3">Owner Name</th>
                                         <th className="px-5 py-3">Owner ID</th>
                                         <th className="px-5 py-3 text-right">Created At</th>
+                                        <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-800">
@@ -598,12 +642,26 @@ function AdminOrganizationsTab() {
                                                 </div>
                                                 {item.name}
                                             </td>
+                                            <td className="px-5 py-4 text-slate-300">
+                                                {item.owner_profile?.full_name || '—'}
+                                            </td>
                                             <td className="px-5 py-4 text-xs text-slate-500 font-mono">{item.owner_id}</td>
                                             <td className="px-5 py-4 text-slate-400 text-right">{new Date(item.created_at).toLocaleDateString()}</td>
+                                            <td className="px-5 py-4 text-right">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-8 border-red-900 text-red-400 hover:bg-red-950/30 hover:text-red-300"
+                                                    onClick={() => setConfirmDialog({ open: true, org: item })}
+                                                    disabled={actionLoading === item.id}
+                                                >
+                                                    Delete
+                                                </Button>
+                                            </td>
                                         </tr>
                                     ))}
                                     {filteredItems.length === 0 && (
-                                        <tr><td colSpan={3} className="px-5 py-8 text-center text-slate-500">No organizations found.</td></tr>
+                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-500">No organizations found.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -611,9 +669,58 @@ function AdminOrganizationsTab() {
                     )}
                 </CardContent>
             </Card>
+
+            <AnimatePresence>
+                {confirmDialog.open && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="w-full max-w-md bg-[#0f172a] border border-slate-800 rounded-xl shadow-xl overflow-hidden"
+                        >
+                            <div className="p-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="p-3 rounded-full bg-red-900/20 text-red-400">
+                                        <ShieldAlert className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-slate-100">Delete Organization</h3>
+                                        <p className="text-slate-400 text-sm">
+                                            Delete <strong>{confirmDialog.org?.name}</strong> and all its assets?
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <p className="text-slate-500 text-sm mb-6">
+                                    This action is permanent and cannot be undone.
+                                </p>
+
+                                <div className="flex justify-end gap-3">
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => setConfirmDialog({ open: false, org: null })}
+                                        className="text-slate-400 hover:text-slate-200"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        className="bg-red-600 hover:bg-red-700 text-white"
+                                        onClick={handleDelete}
+                                    >
+                                        Confirm Delete
+                                    </Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
+
+import { AdminAssetDetailsDialog } from '@/components/admin/AdminAssetDetailsDialog';
 
 // --------------------------------------------------------------------------
 // ASSETS TAB
@@ -622,43 +729,102 @@ function AdminAssetsTab() {
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedAsset, setSelectedAsset] = useState<any | null>(null);
+    const [detailsOpen, setDetailsOpen] = useState(false);
+
+    const fetchAssets = async () => {
+        setLoading(true);
+        // Fetch assets with organization and creator details
+        // Note: PostgREST embedded resources used for joins
+        const { data, error } = await supabase
+            .from('assets')
+            .select(`
+                *,
+                organization:organizations(name),
+                creator:profiles!assets_created_by_fkey(full_name, email)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching assets:', error);
+        } else {
+            setItems(data || []);
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
-        const fetch = async () => {
-            const { data } = await supabase.from('assets').select('*').order('created_at', { ascending: false });
-            setItems(data || []);
-            setLoading(false);
-        };
-        fetch();
+        fetchAssets();
     }, []);
 
     const filteredItems = useMemo(() => {
         return items.filter(i =>
             (i.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (i.location || '').toLowerCase().includes(searchQuery.toLowerCase())
+            (i.location || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (i.organization?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [items, searchQuery]);
 
+    const handleDeleteAsset = async (asset: any) => {
+        try {
+            const { error } = await supabase.rpc('delete_asset_by_admin', { target_asset_id: asset.id });
+            if (error) throw error;
+            await fetchAssets();
+        } catch (error) {
+            console.error('Failed to delete asset:', error);
+            alert('Failed to delete asset. See console for details.');
+        }
+    };
+
     return (
         <div className="space-y-6">
-            <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search assets by name or location..." />
+            <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search assets by name, location, or organization..." />
 
             <Card className="border-slate-800 bg-[#0f172a] shadow-md">
                 <CardHeader>
                     <CardTitle className="text-slate-100">Global Assets</CardTitle>
-                    <CardDescription className="text-slate-400">Every asset registered across the system.</CardDescription>
+                    <CardDescription className="text-slate-400">Every asset registered across the system. Click on a card for details.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {filteredItems.map(item => (
-                                <div key={item.id} className="border border-slate-800 rounded-xl p-5 bg-[#1e293b]/50 shadow-sm flex flex-col gap-3 hover:border-slate-700 transition-colors">
+                                <div 
+                                    key={item.id} 
+                                    onClick={() => {
+                                        setSelectedAsset(item);
+                                        setDetailsOpen(true);
+                                    }}
+                                    className="border border-slate-800 rounded-xl p-5 bg-[#1e293b]/50 shadow-sm flex flex-col gap-3 hover:border-slate-600 hover:bg-[#1e293b]/80 transition-all cursor-pointer group"
+                                >
                                     <div className="flex justify-between items-start gap-2">
-                                        <div className="font-semibold text-slate-200 line-clamp-1">{item.name}</div>
-                                        <div className="text-xs px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 font-medium uppercase tracking-wider shrink-0">{item.status}</div>
+                                        <div className="font-semibold text-slate-200 line-clamp-1 group-hover:text-emerald-400 transition-colors">{item.name}</div>
+                                        <div className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wider shrink-0 border ${
+                                            item.status === 'active' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-900/50' : 
+                                            'bg-slate-800 text-slate-400 border-slate-700'
+                                        }`}>
+                                            {item.status}
+                                        </div>
                                     </div>
-                                    <div className="text-sm text-slate-400 flex items-center gap-1.5"><Package className="w-3.5 h-3.5" />{item.location || 'No location specified'}</div>
-                                    <div className="text-xs text-slate-500 font-mono truncate mt-2 bg-slate-900/50 p-2 rounded">Org ID: {item.org_id}</div>
+                                    
+                                    <div className="space-y-1.5">
+                                        <div className="text-sm text-slate-400 flex items-center gap-2">
+                                            <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                                            <span className="truncate">{item.organization?.name || 'Unknown Org'}</span>
+                                        </div>
+                                        <div className="text-sm text-slate-400 flex items-center gap-2">
+                                            <Package className="w-3.5 h-3.5 text-slate-500" />
+                                            <span className="truncate">{item.location || 'No location'}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 mt-auto border-t border-slate-800/50 flex justify-between items-center text-xs text-slate-500">
+                                        <div className="flex items-center gap-1.5">
+                                            <User className="w-3 h-3" />
+                                            <span className="truncate max-w-[100px]">{item.creator?.full_name || 'Unknown'}</span>
+                                        </div>
+                                        <span className="font-mono opacity-50">{new Date(item.created_at).toLocaleDateString()}</span>
+                                    </div>
                                 </div>
                             ))}
                             {filteredItems.length === 0 && <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-slate-500 py-12 border border-slate-800 border-dashed rounded-xl">No assets match your search.</div>}
@@ -666,6 +832,13 @@ function AdminAssetsTab() {
                     )}
                 </CardContent>
             </Card>
+
+            <AdminAssetDetailsDialog 
+                asset={selectedAsset}
+                open={detailsOpen}
+                onOpenChange={setDetailsOpen}
+                onDelete={handleDeleteAsset}
+            />
         </div>
     );
 }
@@ -674,19 +847,18 @@ function AdminAssetsTab() {
 // ISSUES TAB
 // --------------------------------------------------------------------------
 function AdminIssuesTab() {
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<IssueWithAsset[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         const fetch = async () => {
-            // Join issues with assets to get the asset name. PostgREST does this via an embedded resource
             const { data, error } = await supabase
                 .from('issues')
                 .select('*, asset:assets(name)')
                 .order('created_at', { ascending: false });
 
-            setItems(data || []);
+            setItems((data as IssueWithAsset[]) || []);
             setLoading(false);
         };
         fetch();
