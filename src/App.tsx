@@ -8,6 +8,7 @@ import Landing from "./pages/Landing";
 
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import Onboarding from "./pages/auth/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
@@ -88,6 +89,7 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/report/:assetId" element={<ReportIssue />} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
