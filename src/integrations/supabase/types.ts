@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      providers: {
+        Row: {
+          category: string | null
+          contact_info: string | null
+          created_at: string | null
+          id: string
+          location: string | null
+          platform: string | null
+          provider_name: string
+          rating: string | null
+        }
+        Insert: {
+          category?: string | null
+          contact_info?: string | null
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          platform?: string | null
+          provider_name: string
+          rating?: string | null
+        }
+        Update: {
+          category?: string | null
+          contact_info?: string | null
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          platform?: string | null
+          provider_name?: string
+          rating?: string | null
+        }
+        Relationships: []
+      }
       assets: {
         Row: {
           created_at: string

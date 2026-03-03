@@ -44,7 +44,13 @@ export default function Login() {
   return (
     <div className="qresolve-auth grid min-h-screen lg:grid-cols-2 bg-white text-slate-900">
       {/* Left panel - Form */}
-      <div className="flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24">
+      <div className="flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24 relative">
+        <div className="absolute top-6 left-6">
+          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors">
+            <ArrowRight className="h-4 w-4 rotate-180" />
+            Back to Home
+          </Link>
+        </div>
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}

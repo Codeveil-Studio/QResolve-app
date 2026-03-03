@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
+import { Star, MapPin, Phone, Building2 } from 'lucide-react';
 
-const fadeInUp = {
+const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
 };
 
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -18,7 +20,7 @@ const staggerContainer = {
   },
 };
 
-const scaleIn = {
+const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: 'easeOut' } },
 };
@@ -26,6 +28,44 @@ const scaleIn = {
 export default function Landing() {
   const { user, organization, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [locationFilter, setLocationFilter] = useState('All locations');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      let query = supabase
+        .from('providers')
+        .select('*')
+        .or(`provider_name.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
+
+      if (locationFilter !== 'All locations') {
+        query = query.ilike('location', `%${locationFilter}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setSearchResults(data || []);
+    } catch (error) {
+      console.error('Error searching providers:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
 
   if (loading) {
     return (
@@ -105,23 +145,79 @@ export default function Landing() {
             service providers — ranked by real performance data, not just promises.
           </motion.p>
 
-          <motion.div variants={fadeInUp} className="hero-search group hover:shadow-[0_8px_50px_rgba(6,214,160,0.2)] transition-shadow">
-            <input
-              type="text"
-              placeholder="What needs fixing? e.g. coffee machine, lift, EV charger..."
-            />
-            <select>
-              <option>All locations</option>
-              <option>Mumbai</option>
-              <option>Delhi NCR</option>
-              <option>Bangalore</option>
-              <option>Hyderabad</option>
-              <option>Chennai</option>
-              <option>Pune</option>
-              <option>Kolkata</option>
-              <option>Ahmedabad</option>
-            </select>
-            <button type="button">Search</button>
+          <motion.div variants={fadeInUp} className="relative z-50">
+            <div className="hero-search group hover:shadow-[0_8px_50px_rgba(6,214,160,0.2)] transition-shadow">
+              <input
+                type="text"
+                placeholder="What needs fixing? e.g. coffee machine, lift, EV charger..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+              <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
+                <option>All locations</option>
+                <option>Mumbai</option>
+                <option>Delhi NCR</option>
+                <option>Bangalore</option>
+                <option>Hyderabad</option>
+                <option>Chennai</option>
+                <option>Pune</option>
+                <option>Kolkata</option>
+                <option>Ahmedabad</option>
+              </select>
+              <button type="button" onClick={handleSearch} disabled={isSearching}>
+                {isSearching ? 'Searching...' : 'Search'}
+              </button>
+            </div>
+
+            {/* Search Results Dropdown */}
+            <AnimatePresence>
+              {searchResults.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-[#0f172a] border border-slate-800 rounded-xl shadow-2xl overflow-hidden max-h-96 overflow-y-auto"
+                >
+                  <div className="p-2 space-y-1">
+                    {searchResults.map((provider) => (
+                      <div key={provider.id} className="p-3 hover:bg-slate-800/50 rounded-lg transition-colors group cursor-pointer border border-transparent hover:border-slate-700">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="text-slate-200 font-semibold group-hover:text-[#06d6a0] transition-colors">
+                              {provider.provider_name}
+                            </h4>
+                            <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
+                              <span className="flex items-center gap-1 bg-slate-800/50 px-2 py-0.5 rounded">
+                                <Building2 className="w-3 h-3" />
+                                {provider.category}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {provider.location}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="flex items-center gap-1 bg-emerald-950/30 text-emerald-400 px-2 py-0.5 rounded text-xs font-medium border border-emerald-900/30">
+                              <Star className="w-3 h-3 fill-current" />
+                              {provider.rating || 'N/A'}
+                            </div>
+                            <span className="text-[10px] text-slate-600">{provider.platform}</span>
+                          </div>
+                        </div>
+                        {provider.contact_info && (
+                          <div className="mt-2 pt-2 border-t border-slate-800/50 flex items-center gap-2 text-xs text-slate-400">
+                            <Phone className="w-3 h-3" />
+                            {provider.contact_info}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           <motion.div variants={fadeInUp} className="hero-tags">
