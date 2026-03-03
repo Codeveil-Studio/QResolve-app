@@ -127,6 +127,24 @@ export type Database = {
           },
         ]
       }
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       issues: {
         Row: {
           asset_id: string | null
@@ -408,6 +426,18 @@ export type Database = {
       is_org_admin: { Args: { _org_id: string }; Returns: boolean }
       is_org_member: { Args: { _org_id: string }; Returns: boolean }
       is_org_owner: { Args: { _org_id: string }; Returns: boolean }
+      delete_user_by_admin: {
+        Args: { target_user_id: string }
+        Returns: void
+      }
+      delete_organization_by_admin: {
+        Args: { target_org_id: string }
+        Returns: void
+      }
+      delete_asset_by_admin: {
+        Args: { target_asset_id: string }
+        Returns: void
+      }
     }
     Enums: {
       asset_status: "active" | "inactive" | "maintenance" | "retired"

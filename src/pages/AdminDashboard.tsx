@@ -18,7 +18,11 @@ import {
     Activity,
     ShieldAlert,
     Search,
-    User
+    User,
+    Tags,
+    Trash2,
+    Edit,
+    Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,15 +35,31 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 type OwnerProfile = Pick<Profile, 'user_id' | 'full_name' | 'email'>;
 type OrganizationWithOwner = Organization & { owner_profile: OwnerProfile | null };
 type IssueWithAsset = Issue & { asset?: { name: string } | null };
+interface Category {
+    id: string;
+    name: string;
+    created_at: string;
+}
 
 const TABS = {
     OVERVIEW: 'overview',
     USERS: 'users',
     ORGANIZATIONS: 'organizations',
+    CATEGORIES: 'categories',
     ASSETS: 'assets',
     ISSUES: 'issues',
     SETTINGS: 'settings'
@@ -49,6 +69,7 @@ const navItems = [
     { id: TABS.OVERVIEW, label: 'Overview', icon: LayoutDashboard },
     { id: TABS.USERS, label: 'Users', icon: Users },
     { id: TABS.ORGANIZATIONS, label: 'Organizations', icon: Building2 },
+    { id: TABS.CATEGORIES, label: 'Categories', icon: Tags },
     { id: TABS.ASSETS, label: 'Assets', icon: Package },
     { id: TABS.ISSUES, label: 'Issues', icon: AlertCircle },
     { id: TABS.SETTINGS, label: 'Settings', icon: Settings },
@@ -76,6 +97,7 @@ export default function AdminDashboard() {
             case TABS.OVERVIEW: return <AdminOverviewTab />;
             case TABS.USERS: return <AdminUsersTab />;
             case TABS.ORGANIZATIONS: return <AdminOrganizationsTab />;
+            case TABS.CATEGORIES: return <AdminCategoriesTab />;
             case TABS.ASSETS: return <AdminAssetsTab />;
             case TABS.ISSUES: return <AdminIssuesTab />;
             case TABS.SETTINGS: return <AdminSettingsTab />;
@@ -721,6 +743,206 @@ function AdminOrganizationsTab() {
 }
 
 import { AdminAssetDetailsDialog } from '@/components/admin/AdminAssetDetailsDialog';
+
+
+// --------------------------------------------------------------------------
+// CATEGORIES TAB
+// --------------------------------------------------------------------------
+function AdminCategoriesTab() {
+    const { toast } = useToast();
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const [formData, setFormData] = useState({ name: '' });
+
+    const fetchCategories = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('categories')
+                .select('*')
+                .order('name');
+            
+            if (error) throw error;
+            setCategories(data || []);
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to load categories',
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (editingCategory) {
+                const { error } = await supabase
+                    .from('categories')
+                    .update({ name: formData.name })
+                    .eq('id', editingCategory.id);
+                if (error) throw error;
+                toast({ title: 'Category updated successfully' });
+            } else {
+                const { error } = await supabase
+                    .from('categories')
+                    .insert({ name: formData.name });
+                if (error) throw error;
+                toast({ title: 'Category created successfully' });
+            }
+            setDialogOpen(false);
+            setFormData({ name: '' });
+            setEditingCategory(null);
+            fetchCategories();
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: error.message,
+            });
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this category?')) return;
+        try {
+            const { error } = await supabase.from('categories').delete().eq('id', id);
+            if (error) throw error;
+            toast({ title: 'Category deleted successfully' });
+            fetchCategories();
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to delete category',
+            });
+        }
+    };
+
+    const filteredCategories = categories.filter(c => 
+        c.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                <div className="w-full sm:w-72">
+                    <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search categories..." />
+                </div>
+                <Dialog open={dialogOpen} onOpenChange={(open) => {
+                    setDialogOpen(open);
+                    if (!open) {
+                        setEditingCategory(null);
+                        setFormData({ name: '' });
+                    }
+                }}>
+                    <DialogTrigger asChild>
+                        <Button className="bg-primary hover:bg-primary/90">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Category
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md bg-[#1e293b] border-slate-800 text-slate-200">
+                        <DialogHeader>
+                            <DialogTitle>{editingCategory ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+                            <DialogDescription className="text-slate-400">
+                                {editingCategory ? 'Update the category name.' : 'Create a new category for asset types.'}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleSave} className="space-y-4">
+                            <div>
+                                <Label htmlFor="name" className="text-slate-200">Category Name</Label>
+                                <Input
+                                    id="name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="e.g., IT Equipment"
+                                    required
+                                    className="mt-1.5 bg-[#0f172a] border-slate-700 text-slate-200"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4">
+                                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
+                                    Cancel
+                                </Button>
+                                <Button type="submit" className="bg-primary hover:bg-primary/90">
+                                    {editingCategory ? 'Update' : 'Create'}
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-slate-100">All Categories</CardTitle>
+                    <CardDescription className="text-slate-400">Manage categories used for asset types across the platform.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
+                        <div className="rounded-lg border border-slate-800 overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
+                                    <tr>
+                                        <th className="px-5 py-3">Category Name</th>
+                                        <th className="px-5 py-3 text-right">Created At</th>
+                                        <th className="px-5 py-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    {filteredCategories.map((category) => (
+                                        <tr key={category.id} className="hover:bg-slate-800/30 transition-colors">
+                                            <td className="px-5 py-4 font-medium text-slate-200">{category.name}</td>
+                                            <td className="px-5 py-4 text-slate-400 text-right whitespace-nowrap">
+                                                {new Date(category.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-5 py-4 text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700"
+                                                        onClick={() => {
+                                                            setEditingCategory(category);
+                                                            setFormData({ name: category.name });
+                                                            setDialogOpen(true);
+                                                        }}
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-slate-700"
+                                                        onClick={() => handleDelete(category.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {filteredCategories.length === 0 && (
+                                        <tr><td colSpan={3} className="px-5 py-8 text-center text-slate-500">No categories found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
 
 // --------------------------------------------------------------------------
 // ASSETS TAB
