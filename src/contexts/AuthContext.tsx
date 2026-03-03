@@ -139,10 +139,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string, isAdminLogin: boolean = false) => {
+    // 1. Authenticate with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error };
 
     if (data.user) {
+      // 2. Check if the user is banned
       const { data: profileData } = await supabase
         .from('profiles')
         .select('is_banned')
@@ -154,26 +156,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: new Error('Your account has been banned by the administrator. Please contact support.') };
       }
 
+      // 3. Check if the user is an admin
+      // We check if the user's ID exists in the 'admins' table
       const { data: adminData } = await supabase
         .from('admins')
         .select('id')
         .eq('id', data.user.id)
         .maybeSingle();
 
+      const isUserAdmin = !!adminData;
+
+      // 4. Validate login type
       if (isAdminLogin) {
-        if (!adminData) {
+        // Trying to login as Admin
+        if (!isUserAdmin) {
+          // User is NOT an admin
           await supabase.auth.signOut();
           return { error: new Error('Unauthorized: Admin access required.') };
         }
+        // Success: User is admin and logging in as admin
         setIsAdmin(true);
-        setUser(data.user);
-        setSession(data.session);
       } else {
-        if (adminData) {
+        // Trying to login as User
+        if (isUserAdmin) {
+          // User IS an admin, but trying to login as normal user
           await supabase.auth.signOut();
           return { error: new Error('You are an Admin. Please use the Admin Login tab.') };
         }
+        // Success: User is not admin
       }
+
+      setUser(data.user);
+      setSession(data.session);
     }
     return { error: null };
   };

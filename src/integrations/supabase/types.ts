@@ -47,6 +47,27 @@ export type Database = {
         }
         Relationships: []
       }
+      admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assets: {
         Row: {
           created_at: string
@@ -232,6 +253,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          is_banned: boolean | null
           updated_at: string
           user_id: string
         }
@@ -241,6 +263,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_banned?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -250,6 +273,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_banned?: boolean | null
           updated_at?: string
           user_id?: string
         }
