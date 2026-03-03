@@ -38,10 +38,19 @@ import { Issue, Asset, IssueStatus, IssuePriority } from '@/lib/supabase-types';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
+type IssueWithAsset = Issue & {
+  asset?: {
+    name: string;
+    asset_type?: {
+      name: string;
+    } | null;
+  } | null;
+};
+
 export default function Issues() {
   const { organization, user } = useAuth();
   const { toast } = useToast();
-  const [issues, setIssues] = useState<Issue[]>([]);
+  const [issues, setIssues] = useState<IssueWithAsset[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,12 +70,20 @@ export default function Issues() {
     try {
       const { data, error } = await supabase
         .from('issues')
-        .select('*')
+        .select(`
+          *,
+          asset:assets (
+            name,
+            asset_type:asset_types (
+              name
+            )
+          )
+        `)
         .eq('org_id', organization.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setIssues((data as Issue[]) || []);
+      setIssues((data as unknown as IssueWithAsset[]) || []);
     } catch (error) {
       console.error('Error fetching issues:', error);
     } finally {
@@ -183,7 +200,7 @@ export default function Issues() {
     {
       key: 'title',
       header: 'Issue',
-      render: (issue: Issue) => (
+      render: (issue: IssueWithAsset) => (
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
             <AlertCircle className="h-5 w-5 text-warning" />
@@ -195,6 +212,15 @@ export default function Issues() {
             </p>
           </div>
         </div>
+      ),
+    },
+    {
+      key: 'asset_type',
+      header: 'Asset Type',
+      render: (issue: IssueWithAsset) => (
+        <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded-md">
+          {issue.asset?.asset_type?.name || 'N/A'}
+        </span>
       ),
     },
     {

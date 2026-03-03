@@ -63,8 +63,10 @@ export default function Assets() {
     serial_number: '',
     status: 'active' as AssetStatus,
     issue_types: [] as string[],
+    asset_type_id: '',
   });
   const [currentIssueType, setCurrentIssueType] = useState('');
+  const [assetTypes, setAssetTypes] = useState<any[]>([]);
 
   const fetchAssets = useCallback(async () => {
     if (!organization) return;
@@ -72,7 +74,10 @@ export default function Assets() {
     try {
       const { data, error } = await supabase
         .from('assets')
-        .select('*')
+        .select(`
+          *,
+          asset_type:asset_types(name)
+        `)
         .eq('org_id', organization.id)
         .order('created_at', { ascending: false });
 
@@ -85,11 +90,22 @@ export default function Assets() {
     }
   }, [organization]);
 
+  const fetchAssetTypes = useCallback(async () => {
+    if (!organization) return;
+    const { data } = await supabase
+      .from('asset_types')
+      .select('id, name')
+      .eq('org_id', organization.id)
+      .order('name');
+    setAssetTypes(data || []);
+  }, [organization]);
+
   useEffect(() => {
     if (organization) {
       fetchAssets();
+      fetchAssetTypes();
     }
-  }, [organization, fetchAssets]);
+  }, [organization, fetchAssets, fetchAssetTypes]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +125,7 @@ export default function Assets() {
         name: formData.name,
         description: formData.description.trim() || null, // Optional: Save as null if empty
         type: formData.type, // We keep type for backward compatibility or generic classification
+        asset_type_id: formData.asset_type_id || null, // Link to asset_types table
         location: formData.location,
         serial_number: formData.serial_number,
         status: formData.status,
@@ -131,6 +148,7 @@ export default function Assets() {
         serial_number: '',
         status: 'active',
         issue_types: [],
+        asset_type_id: '',
       });
       fetchAssets();
     } catch (error: unknown) {
@@ -399,6 +417,31 @@ export default function Assets() {
                   className="mt-1.5"
                 />
               </div>
+              
+              <div>
+                <Label htmlFor="asset_type">Asset Type</Label>
+                <Select
+                  value={formData.asset_type_id}
+                  onValueChange={(val) => setFormData({ ...formData, asset_type_id: val })}
+                >
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue placeholder="Select Asset Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assetTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {assetTypes.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    No asset types found. Create one in the "Asset Types" tab.
+                  </p>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="issue_types">Issue Types (Tags)</Label>

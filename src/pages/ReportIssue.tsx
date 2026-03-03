@@ -34,7 +34,7 @@ export default function ReportIssue() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [asset, setAsset] = useState<(Pick<Asset, 'id' | 'name' | 'location' | 'org_id' | 'serial_number'> & { issue_types?: string[] }) | null>(null);
+  const [asset, setAsset] = useState<(Pick<Asset, 'id' | 'name' | 'location' | 'org_id' | 'serial_number'> & { issue_types?: string[]; asset_type?: { name: string; category: { name: string } } }) | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Form state
@@ -67,7 +67,13 @@ export default function ReportIssue() {
       try {
         const { data, error } = await supabase
           .from('assets')
-          .select('id, name, location, org_id, serial_number, issue_types')
+          .select(`
+            id, name, location, org_id, serial_number, issue_types,
+            asset_type:asset_types (
+              name,
+              category:categories (name)
+            )
+          `)
           .eq('id', assetId)
           .single();
 
@@ -87,7 +93,7 @@ export default function ReportIssue() {
             setError('Could not verify asset details. Please scan the code again or try refreshing.');
           }
         } else {
-          setAsset(data);
+          setAsset(data as any);
           setError(null);
         }
       } catch (err) {
@@ -234,11 +240,32 @@ Contact: ${reporterEmail || 'N/A'}
 
         <Card className="bg-white text-slate-900 shadow-md border border-gray-200">
             <CardHeader>
-                <CardTitle>{asset?.name || urlData.name}</CardTitle>
-                <CardDescription>
-                    {asset?.location || urlData.location}
-                    {asset?.serial_number && <span className="block text-xs font-mono mt-1">SN: {asset.serial_number}</span>}
-                </CardDescription>
+                <div className="flex items-start justify-between">
+                    <div>
+                        <CardTitle className="text-2xl font-bold text-slate-900">{asset?.name || urlData.name}</CardTitle>
+                        <CardDescription className="text-slate-500 mt-1 flex items-center gap-2">
+                            <span className="flex items-center gap-1">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                {asset?.location || urlData.location || 'Unknown Location'}
+                            </span>
+                            {asset?.serial_number && (
+                                <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                    SN: {asset.serial_number}
+                                </span>
+                            )}
+                        </CardDescription>
+                        {asset?.asset_type && (
+                            <div className="flex gap-2 mt-2">
+                                <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600 border-slate-200">
+                                    {asset.asset_type.name}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                                    {asset.asset_type.category?.name}
+                                </Badge>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
                 {error ? (

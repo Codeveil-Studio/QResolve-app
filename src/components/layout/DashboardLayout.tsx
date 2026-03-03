@@ -12,7 +12,8 @@ import {
   X,
   ChevronDown,
   Building2,
-  QrCode
+  QrCode,
+  Tags
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/asset-types', label: 'Asset Types', icon: Tags },
   { path: '/assets', label: 'Inventory', icon: Package },
   { path: '/issues', label: 'Issues', icon: AlertCircle },
   { path: '/reports', label: 'Reports', icon: BarChart3 },
