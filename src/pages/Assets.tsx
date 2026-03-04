@@ -287,14 +287,14 @@ export default function Assets() {
     {
       key: 'name',
       header: 'Asset',
-      render: (asset: Asset) => (
+      render: (asset: Asset & { asset_type?: { name: string } | null }) => (
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
             <QrCode className="h-5 w-5 text-primary" />
           </div>
           <div>
             <p className="font-medium">{asset.name}</p>
-            <p className="text-sm text-muted-foreground">{asset.type || 'No type'}</p>
+            <p className="text-sm text-muted-foreground">{asset.asset_type?.name || asset.type || 'No type'}</p>
           </div>
         </div>
       ),
@@ -588,7 +588,9 @@ export default function Assets() {
               <div className="space-y-4">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Type</p>
-                  <p className="text-sm font-medium">{selectedAsset?.type || 'Not specified'}</p>
+                  <p className="text-sm font-medium">
+                    {(selectedAsset as any)?.asset_type?.name || selectedAsset?.type || 'Not specified'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Location</p>
