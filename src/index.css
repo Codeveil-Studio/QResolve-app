@@ -138,6 +138,16 @@
     @apply border-border;
   }
 
+  ::selection {
+    background: hsl(173 80% 40% / 0.3);
+    color: inherit;
+  }
+
+  ::-moz-selection {
+    background: hsl(173 80% 40% / 0.3);
+    color: inherit;
+  }
+
   html {
     font-family: 'Inter', system-ui, sans-serif;
   }
@@ -192,7 +202,7 @@
 .qresolve-theme h2,
 .qresolve-theme h3,
 .qresolve-theme h4 {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Outfit', system-ui, sans-serif;
 }
 
 .qresolve-auth {
@@ -237,7 +247,7 @@
 .qresolve-landing h2,
 .qresolve-landing h3,
 .qresolve-landing h4 {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Outfit', system-ui, sans-serif;
   color: var(--text-bright);
   font-weight: 400;
 }
@@ -289,7 +299,7 @@
 }
 
 .qresolve-landing .nav-logo span {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Outfit', system-ui, sans-serif;
   font-size: 1.3rem;
   color: var(--text-bright);
 }
@@ -522,7 +532,7 @@
 }
 
 .qresolve-landing .hero-stat .num {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Outfit', system-ui, sans-serif;
   font-size: 2rem;
   color: var(--teal);
 }
@@ -536,10 +546,12 @@
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.4;
   }
@@ -550,6 +562,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -684,7 +697,7 @@
 }
 
 .qresolve-landing .how-num {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Outfit', system-ui, sans-serif;
   font-size: 4rem;
   color: var(--teal);
   opacity: 0.15;
@@ -744,7 +757,7 @@
   margin-bottom: 1.2rem;
 }
 
-.qresolve-landing .verified-content > p {
+.qresolve-landing .verified-content>p {
   color: var(--text-dim);
   line-height: 1.7;
   font-weight: 300;
@@ -863,7 +876,7 @@
 }
 
 .qresolve-landing .v-metric .val {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Outfit', system-ui, sans-serif;
   font-size: 1.4rem;
   color: var(--text-bright);
 }
@@ -927,10 +940,12 @@
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-6px);
   }
@@ -953,7 +968,7 @@
   margin-bottom: 1rem;
 }
 
-.qresolve-landing .urgent-inner > p {
+.qresolve-landing .urgent-inner>p {
   color: var(--text-dim);
   max-width: 600px;
   margin: 0 auto 3rem;
@@ -1100,7 +1115,7 @@
 }
 
 .qresolve-landing .relay-brand span {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Outfit', system-ui, sans-serif;
   font-size: 1.6rem;
   color: var(--text-bright);
 }
@@ -1316,7 +1331,7 @@
 }
 
 .qresolve-landing .rp-price {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Outfit', system-ui, sans-serif;
   font-size: 2.2rem;
   color: var(--text-bright);
   margin-bottom: 0.2rem;
@@ -1669,26 +1684,59 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(-10px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes pulseSubtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }

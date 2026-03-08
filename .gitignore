@@ -24,3 +24,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+/files/
+/.gemini/
+/brain/
+node_modules/
