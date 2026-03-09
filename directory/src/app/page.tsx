@@ -140,6 +140,7 @@ export default function HomePage() {
           <li><a href="#relay">For Providers</a></li>
           <li><a href="#about">Our Story</a></li>
           <li><a href="#contact">Contact</a></li>
+          <li><a href="https://app.qresolve.com/login">Login</a></li>
           <li><a href="#list-your-business" className="nav-cta">List Your Business</a></li>
         </ul>
         <button

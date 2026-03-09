@@ -30,7 +30,7 @@ export function Navbar() {
                 <li><Link href="/#categories">Categories</Link></li>
                 <li><Link href="/#verified">Why Verified</Link></li>
                 <li><Link href="/#relay">For Providers</Link></li>
-                <li><Link href="http://localhost:8081/login">Login</Link></li>
+                <li><Link href="https://app.qresolve.com/login">Login</Link></li>
                 <li><Link href="/#list-your-business" className="nav-cta">List Your Business</Link></li>
             </ul>
         </nav>
