@@ -141,7 +141,7 @@ export default function HomePage() {
           <li><a href="#about">Our Story</a></li>
           <li><a href="#contact">Contact</a></li>
           <li><a href="https://app.qresolve.com/login">Login</a></li>
-          <li><a href="#list-your-business" className="nav-cta">List Your Business</a></li>
+          <li><a href="https://app.qresolve.com/signup" className="nav-cta">List Your Business</a></li>
         </ul>
         <button
           className={`nav-hamburger ${menuOpen ? "open" : ""}`}
@@ -567,7 +567,7 @@ export default function HomePage() {
             <div>
               <div className="footer-col-title">For Providers</div>
               <ul className="footer-links">
-                <li><a href="#list-your-business">List Your Business</a></li>
+                <li><a href="https://app.qresolve.com/signup">List Your Business</a></li>
                 <li><a href="#relay">Relay Features</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="#early-access">Founding Provider Program</a></li>

@@ -16,8 +16,10 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: "QResolve — India's Verified Maintenance Provider Directory",
-  description:
-    "Find verified maintenance service providers ranked by real performance data. QR-powered fault reporting for vending machines, EV chargers, lifts, HVAC and more.",
+  description: "Find verified maintenance service providers ranked by real performance data. QR-powered fault reporting for vending machines, EV chargers, lifts, HVAC and more.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
