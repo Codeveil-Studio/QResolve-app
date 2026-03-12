@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit, Download, X as XIcon } from 'lucide-react';
+import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit, Download, Printer, X as XIcon } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import html2pdf from 'html2pdf.js';
 import { createRoot } from 'react-dom/client';
@@ -42,10 +42,19 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
+type AssetTypeOption = {
+  id: string;
+  name: string;
+};
+
+type AssetWithType = Asset & {
+  asset_type?: { name: string } | null;
+};
+
 export default function Assets() {
   const { organization, user } = useAuth();
   const { toast } = useToast();
-  const [assets, setAssets] = useState<Asset[]>([]);
+  const [assets, setAssets] = useState<AssetWithType[]>([]);
   const [loading, setLoading] = useState(true);
   const [issuesLoading, setIssuesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,7 +62,7 @@ export default function Assets() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [assetDialogOpen, setAssetDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<AssetWithType | null>(null);
   const [assetIssues, setAssetIssues] = useState<Issue[]>([]);
   const [formData, setFormData] = useState({
     name: '',
@@ -66,7 +75,7 @@ export default function Assets() {
     asset_type_id: '',
   });
   const [currentIssueType, setCurrentIssueType] = useState('');
-  const [assetTypes, setAssetTypes] = useState<any[]>([]);
+  const [assetTypes, setAssetTypes] = useState<AssetTypeOption[]>([]);
 
   const fetchAssets = useCallback(async () => {
     if (!organization) return;
@@ -82,7 +91,7 @@ export default function Assets() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAssets((data as Asset[]) || []);
+      setAssets((data as unknown as AssetWithType[]) || []);
     } catch (error) {
       console.error('Error fetching assets:', error);
     } finally {
@@ -180,7 +189,7 @@ export default function Assets() {
   };
 
 
-  const handleDelete = async (asset: Asset) => {
+  const handleDelete = async (asset: AssetWithType) => {
     if (!confirm('Are you sure you want to delete this asset?')) return;
 
     try {
@@ -197,13 +206,13 @@ export default function Assets() {
     }
   };
 
-  const showQRCode = (asset: Asset) => {
+  const showQRCode = (asset: AssetWithType) => {
     setSelectedAsset(asset);
     setQrDialogOpen(true);
   };
 
   const openAssetDetails = useCallback(
-    async (asset: Asset) => {
+    async (asset: AssetWithType) => {
       setSelectedAsset(asset);
       setAssetDialogOpen(true);
       if (!organization) return;
@@ -232,7 +241,7 @@ export default function Assets() {
     [organization, toast]
   );
 
-  const downloadQR = async (asset: Asset) => {
+  const downloadQR = async (asset: AssetWithType) => {
     const qrUrl = generateReportUrl(asset);
     
     // Create a temporary container
@@ -274,6 +283,135 @@ export default function Assets() {
     }
   };
 
+  const injectPrintPlaceholder = (printWindow: Window) => {
+    printWindow.document.open();
+    printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Generating QR Code...</title>
+      <style>
+        html, body { margin: 0; padding: 0; height: 100%; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+        .wrap { height: 100%; display: grid; place-items: center; background: #0b1220; color: #e2e8f0; }
+        .card { text-align: center; padding: 24px 20px; border: 1px solid rgba(148,163,184,0.2); border-radius: 12px; background: rgba(15,23,42,0.8); }
+        .spinner { width: 28px; height: 28px; border-radius: 9999px; border: 3px solid rgba(226,232,240,0.25); border-top-color: #06d6a0; margin: 0 auto 12px; animation: spin 0.9s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      </style>
+    </head><body><div class="wrap"><div class="card"><div class="spinner"></div><div>Generating QR Code…</div></div></div></body></html>`);
+    printWindow.document.close();
+  };
+
+  const getPrintDocumentHTML = (title: string) => `<!doctype html><html><head><meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.svg" />
+    <style>
+      @page { size: A5 portrait; margin: 0; }
+      * { box-sizing: border-box; }
+      html, body { width: 148mm; height: 210mm; margin: 0; padding: 0; overflow: hidden; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      #root { width: 148mm; height: 210mm; overflow: hidden; }
+    </style>
+  </head><body><div id="root"></div></body></html>`;
+
+  const printQRIntoWindow = async (asset: AssetWithType, printWindow: Window) => {
+    try {
+      const qrUrl = generateReportUrl(asset);
+
+      printWindow.document.open();
+      printWindow.document.write(getPrintDocumentHTML(`${asset.name} QR`));
+      printWindow.document.close();
+
+      const mountNode = printWindow.document.getElementById('root');
+      if (!mountNode) throw new Error('Failed to mount print template');
+
+      const root = createRoot(mountNode);
+      root.render(<AssetQRPDFTemplate asset={asset} qrUrl={qrUrl} />);
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const cleanup = () => {
+        root.unmount();
+        if (!printWindow.closed) {
+          printWindow.close();
+        }
+      };
+
+      printWindow.onafterprint = cleanup;
+      printWindow.focus();
+      printWindow.print();
+
+      setTimeout(cleanup, 2000);
+    } catch (error) {
+      if (!printWindow.closed) {
+        printWindow.close();
+      }
+      toast({
+        variant: 'destructive',
+        title: 'Failed to print QR code',
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  };
+
+  const printQRInIframe = async (asset: AssetWithType) => {
+    const qrUrl = generateReportUrl(asset);
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '1px';
+    iframe.style.height = '1px';
+    iframe.style.opacity = '0';
+    iframe.style.border = '0';
+    iframe.style.pointerEvents = 'none';
+    document.body.appendChild(iframe);
+
+    const iframeWindow = iframe.contentWindow;
+    const iframeDocument = iframe.contentDocument;
+
+    if (!iframeWindow || !iframeDocument) {
+      iframe.remove();
+      toast({
+        variant: 'destructive',
+        title: 'Failed to print QR code',
+        description: 'Print frame could not be initialized.',
+      });
+      return;
+    }
+
+    try {
+      iframeDocument.open();
+      iframeDocument.write(getPrintDocumentHTML(`${asset.name} QR`));
+      iframeDocument.close();
+
+      const mountNode = iframeDocument.getElementById('root');
+      if (!mountNode) throw new Error('Failed to mount print template');
+
+      const root = createRoot(mountNode);
+      root.render(<AssetQRPDFTemplate asset={asset} qrUrl={qrUrl} />);
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const cleanup = () => {
+        root.unmount();
+        iframe.remove();
+      };
+
+      iframeWindow.onafterprint = cleanup;
+      iframeWindow.focus();
+      iframeWindow.print();
+
+      setTimeout(cleanup, 2000);
+    } catch (error) {
+      iframe.remove();
+      toast({
+        variant: 'destructive',
+        title: 'Failed to print QR code',
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  };
+
   const filteredAssets = assets.filter((asset) => {
     const matchesSearch =
       asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -287,7 +425,7 @@ export default function Assets() {
     {
       key: 'name',
       header: 'Asset',
-      render: (asset: Asset & { asset_type?: { name: string } | null }) => (
+      render: (asset: AssetWithType) => (
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
             <QrCode className="h-5 w-5 text-primary" />
@@ -302,7 +440,7 @@ export default function Assets() {
     {
       key: 'location',
       header: 'Location',
-      render: (asset: Asset) => (
+      render: (asset: AssetWithType) => (
         <div className="flex items-center gap-2 text-muted-foreground">
           <MapPin className="h-4 w-4" />
           {asset.location || 'Not specified'}
@@ -312,19 +450,19 @@ export default function Assets() {
     {
       key: 'serial_number',
       header: 'Serial No.',
-      render: (asset: Asset) => (
+      render: (asset: AssetWithType) => (
         <span className="font-mono text-sm">{asset.serial_number || '—'}</span>
       ),
     },
     {
       key: 'status',
       header: 'Status',
-      render: (asset: Asset) => <StatusBadge status={asset.status} type="asset" />,
+      render: (asset: AssetWithType) => <StatusBadge status={asset.status} type="asset" />,
     },
     {
       key: 'created_at',
       header: 'Added',
-      render: (asset: Asset) => (
+      render: (asset: AssetWithType) => (
         <span className="text-muted-foreground">
           {format(new Date(asset.created_at), 'MMM d, yyyy')}
         </span>
@@ -334,7 +472,7 @@ export default function Assets() {
       key: 'actions',
       header: '',
       className: 'w-12',
-      render: (asset: Asset) => (
+      render: (asset: AssetWithType) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
               <Button
@@ -364,6 +502,26 @@ export default function Assets() {
             >
               <Download className="mr-2 h-4 w-4" />
               Download PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(event) => {
+                event.stopPropagation();
+                const printWindow = window.open('about:blank', '_blank');
+                if (printWindow) {
+                  injectPrintPlaceholder(printWindow);
+                  void printQRIntoWindow(asset, printWindow);
+                  return;
+                }
+
+                toast({
+                  title: 'Pop-up blocked',
+                  description: 'Using in-page print instead.',
+                });
+                void printQRInIframe(asset);
+              }}
+            >
+              <Printer className="mr-2 h-4 w-4" />
+              Print QR Code
             </DropdownMenuItem>
             <DropdownMenuItem onClick={(event) => event.stopPropagation()}>
               <Edit className="mr-2 h-4 w-4" />
@@ -589,7 +747,7 @@ export default function Assets() {
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Type</p>
                   <p className="text-sm font-medium">
-                    {(selectedAsset as any)?.asset_type?.name || selectedAsset?.type || 'Not specified'}
+                    {selectedAsset?.asset_type?.name || selectedAsset?.type || 'Not specified'}
                   </p>
                 </div>
                 <div>
