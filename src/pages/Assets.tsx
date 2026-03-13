@@ -14,6 +14,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { generateReportUrl } from '@/lib/assetUrl';
 import { AssetQRPDFTemplate } from '@/components/assets/AssetQRPDFTemplate';
+import { AssetQRPDFTemplateMinimal } from '@/components/assets/AssetQRPDFTemplateMinimal';
+import { AssetQRPDFTemplateBold } from '@/components/assets/AssetQRPDFTemplateBold';
 import {
   Dialog,
   DialogContent,
@@ -51,6 +53,9 @@ type AssetWithType = Asset & {
   asset_type?: { name: string } | null;
 };
 
+type QRTemplateId = 'classic' | 'minimal' | 'bold';
+type QRTemplateAction = 'download' | 'print';
+
 export default function Assets() {
   const { organization, user } = useAuth();
   const { toast } = useToast();
@@ -76,6 +81,9 @@ export default function Assets() {
   });
   const [currentIssueType, setCurrentIssueType] = useState('');
   const [assetTypes, setAssetTypes] = useState<AssetTypeOption[]>([]);
+  const [qrTemplateDialogOpen, setQrTemplateDialogOpen] = useState(false);
+  const [qrTemplateAction, setQrTemplateAction] = useState<QRTemplateAction | null>(null);
+  const [qrTemplateAsset, setQrTemplateAsset] = useState<AssetWithType | null>(null);
 
   const fetchAssets = useCallback(async () => {
     if (!organization) return;
@@ -241,7 +249,59 @@ export default function Assets() {
     [organization, toast]
   );
 
-  const downloadQR = async (asset: AssetWithType) => {
+  const getQRTemplateElement = (templateId: QRTemplateId, asset: AssetWithType, qrUrl: string) => {
+    switch (templateId) {
+      case 'minimal':
+        return <AssetQRPDFTemplateMinimal asset={asset} qrUrl={qrUrl} />;
+      case 'bold':
+        return <AssetQRPDFTemplateBold asset={asset} qrUrl={qrUrl} />;
+      case 'classic':
+      default:
+        return <AssetQRPDFTemplate asset={asset} qrUrl={qrUrl} />;
+    }
+  };
+
+  const openQRTemplatePicker = (action: QRTemplateAction, asset: AssetWithType) => {
+    setQrTemplateAction(action);
+    setQrTemplateAsset(asset);
+    setQrTemplateDialogOpen(true);
+  };
+
+  const qrTemplates: Array<{ id: QRTemplateId; title: string; subtitle: string }> = [
+    { id: 'classic', title: 'Classic', subtitle: 'Yellow branded (current)' },
+    { id: 'minimal', title: 'Minimal', subtitle: 'Clean white layout' },
+    { id: 'bold', title: 'Bold', subtitle: 'Dark + neon accent' },
+  ];
+
+  const handleQRTemplateSelect = (templateId: QRTemplateId) => {
+    const asset = qrTemplateAsset;
+    const action = qrTemplateAction;
+    setQrTemplateDialogOpen(false);
+    setQrTemplateAsset(null);
+    setQrTemplateAction(null);
+
+    if (!asset || !action) return;
+
+    if (action === 'download') {
+      void downloadQR(asset, templateId);
+      return;
+    }
+
+    const printWindow = window.open('about:blank', '_blank');
+    if (printWindow) {
+      injectPrintPlaceholder(printWindow);
+      void printQRIntoWindow(asset, printWindow, templateId);
+      return;
+    }
+
+    toast({
+      title: 'Pop-up blocked',
+      description: 'Using in-page print instead.',
+    });
+    void printQRInIframe(asset, templateId);
+  };
+
+  const downloadQR = async (asset: AssetWithType, templateId: QRTemplateId) => {
     const qrUrl = generateReportUrl(asset);
     
     // Create a temporary container
@@ -255,7 +315,7 @@ export default function Assets() {
     document.body.appendChild(container);
     
     const root = createRoot(container);
-    root.render(<AssetQRPDFTemplate asset={asset} qrUrl={qrUrl} />);
+    root.render(getQRTemplateElement(templateId, asset, qrUrl));
     
     // Wait for render
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -264,7 +324,7 @@ export default function Assets() {
     
     const opt = {
       margin: 0,
-      filename: `${asset.name.replace(/\s+/g, '_')}-QR.pdf`,
+      filename: `${asset.name.replace(/\s+/g, '_')}-QR-${templateId}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, windowWidth: 560, windowHeight: 794 },
       jsPDF: { unit: 'mm' as const, format: 'a5' as const, orientation: 'portrait' as const },
@@ -313,7 +373,7 @@ export default function Assets() {
     </style>
   </head><body><div id="root"></div></body></html>`;
 
-  const printQRIntoWindow = async (asset: AssetWithType, printWindow: Window) => {
+  const printQRIntoWindow = async (asset: AssetWithType, printWindow: Window, templateId: QRTemplateId) => {
     try {
       const qrUrl = generateReportUrl(asset);
 
@@ -325,7 +385,7 @@ export default function Assets() {
       if (!mountNode) throw new Error('Failed to mount print template');
 
       const root = createRoot(mountNode);
-      root.render(<AssetQRPDFTemplate asset={asset} qrUrl={qrUrl} />);
+      root.render(getQRTemplateElement(templateId, asset, qrUrl));
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -353,7 +413,7 @@ export default function Assets() {
     }
   };
 
-  const printQRInIframe = async (asset: AssetWithType) => {
+  const printQRInIframe = async (asset: AssetWithType, templateId: QRTemplateId) => {
     const qrUrl = generateReportUrl(asset);
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
@@ -388,7 +448,7 @@ export default function Assets() {
       if (!mountNode) throw new Error('Failed to mount print template');
 
       const root = createRoot(mountNode);
-      root.render(<AssetQRPDFTemplate asset={asset} qrUrl={qrUrl} />);
+      root.render(getQRTemplateElement(templateId, asset, qrUrl));
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -497,7 +557,7 @@ export default function Assets() {
             <DropdownMenuItem
               onClick={(event) => {
                 event.stopPropagation();
-                downloadQR(asset);
+                openQRTemplatePicker('download', asset);
               }}
             >
               <Download className="mr-2 h-4 w-4" />
@@ -506,18 +566,7 @@ export default function Assets() {
             <DropdownMenuItem
               onClick={(event) => {
                 event.stopPropagation();
-                const printWindow = window.open('about:blank', '_blank');
-                if (printWindow) {
-                  injectPrintPlaceholder(printWindow);
-                  void printQRIntoWindow(asset, printWindow);
-                  return;
-                }
-
-                toast({
-                  title: 'Pop-up blocked',
-                  description: 'Using in-page print instead.',
-                });
-                void printQRInIframe(asset);
+                openQRTemplatePicker('print', asset);
               }}
             >
               <Printer className="mr-2 h-4 w-4" />
@@ -814,6 +863,52 @@ export default function Assets() {
                 </div>
               )}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={qrTemplateDialogOpen} onOpenChange={setQrTemplateDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Choose QR Template</DialogTitle>
+            <DialogDescription>
+              {qrTemplateAction === 'print' ? 'Select a template to print.' : 'Select a template to download as PDF.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 md:grid-cols-3">
+            {qrTemplates.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleQRTemplateSelect(t.id)}
+                className="group text-left rounded-xl border border-border/50 bg-card hover:border-border hover:shadow-sm transition-all overflow-hidden"
+              >
+                <div className="px-4 pt-4">
+                  <div className="font-semibold">{t.title}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{t.subtitle}</div>
+                </div>
+                <div className="p-4 pt-3">
+                  <div className="relative h-56 overflow-hidden rounded-lg border border-border/50 bg-muted/10">
+                    {qrTemplateAsset ? (
+                      <div
+                        style={{
+                          width: '148mm',
+                          height: '210mm',
+                          transform: 'scale(0.23)',
+                          transformOrigin: 'top left',
+                        }}
+                      >
+                        {getQRTemplateElement(t.id, qrTemplateAsset, generateReportUrl(qrTemplateAsset))}
+                      </div>
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
+                        Loading…
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </button>
+            ))}
           </div>
         </DialogContent>
       </Dialog>
