@@ -83,7 +83,6 @@ export default function AdminDashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const { user, profile, signOut } = useAuth();
-    console.log('AdminDashboard: Current User:', user?.id, 'Email:', user?.email);
     const navigate = useNavigate();
 
     const handleSignOut = async () => {
@@ -111,7 +110,7 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="flex h-screen bg-[#020817] text-slate-50">
+        <div className="flex h-screen bg-background text-foreground qresolve-theme font-sans">
             {/* Mobile overlay */}
             <AnimatePresence>
                 {sidebarOpen && (
@@ -128,20 +127,20 @@ export default function AdminDashboard() {
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-50 w-64 transform bg-[#050b18] border-r border-slate-800 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 outline-none",
+                    "fixed inset-y-0 left-0 z-50 w-64 transform bg-card border-r border-border transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 outline-none",
                     sidebarOpen ? "translate-x-0" : "-translate-x-full"
                 )}
             >
                 <div className="flex h-full flex-col">
                     {/* Logo */}
-                    <div className="flex h-16 items-center gap-3 border-b border-slate-800 px-6">
+                    <div className="flex h-16 items-center gap-3 border-b border-border px-6">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-md">
                             <ShieldAlert className="h-5 w-5 text-primary-foreground" />
                         </div>
-                        <span className="text-lg font-bold text-white tracking-tight">Admin Portal</span>
+                        <span className="text-lg font-bold text-foreground font-serif tracking-tight">Admin Portal</span>
                         <button
                             onClick={() => setSidebarOpen(false)}
-                            className="ml-auto p-1 hover:bg-slate-800 rounded-md lg:hidden text-slate-400"
+                            className="ml-auto p-1 hover:bg-muted rounded-md lg:hidden text-muted-foreground"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -162,10 +161,10 @@ export default function AdminDashboard() {
                                     }}
                                     className={cn(
                                         "w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative overflow-hidden group",
-                                        isActive ? "text-primary-foreground" : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/50"
+                                        isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
-                                    <Icon className={cn("h-5 w-5 relative z-10 transition-colors", isActive ? "text-primary-foreground" : "text-slate-400 group-hover:text-slate-100")} />
+                                    <Icon className={cn("h-5 w-5 relative z-10 transition-colors", isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground")} />
                                     <span className="font-semibold relative z-10 text-sm tracking-wide">{item.label}</span>
                                     {isActive && (
                                         <motion.div
@@ -180,29 +179,29 @@ export default function AdminDashboard() {
                     </nav>
 
                     {/* User section */}
-                    <div className="border-t border-slate-800 p-4">
+                    <div className="border-t border-border p-4">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <button className="flex w-full items-center gap-3 px-2 py-2 hover:bg-slate-800 transition-colors rounded-lg outline-none">
-                                    <Avatar className="h-9 w-9 border border-slate-700">
+                                <button className="flex w-full items-center gap-3 px-2 py-2 hover:bg-muted transition-colors rounded-lg outline-none">
+                                    <Avatar className="h-9 w-9 border border-border">
                                         <AvatarImage src={profile?.avatar_url || undefined} />
                                         <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                                             {getInitials(profile?.full_name)}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 text-left overflow-hidden">
-                                        <p className="text-sm font-semibold text-slate-200 truncate">
+                                        <p className="text-sm font-semibold text-foreground truncate">
                                             System Admin
                                         </p>
-                                        <p className="text-xs text-slate-500 truncate">
+                                        <p className="text-xs text-muted-foreground truncate">
                                             {user?.email}
                                         </p>
                                     </div>
-                                    <ChevronDown className="h-4 w-4 text-slate-500" />
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                                 </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56 bg-[#0f172a] border-slate-800 text-slate-200">
-                                <DropdownMenuItem onClick={handleSignOut} className="text-red-400 hover:text-red-300 hover:bg-slate-800 focus:bg-slate-800 focus:text-red-300 cursor-pointer font-medium">
+                            <DropdownMenuContent align="end" className="w-56 bg-card border-border text-foreground">
+                                <DropdownMenuItem onClick={handleSignOut} className="text-red-400 hover:text-red-300 hover:bg-muted focus:bg-muted focus:text-red-300 cursor-pointer font-medium">
                                     <LogOut className="mr-2 h-4 w-4" />
                                     Sign out
                                 </DropdownMenuItem>
@@ -213,23 +212,23 @@ export default function AdminDashboard() {
             </aside>
 
             {/* Main content */}
-            <div className="flex flex-1 flex-col overflow-hidden bg-[#020817]">
+            <div className="flex flex-1 flex-col overflow-hidden bg-background">
                 {/* Mobile header */}
-                <header className="flex h-16 items-center justify-between border-b border-slate-800 bg-[#020817] px-4 lg:px-8 shrink-0">
+                <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 lg:px-8 shrink-0">
                     <div className="flex items-center">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setSidebarOpen(true)}
-                            className="lg:hidden mr-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+                            className="lg:hidden mr-3 text-muted-foreground hover:text-foreground hover:bg-muted"
                         >
                             <Menu className="h-5 w-5" />
                         </Button>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-100 hidden sm:block capitalize">
+                        <h1 className="text-xl font-bold font-serif tracking-tight text-foreground hidden sm:block capitalize">
                             {activeTab} Management
                         </h1>
                     </div>
-                    <div className="flex items-center gap-2.5 text-xs font-semibold tracking-wide uppercase text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-3 py-1.5 rounded-full">
+                    <div className="flex items-center gap-2.5 text-xs font-semibold tracking-wide uppercase text-accent bg-accent/10 border border-accent/20 px-3 py-1.5 rounded-full">
                         <Activity className="h-3.5 w-3.5" />
                         System Live
                     </div>
@@ -252,13 +251,13 @@ export default function AdminDashboard() {
 function SearchBar({ value, onChange, placeholder }: { value: string, onChange: (val: string) => void, placeholder: string }) {
     return (
         <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
                 type="text"
                 placeholder={placeholder}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="pl-9 bg-[#0f172a] border-slate-800 text-slate-200 placeholder:text-slate-500 focus-visible:ring-primary h-11"
+                className="pl-9 bg-card border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary h-11 shadow-sm"
             />
         </div>
     );
@@ -303,10 +302,10 @@ function AdminOverviewTab() {
     }, []);
 
     const statCards = [
-        { title: 'Total Users', value: stats.users, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-        { title: 'Organizations', value: stats.organizations, icon: Building2, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
-        { title: 'Total Assets', value: stats.assets, icon: Package, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-        { title: 'Reported Issues', value: stats.issues, icon: AlertCircle, color: 'text-rose-400', bg: 'bg-rose-400/10' },
+        { title: 'Total Users', value: stats.users, icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
+        { title: 'Organizations', value: stats.organizations, icon: Building2, color: 'text-accent', bg: 'bg-accent/10' },
+        { title: 'Total Assets', value: stats.assets, icon: Package, color: 'text-accent', bg: 'bg-accent/10' },
+        { title: 'Reported Issues', value: stats.issues, icon: AlertCircle, color: 'text-destructive', bg: 'bg-destructive/10' },
     ];
 
     return (
@@ -319,18 +318,18 @@ function AdminOverviewTab() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1, duration: 0.4 }}
                     >
-                        <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+                        <Card className="border-border bg-card shadow-md">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <CardTitle className="text-sm font-medium text-slate-400">{stat.title}</CardTitle>
+                                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
                                 <div className={`p-2 rounded-lg ${stat.bg}`}>
                                     <stat.icon className={`h-5 w-5 ${stat.color}`} />
                                 </div>
                             </CardHeader>
                             <CardContent>
                                 {loading ? (
-                                    <div className="h-8 w-16 bg-slate-800 animate-pulse rounded" />
+                                    <div className="h-8 w-16 bg-muted animate-pulse rounded" />
                                 ) : (
-                                    <div className="text-3xl font-bold text-slate-100">{stat.value.toLocaleString()}</div>
+                                    <div className="text-3xl font-bold text-foreground">{stat.value.toLocaleString()}</div>
                                 )}
                             </CardContent>
                         </Card>
@@ -338,27 +337,27 @@ function AdminOverviewTab() {
                 ))}
             </div>
 
-            <Card className="border-slate-800 bg-[#0f172a] shadow-md mt-8 col-span-4">
+            <Card className="border-border bg-card shadow-md mt-8 col-span-4">
                 <CardHeader>
-                    <CardTitle className="text-slate-100">System Status Log</CardTitle>
-                    <CardDescription className="text-slate-400">Recent automated system events and alerts</CardDescription>
+                    <CardTitle className="text-foreground font-serif">System Status Log</CardTitle>
+                    <CardDescription className="text-muted-foreground">Recent automated system events and alerts</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        <div className="flex items-center gap-4 py-3 border-b border-slate-800 text-sm">
-                            <div className="bg-emerald-400/10 text-emerald-400 p-2 rounded-full"><Activity className="w-4 h-4" /></div>
-                            <div className="flex-1 font-medium text-slate-300">Database automated backup completed</div>
-                            <div className="text-slate-500 font-medium">10 mins ago</div>
+                        <div className="flex items-center gap-4 py-3 border-b border-border text-sm">
+                            <div className="bg-accent/10 text-accent p-2 rounded-full"><Activity className="w-4 h-4" /></div>
+                            <div className="flex-1 font-medium text-foreground">Database automated backup completed</div>
+                            <div className="text-muted-foreground font-medium">10 mins ago</div>
                         </div>
-                        <div className="flex items-center gap-4 py-3 border-b border-slate-800 text-sm">
-                            <div className="bg-blue-400/10 text-blue-400 p-2 rounded-full"><Users className="w-4 h-4" /></div>
-                            <div className="flex-1 font-medium text-slate-300">New organization signed up</div>
-                            <div className="text-slate-500 font-medium">1 hr ago</div>
+                        <div className="flex items-center gap-4 py-3 border-b border-border text-sm">
+                            <div className="bg-primary/10 text-primary p-2 rounded-full"><Users className="w-4 h-4" /></div>
+                            <div className="flex-1 font-medium text-foreground">New organization signed up</div>
+                            <div className="text-muted-foreground font-medium">1 hr ago</div>
                         </div>
                         <div className="flex items-center gap-4 py-3 text-sm">
-                            <div className="bg-emerald-400/10 text-emerald-400 p-2 rounded-full"><Activity className="w-4 h-4" /></div>
-                            <div className="flex-1 font-medium text-slate-300">System performance OK</div>
-                            <div className="text-slate-500 font-medium">2 hrs ago</div>
+                            <div className="bg-accent/10 text-accent p-2 rounded-full"><Activity className="w-4 h-4" /></div>
+                            <div className="flex-1 font-medium text-foreground">System performance OK</div>
+                            <div className="text-muted-foreground font-medium">2 hrs ago</div>
                         </div>
                     </div>
                 </CardContent>
@@ -432,16 +431,16 @@ function AdminUsersTab() {
         <div className="space-y-6">
             <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search users by name or email..." />
 
-            <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+            <Card className="border-border bg-card shadow-md">
                 <CardHeader>
-                    <CardTitle className="text-slate-100">Platform Users</CardTitle>
-                    <CardDescription className="text-slate-400">A complete list of registered users across all organizations.</CardDescription>
+                    <CardTitle className="text-foreground font-serif">Platform Users</CardTitle>
+                    <CardDescription className="text-muted-foreground">A complete list of registered users across all organizations.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
-                        <div className="rounded-lg border border-slate-800 overflow-x-auto">
+                    {loading ? <div className="text-sm text-muted-foreground">Loading data...</div> : (
+                        <div className="rounded-lg border border-border overflow-x-auto">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
+                                <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border">
                                     <tr>
                                         <th className="px-5 py-3">User</th>
                                         <th className="px-5 py-3">Email</th>
@@ -450,30 +449,30 @@ function AdminUsersTab() {
                                         <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800">
+                                <tbody className="divide-y divide-border">
                                     {filteredItems.map(item => (
-                                        <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
-                                            <td className="px-5 py-4 font-medium text-slate-200">{item.full_name || 'No Name'}</td>
-                                            <td className="px-5 py-4 text-slate-400">{item.email}</td>
+                                        <tr key={item.id} className="hover:bg-muted/30 transition-colors">
+                                            <td className="px-5 py-4 font-medium text-foreground">{item.full_name || 'No Name'}</td>
+                                            <td className="px-5 py-4 text-muted-foreground">{item.email}</td>
                                             <td className="px-5 py-4">
                                                 {item.is_banned ? (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-400 border border-red-900/50">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20">
                                                         Banned
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-900/30 text-emerald-400 border border-emerald-900/50">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent border border-accent/20">
                                                         Active
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="px-5 py-4 text-slate-400 text-right">{new Date(item.created_at).toLocaleDateString()}</td>
+                                            <td className="px-5 py-4 text-muted-foreground text-right">{new Date(item.created_at).toLocaleDateString()}</td>
                                             <td className="px-5 py-4 text-right">
                                                 <div className="flex justify-end gap-2">
                                                     {item.is_banned ? (
                                                         <Button 
                                                             variant="outline" 
                                                             size="sm" 
-                                                            className="h-8 border-emerald-800 text-emerald-400 hover:bg-emerald-900/20 hover:text-emerald-300"
+                                                            className="h-8 border-accent/50 text-accent hover:bg-accent/10 hover:text-accent"
                                                             onClick={() => setConfirmDialog({ open: true, type: 'unban', user: item })}
                                                             disabled={actionLoading === item.id}
                                                         >
@@ -483,7 +482,7 @@ function AdminUsersTab() {
                                                         <Button 
                                                             variant="outline" 
                                                             size="sm" 
-                                                            className="h-8 border-amber-800 text-amber-400 hover:bg-amber-900/20 hover:text-amber-300"
+                                                            className="h-8 border-warning/50 text-warning hover:bg-warning/10 hover:text-warning"
                                                             onClick={() => setConfirmDialog({ open: true, type: 'ban', user: item })}
                                                             disabled={actionLoading === item.id}
                                                         >
@@ -493,7 +492,7 @@ function AdminUsersTab() {
                                                     <Button 
                                                         variant="outline" 
                                                         size="sm" 
-                                                        className="h-8 border-red-900 text-red-400 hover:bg-red-950/30 hover:text-red-300"
+                                                        className="h-8 border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                                         onClick={() => setConfirmDialog({ open: true, type: 'delete', user: item })}
                                                         disabled={actionLoading === item.id}
                                                     >
@@ -504,7 +503,7 @@ function AdminUsersTab() {
                                         </tr>
                                     ))}
                                     {filteredItems.length === 0 && (
-                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-500">No users found.</td></tr>
+                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">No users found.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -521,28 +520,28 @@ function AdminUsersTab() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-md bg-[#0f172a] border border-slate-800 rounded-xl shadow-xl overflow-hidden"
+                            className="w-full max-w-md bg-card border border-border rounded-xl shadow-xl overflow-hidden"
                         >
                             <div className="p-6">
                                 <div className="flex items-center gap-4 mb-4">
                                     <div className={`p-3 rounded-full ${
-                                        confirmDialog.type === 'delete' ? 'bg-red-900/20 text-red-400' : 
-                                        confirmDialog.type === 'ban' ? 'bg-amber-900/20 text-amber-400' : 
-                                        'bg-emerald-900/20 text-emerald-400'
+                                        confirmDialog.type === 'delete' ? 'bg-destructive/10 text-destructive' : 
+                                        confirmDialog.type === 'ban' ? 'bg-warning/10 text-warning' : 
+                                        'bg-accent/10 text-accent'
                                     }`}>
                                         <ShieldAlert className="h-6 w-6" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-slate-100 capitalize">
+                                        <h3 className="text-lg font-semibold text-foreground capitalize font-serif">
                                             {confirmDialog.type} User
                                         </h3>
-                                        <p className="text-slate-400 text-sm">
+                                        <p className="text-muted-foreground text-sm">
                                             Are you sure you want to {confirmDialog.type} <strong>{confirmDialog.user?.full_name}</strong>?
                                         </p>
                                     </div>
                                 </div>
                                 
-                                <p className="text-slate-500 text-sm mb-6">
+                                <p className="text-muted-foreground/70 text-sm mb-6">
                                     {confirmDialog.type === 'delete' 
                                         ? "This action is permanent and cannot be undone. All user data will be removed."
                                         : confirmDialog.type === 'ban'
@@ -555,15 +554,15 @@ function AdminUsersTab() {
                                     <Button 
                                         variant="ghost" 
                                         onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}
-                                        className="text-slate-400 hover:text-slate-200"
+                                        className="text-muted-foreground hover:text-foreground hover:bg-muted"
                                     >
                                         Cancel
                                     </Button>
                                     <Button 
                                         className={`${
-                                            confirmDialog.type === 'delete' ? 'bg-red-600 hover:bg-red-700' : 
-                                            confirmDialog.type === 'ban' ? 'bg-amber-600 hover:bg-amber-700' : 
-                                            'bg-emerald-600 hover:bg-emerald-700'
+                                            confirmDialog.type === 'delete' ? 'bg-destructive hover:bg-destructive/90' : 
+                                            confirmDialog.type === 'ban' ? 'bg-warning hover:bg-warning/90' : 
+                                            'bg-accent hover:bg-accent/90'
                                         } text-white`}
                                         onClick={handleAction}
                                     >
@@ -642,16 +641,16 @@ function AdminOrganizationsTab() {
         <div className="space-y-6">
             <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search organizations by name..." />
 
-            <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+            <Card className="border-border bg-card shadow-md">
                 <CardHeader>
-                    <CardTitle className="text-slate-100">Organizations</CardTitle>
-                    <CardDescription className="text-slate-400">Companies and teams using the platform.</CardDescription>
+                    <CardTitle className="text-foreground font-serif">Organizations</CardTitle>
+                    <CardDescription className="text-muted-foreground">Companies and teams using the platform.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
-                        <div className="rounded-lg border border-slate-800 overflow-x-auto">
+                    {loading ? <div className="text-sm text-muted-foreground">Loading data...</div> : (
+                        <div className="rounded-lg border border-border overflow-x-auto">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
+                                <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border">
                                     <tr>
                                         <th className="px-5 py-3">Organization Name</th>
                                         <th className="px-5 py-3">Owner Name</th>
@@ -660,25 +659,25 @@ function AdminOrganizationsTab() {
                                         <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800">
+                                <tbody className="divide-y divide-border">
                                     {filteredItems.map(item => (
-                                        <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
-                                            <td className="px-5 py-4 font-medium text-slate-200 flex items-center gap-3">
-                                                <div className="p-2 bg-slate-800 rounded-md">
-                                                    <Building2 className="w-4 h-4 text-slate-400" />
+                                        <tr key={item.id} className="hover:bg-muted/30 transition-colors">
+                                            <td className="px-5 py-4 font-medium text-foreground flex items-center gap-3">
+                                                <div className="p-2 bg-muted rounded-md">
+                                                    <Building2 className="w-4 h-4 text-muted-foreground" />
                                                 </div>
                                                 {item.name}
                                             </td>
-                                            <td className="px-5 py-4 text-slate-300">
+                                            <td className="px-5 py-4 text-foreground/80">
                                                 {item.owner_profile?.full_name || '—'}
                                             </td>
-                                            <td className="px-5 py-4 text-xs text-slate-500 font-mono">{item.owner_id}</td>
-                                            <td className="px-5 py-4 text-slate-400 text-right">{new Date(item.created_at).toLocaleDateString()}</td>
+                                            <td className="px-5 py-4 text-xs text-muted-foreground font-mono">{item.owner_id}</td>
+                                            <td className="px-5 py-4 text-muted-foreground text-right">{new Date(item.created_at).toLocaleDateString()}</td>
                                             <td className="px-5 py-4 text-right">
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="h-8 border-red-900 text-red-400 hover:bg-red-950/30 hover:text-red-300"
+                                                    className="h-8 border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                                     onClick={() => setConfirmDialog({ open: true, org: item })}
                                                     disabled={actionLoading === item.id}
                                                 >
@@ -688,7 +687,7 @@ function AdminOrganizationsTab() {
                                         </tr>
                                     ))}
                                     {filteredItems.length === 0 && (
-                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-500">No organizations found.</td></tr>
+                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">No organizations found.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -704,11 +703,11 @@ function AdminOrganizationsTab() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="w-full max-w-md bg-[#0f172a] border border-slate-800 rounded-xl shadow-xl overflow-hidden"
+                            className="w-full max-w-md bg-card border border-border rounded-xl shadow-xl overflow-hidden"
                         >
                             <div className="p-6">
                                 <div className="flex items-center gap-4 mb-4">
-                                    <div className="p-3 rounded-full bg-red-900/20 text-red-400">
+                                    <div className="p-3 rounded-full bg-destructive/10 text-destructive">
                                         <ShieldAlert className="h-6 w-6" />
                                     </div>
                                     <div>
@@ -727,12 +726,12 @@ function AdminOrganizationsTab() {
                                     <Button
                                         variant="ghost"
                                         onClick={() => setConfirmDialog({ open: false, org: null })}
-                                        className="text-slate-400 hover:text-slate-200"
+                                        className="text-muted-foreground hover:text-foreground hover:bg-muted"
                                     >
                                         Cancel
                                     </Button>
                                     <Button
-                                        className="bg-red-600 hover:bg-red-700 text-white"
+                                        className="bg-destructive hover:bg-destructive/90 text-white"
                                         onClick={handleDelete}
                                     >
                                         Confirm Delete
@@ -855,27 +854,27 @@ function AdminCategoriesTab() {
                             Add Category
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md bg-[#1e293b] border-slate-800 text-slate-200">
+                    <DialogContent className="sm:max-w-md bg-card border-border text-foreground">
                         <DialogHeader>
-                            <DialogTitle>{editingCategory ? 'Edit Category' : 'Add New Category'}</DialogTitle>
-                            <DialogDescription className="text-slate-400">
+                            <DialogTitle className="font-serif">{editingCategory ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+                            <DialogDescription className="text-muted-foreground">
                                 {editingCategory ? 'Update the category name.' : 'Create a new category for asset types.'}
                             </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleSave} className="space-y-4">
                             <div>
-                                <Label htmlFor="name" className="text-slate-200">Category Name</Label>
+                                <Label htmlFor="name" className="text-foreground">Category Name</Label>
                                 <Input
                                     id="name"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="e.g., IT Equipment"
                                     required
-                                    className="mt-1.5 bg-[#0f172a] border-slate-700 text-slate-200"
+                                    className="mt-1.5 bg-background border-border text-foreground focus-visible:ring-primary"
                                 />
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
-                                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
+                                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="border-border text-muted-foreground hover:bg-muted hover:text-foreground">
                                     Cancel
                                 </Button>
                                 <Button type="submit" className="bg-primary hover:bg-primary/90">
@@ -887,27 +886,27 @@ function AdminCategoriesTab() {
                 </Dialog>
             </div>
 
-            <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+            <Card className="border-border bg-card shadow-md">
                 <CardHeader>
-                    <CardTitle className="text-slate-100">All Categories</CardTitle>
-                    <CardDescription className="text-slate-400">Manage categories used for asset types across the platform.</CardDescription>
+                    <CardTitle className="text-foreground font-serif">All Categories</CardTitle>
+                    <CardDescription className="text-muted-foreground">Manage categories used for asset types across the platform.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
-                        <div className="rounded-lg border border-slate-800 overflow-x-auto">
+                    {loading ? <div className="text-sm text-muted-foreground">Loading data...</div> : (
+                        <div className="rounded-lg border border-border overflow-x-auto">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
+                                <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border">
                                     <tr>
                                         <th className="px-5 py-3">Category Name</th>
                                         <th className="px-5 py-3 text-right">Created At</th>
                                         <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800">
+                                <tbody className="divide-y divide-border">
                                     {filteredCategories.map((category) => (
-                                        <tr key={category.id} className="hover:bg-slate-800/30 transition-colors">
-                                            <td className="px-5 py-4 font-medium text-slate-200">{category.name}</td>
-                                            <td className="px-5 py-4 text-slate-400 text-right whitespace-nowrap">
+                                        <tr key={category.id} className="hover:bg-muted/30 transition-colors">
+                                            <td className="px-5 py-4 font-medium text-foreground">{category.name}</td>
+                                            <td className="px-5 py-4 text-muted-foreground text-right whitespace-nowrap">
                                                 {new Date(category.created_at).toLocaleDateString()}
                                             </td>
                                             <td className="px-5 py-4 text-right">
@@ -915,7 +914,7 @@ function AdminCategoriesTab() {
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                                                         onClick={() => {
                                                             setEditingCategory(category);
                                                             setFormData({ name: category.name });
@@ -927,7 +926,7 @@ function AdminCategoriesTab() {
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-slate-700"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-muted"
                                                         onClick={() => handleDelete(category.id)}
                                                     >
                                                         <Trash2 className="h-4 w-4" />
@@ -937,7 +936,7 @@ function AdminCategoriesTab() {
                                         </tr>
                                     ))}
                                     {filteredCategories.length === 0 && (
-                                        <tr><td colSpan={3} className="px-5 py-8 text-center text-slate-500">No categories found.</td></tr>
+                                        <tr><td colSpan={3} className="px-5 py-8 text-center text-muted-foreground">No categories found.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -1007,13 +1006,13 @@ function AdminAssetsTab() {
         <div className="space-y-6">
             <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search assets by name, location, or organization..." />
 
-            <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+            <Card className="border-border bg-card shadow-md">
                 <CardHeader>
-                    <CardTitle className="text-slate-100">Global Assets</CardTitle>
-                    <CardDescription className="text-slate-400">Every asset registered across the system. Click on a card for details.</CardDescription>
+                    <CardTitle className="text-foreground font-serif">Global Assets</CardTitle>
+                    <CardDescription className="text-muted-foreground">Every asset registered across the system. Click on a card for details.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
+                    {loading ? <div className="text-sm text-muted-foreground">Loading data...</div> : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {filteredItems.map(item => (
                                 <div 
@@ -1022,30 +1021,30 @@ function AdminAssetsTab() {
                                         setSelectedAsset(item);
                                         setDetailsOpen(true);
                                     }}
-                                    className="border border-slate-800 rounded-xl p-5 bg-[#1e293b]/50 shadow-sm flex flex-col gap-3 hover:border-slate-600 hover:bg-[#1e293b]/80 transition-all cursor-pointer group"
+                                    className="border border-border rounded-xl p-5 bg-muted/20 shadow-sm flex flex-col gap-3 hover:border-accent/50 hover:bg-muted/40 transition-all cursor-pointer group"
                                 >
                                     <div className="flex justify-between items-start gap-2">
-                                        <div className="font-semibold text-slate-200 line-clamp-1 group-hover:text-emerald-400 transition-colors">{item.name}</div>
+                                        <div className="font-semibold text-foreground line-clamp-1 group-hover:text-accent transition-colors">{item.name}</div>
                                         <div className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wider shrink-0 border ${
-                                            item.status === 'active' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-900/50' : 
-                                            'bg-slate-800 text-slate-400 border-slate-700'
+                                            item.status === 'active' ? 'bg-accent/10 text-accent border-accent/20' : 
+                                            'bg-muted text-muted-foreground border-border'
                                         }`}>
                                             {item.status}
                                         </div>
                                     </div>
                                     
                                     <div className="space-y-1.5">
-                                        <div className="text-sm text-slate-400 flex items-center gap-2">
-                                            <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                                        <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                            <Building2 className="w-3.5 h-3.5 text-muted-foreground/60" />
                                             <span className="truncate">{item.organization?.name || 'Unknown Org'}</span>
                                         </div>
-                                        <div className="text-sm text-slate-400 flex items-center gap-2">
-                                            <Package className="w-3.5 h-3.5 text-slate-500" />
+                                        <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                            <Package className="w-3.5 h-3.5 text-muted-foreground/60" />
                                             <span className="truncate">{item.location || 'No location'}</span>
                                         </div>
                                     </div>
 
-                                    <div className="pt-2 mt-auto border-t border-slate-800/50 flex justify-between items-center text-xs text-slate-500">
+                                    <div className="pt-2 mt-auto border-t border-border/50 flex justify-between items-center text-xs text-muted-foreground">
                                         <div className="flex items-center gap-1.5">
                                             <User className="w-3 h-3" />
                                             <span className="truncate max-w-[100px]">{item.creator?.full_name || 'Unknown'}</span>
@@ -1102,16 +1101,16 @@ function AdminIssuesTab() {
         <div className="space-y-6">
             <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search issues by title or description..." />
 
-            <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+            <Card className="border-border bg-card shadow-md">
                 <CardHeader>
-                    <CardTitle className="text-slate-100">Global Issues Log</CardTitle>
-                    <CardDescription className="text-slate-400">Tickets and issues from all organizations, showing related assets.</CardDescription>
+                    <CardTitle className="text-foreground font-serif">Global Issues Log</CardTitle>
+                    <CardDescription className="text-muted-foreground">Tickets and issues from all organizations, showing related assets.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
-                        <div className="rounded-lg border border-slate-800 overflow-x-auto">
+                    {loading ? <div className="text-sm text-muted-foreground">Loading data...</div> : (
+                        <div className="rounded-lg border border-border overflow-x-auto">
                             <table className="w-full text-sm text-left">
-                                <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
+                                <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border">
                                     <tr>
                                         <th className="px-5 py-3">Issue Detail</th>
                                         <th className="px-5 py-3">Asset</th>
@@ -1120,42 +1119,42 @@ function AdminIssuesTab() {
                                         <th className="px-5 py-3 text-right">Date</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800">
+                                <tbody className="divide-y divide-border">
                                     {filteredItems.map(item => (
-                                        <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                                        <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                                             <td className="px-5 py-4">
-                                                <div className="font-semibold text-slate-200 line-clamp-1 max-w-[250px]">{item.title}</div>
-                                                <div className="text-xs text-slate-500 font-mono mt-1.5 truncate max-w-[200px]" title={item.org_id}>Org: {item.org_id}</div>
+                                                <div className="font-semibold text-foreground line-clamp-1 max-w-[250px]">{item.title}</div>
+                                                <div className="text-xs text-muted-foreground/60 font-mono mt-1.5 truncate max-w-[200px]" title={item.org_id}>Org: {item.org_id}</div>
                                             </td>
                                             <td className="px-5 py-4">
-                                                <div className="font-medium text-slate-300 bg-slate-800/50 inline-flex px-2 py-1 rounded max-w-[200px] truncate">
+                                                <div className="font-medium text-foreground/80 bg-muted/50 inline-flex px-2 py-1 rounded max-w-[200px] truncate border border-border/30">
                                                     <Package className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                                                     {item.asset?.name || 'Unknown Asset'}
                                                 </div>
                                             </td>
                                             <td className="px-5 py-4">
-                                                <span className={`text-xs px-2.5 py-1 rounded-md font-medium uppercase tracking-wider shrink-0 ${item.status === 'open' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
-                                                        item.status === 'resolved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
-                                                            'bg-slate-800 text-slate-300 border border-slate-700'
+                                                <span className={`text-xs px-2.5 py-1 rounded-md font-medium uppercase tracking-wider shrink-0 ${item.status === 'open' ? 'bg-warning/10 text-warning border border-warning/20' :
+                                                        item.status === 'resolved' ? 'bg-accent/10 text-accent border border-accent/20' :
+                                                            'bg-muted text-muted-foreground border border-border'
                                                     }`}>
                                                     {item.status}
                                                 </span>
                                             </td>
                                             <td className="px-5 py-4">
-                                                <span className={`text-xs px-2.5 py-1 rounded-md font-medium uppercase tracking-wider shrink-0 ${item.priority === 'critical' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                                                        item.priority === 'high' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
-                                                            'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                                <span className={`text-xs px-2.5 py-1 rounded-md font-medium uppercase tracking-wider shrink-0 ${item.priority === 'critical' ? 'bg-destructive/10 text-destructive border border-destructive/20' :
+                                                        item.priority === 'high' ? 'bg-warning/10 text-warning border border-warning/20' :
+                                                            'bg-primary/10 text-primary border border-primary/20'
                                                     }`}>
                                                     {item.priority}
                                                 </span>
                                             </td>
-                                            <td className="px-5 py-4 text-slate-400 text-right whitespace-nowrap">
+                                            <td className="px-5 py-4 text-muted-foreground text-right whitespace-nowrap">
                                                 {new Date(item.created_at).toLocaleDateString()}
                                             </td>
                                         </tr>
                                     ))}
                                     {filteredItems.length === 0 && (
-                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-500">No issues found.</td></tr>
+                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">No issues found.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -1172,21 +1171,21 @@ function AdminIssuesTab() {
 // --------------------------------------------------------------------------
 function AdminSettingsTab() {
     return (
-        <Card className="border-slate-800 bg-[#0f172a] shadow-md max-w-2xl">
+        <Card className="border-border bg-card shadow-md max-w-2xl">
             <CardHeader>
-                <CardTitle className="text-slate-100">System Settings</CardTitle>
-                <CardDescription className="text-slate-400">Global configurations for the platform.</CardDescription>
+                <CardTitle className="text-foreground font-serif">System Settings</CardTitle>
+                <CardDescription className="text-muted-foreground">Global configurations for the platform.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="space-y-2 border-b border-slate-800 pb-5">
-                    <h4 className="font-semibold text-slate-200">Maintenance Mode</h4>
-                    <p className="text-sm text-slate-500">Prevent users from logging in during scheduled database updates.</p>
-                    <Button variant="outline" className="mt-3 text-red-400 border-red-900 bg-red-950/20 hover:bg-red-900/40 hover:text-red-300">Enable Maintenance Mode</Button>
+                <div className="space-y-2 border-b border-border pb-5">
+                    <h4 className="font-semibold text-foreground">Maintenance Mode</h4>
+                    <p className="text-sm text-muted-foreground">Prevent users from logging in during scheduled database updates.</p>
+                    <Button variant="outline" className="mt-3 text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive">Enable Maintenance Mode</Button>
                 </div>
                 <div className="space-y-2">
-                    <h4 className="font-semibold text-slate-200">Admin Email Notifications</h4>
-                    <p className="text-sm text-slate-500">Receive an email when a new organization is created.</p>
-                    <Button variant="secondary" className="mt-3 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 transition-colors" disabled>Notifications Configured Locally</Button>
+                    <h4 className="font-semibold text-foreground">Admin Email Notifications</h4>
+                    <p className="text-sm text-muted-foreground">Receive an email when a new organization is created.</p>
+                    <Button variant="secondary" className="mt-3 bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors" disabled>Notifications Configured Locally</Button>
                 </div>
             </CardContent>
         </Card>
@@ -1212,9 +1211,6 @@ function AdminClaimsTab() {
         provider:providers(provider_name, category, location)
       `)
       .order('created_at', { ascending: false });
-
-    console.log('AdminClaimsTab: fetchClaims data:', data);
-    console.log('AdminClaimsTab: fetchClaims error:', error);
 
     if (error) {
       console.error('Error fetching claims:', error);
@@ -1306,16 +1302,16 @@ function AdminClaimsTab() {
     <div className="space-y-6">
       <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search claims by provider or user..." />
 
-      <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+      <Card className="border-border bg-card shadow-md">
         <CardHeader>
-          <CardTitle className="text-slate-100">Profile Claim Requests</CardTitle>
-          <CardDescription className="text-slate-400">Review and approve requests from service providers to claim their directory listings.</CardDescription>
+          <CardTitle className="text-foreground font-serif">Profile Claim Requests</CardTitle>
+          <CardDescription className="text-muted-foreground">Review and approve requests from service providers to claim their directory listings.</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
-            <div className="rounded-lg border border-slate-800 overflow-x-auto">
+          {loading ? <div className="text-sm text-muted-foreground">Loading data...</div> : (
+            <div className="rounded-lg border border-border overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
+                <thead className="bg-muted/50 text-muted-foreground font-semibold border-b border-border">
                   <tr>
                     <th className="px-5 py-3">Business Profile</th>
                     <th className="px-5 py-3">Requester Details</th>
@@ -1324,28 +1320,28 @@ function AdminClaimsTab() {
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-border">
                   {filteredItems.map(item => (
-                    <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                    <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-5 py-4">
-                        <div className="font-semibold text-slate-200">{item.provider?.provider_name}</div>
-                        <div className="text-xs text-slate-500 mt-1">{item.provider?.category} • {item.provider?.location}</div>
+                        <div className="font-semibold text-foreground">{item.provider?.provider_name}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{item.provider?.category} • {item.provider?.location}</div>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="font-medium text-slate-300">{item.full_name}</div>
-                        <div className="text-xs text-slate-500">{item.business_email}</div>
-                        <div className="text-xs text-slate-500">{item.phone}</div>
+                        <div className="font-medium text-foreground/80">{item.full_name}</div>
+                        <div className="text-xs text-muted-foreground">{item.business_email}</div>
+                        <div className="text-xs text-muted-foreground">{item.phone}</div>
                       </td>
                       <td className="px-5 py-4">
                         <span className={`text-xs px-2.5 py-1 rounded-md font-medium uppercase tracking-wider shrink-0 ${
-                          item.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
-                          item.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
-                          'bg-red-500/10 text-red-500 border border-red-500/20'
+                          item.status === 'pending' ? 'bg-warning/10 text-warning border border-warning/20' :
+                          item.status === 'approved' ? 'bg-accent/10 text-accent border border-accent/20' :
+                          'bg-destructive/10 text-destructive border border-destructive/20'
                         }`}>
                           {item.status}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-slate-400 text-right whitespace-nowrap">
+                      <td className="px-5 py-4 text-muted-foreground text-right whitespace-nowrap">
                         {new Date(item.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-5 py-4 text-right">
@@ -1354,7 +1350,7 @@ function AdminClaimsTab() {
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="h-8 border-emerald-800 text-emerald-400 hover:bg-emerald-900/20"
+                              className="h-8 border-accent/50 text-accent hover:bg-accent/10"
                               onClick={() => handleApprove(item)}
                               disabled={actionLoading === item.id}
                             >
@@ -1363,7 +1359,7 @@ function AdminClaimsTab() {
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="h-8 border-red-800 text-red-400 hover:bg-red-900/20"
+                              className="h-8 border-destructive/50 text-destructive hover:bg-destructive/10"
                               onClick={() => handleReject(item.id)}
                               disabled={actionLoading === item.id}
                             >
@@ -1372,13 +1368,13 @@ function AdminClaimsTab() {
                           </div>
                         )}
                         {item.status !== 'pending' && (
-                          <span className="text-xs text-slate-500 italic">No actions available</span>
+                          <span className="text-xs text-muted-foreground italic">No actions available</span>
                         )}
                       </td>
                     </tr>
                   ))}
                   {filteredItems.length === 0 && (
-                    <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-500">No claim requests found.</td></tr>
+                    <tr><td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">No claim requests found.</td></tr>
                   )}
                 </tbody>
               </table>
