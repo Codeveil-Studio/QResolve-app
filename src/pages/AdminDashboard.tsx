@@ -1233,12 +1233,18 @@ function AdminClaimsTab() {
     setActionLoading(claim.id);
     try {
       // 1. Update providers table
-      const { error: providerError } = await supabase
+      const { error: providerError, count } = await supabase
         .from('providers')
         .update({ owner_id: claim.user_id })
-        .eq('id', claim.provider_id);
+        .eq('id', claim.provider_id)
+        .select();
 
       if (providerError) throw providerError;
+      
+      // If no rows were updated, it's likely an RLS issue or wrong ID
+      if (!count && count !== null) {
+        console.warn('Provider update affected 0 rows. Check RLS policies or Provider ID.');
+      }
 
       // 2. Update claim status
       const { error: claimError } = await supabase
@@ -1250,14 +1256,15 @@ function AdminClaimsTab() {
 
       toast({
         title: 'Claim approved',
-        description: `Ownership of ${claim.provider?.provider_name} has been assigned to ${claim.user_profile?.full_name}.`,
+        description: `Ownership of ${claim.provider?.provider_name} has been assigned successfully.`,
       });
       await fetchClaims();
     } catch (error: any) {
+      console.error('Approval flow error:', error);
       toast({
         variant: 'destructive',
         title: 'Approval failed',
-        description: error.message,
+        description: error.message || 'An unexpected error occurred during approval.',
       });
     } finally {
       setActionLoading(null);
