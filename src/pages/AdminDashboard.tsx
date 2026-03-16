@@ -83,6 +83,7 @@ export default function AdminDashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const { user, profile, signOut } = useAuth();
+    console.log('AdminDashboard: Current User:', user?.id, 'Email:', user?.email);
     const navigate = useNavigate();
 
     const handleSignOut = async () => {
@@ -1208,13 +1209,20 @@ function AdminClaimsTab() {
       .from('profile_claims')
       .select(`
         *,
-        provider:providers(provider_name, category, location),
-        user_profile:profiles!profile_claims_user_id_fkey(full_name, email)
+        provider:providers(provider_name, category, location)
       `)
       .order('created_at', { ascending: false });
 
+    console.log('AdminClaimsTab: fetchClaims data:', data);
+    console.log('AdminClaimsTab: fetchClaims error:', error);
+
     if (error) {
       console.error('Error fetching claims:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error fetching claims',
+        description: error.message
+      });
     } else {
       setItems(data || []);
     }

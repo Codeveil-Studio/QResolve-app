@@ -18,24 +18,36 @@ ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES auth.users(id) ON DELETE SET N
 -- Enable RLS on profile_claims
 ALTER TABLE public.profile_claims ENABLE ROW LEVEL SECURITY;
 
+-- 🛠️ ROBUST ADMIN CHECK FUNCTION (SECURITY DEFINER bypasses RLS)
+CREATE OR REPLACE FUNCTION public.is_admin() 
+RETURNS boolean AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid());
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Policies for profile_claims
 -- Requesters can see their own claims
+DROP POLICY IF EXISTS "Users can view their own claims" ON public.profile_claims;
 CREATE POLICY "Users can view their own claims" 
 ON public.profile_claims FOR SELECT 
 USING (auth.uid() = user_id);
 
 -- Requesters can insert their own claims
+DROP POLICY IF EXISTS "Users can insert their own claims" ON public.profile_claims;
 CREATE POLICY "Users can insert their own claims" 
 ON public.profile_claims FOR INSERT 
 WITH CHECK (auth.uid() = user_id);
 
--- Admins can view all claims (assuming admins table exists from migrations)
+-- Admins can view all claims
+DROP POLICY IF EXISTS "Admins can view all claims" ON public.profile_claims;
 CREATE POLICY "Admins can view all claims" 
 ON public.profile_claims FOR SELECT 
-USING (EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid()));
+USING (public.is_admin());
 
 -- Admins can update status
+DROP POLICY IF EXISTS "Admins can update claim status" ON public.profile_claims;
 CREATE POLICY "Admins can update claim status" 
 ON public.profile_claims FOR UPDATE 
-USING (EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid()))
-WITH CHECK (EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid()));
+USING (public.is_admin())
+WITH CHECK (public.is_admin());
