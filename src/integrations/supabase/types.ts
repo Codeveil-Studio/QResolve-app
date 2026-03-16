@@ -22,6 +22,7 @@ export type Database = {
           id: string
           location: string | null
           platform: string | null
+          owner_id: string | null
           provider_name: string
           rating: string | null
         }
@@ -32,6 +33,7 @@ export type Database = {
           id?: string
           location?: string | null
           platform?: string | null
+          owner_id?: string | null
           provider_name: string
           rating?: string | null
         }
@@ -42,6 +44,7 @@ export type Database = {
           id?: string
           location?: string | null
           platform?: string | null
+          owner_id?: string | null
           provider_name?: string
           rating?: string | null
         }
@@ -148,7 +151,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           location?: string | null
@@ -460,6 +463,57 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      profile_claims: {
+        Row: {
+          id: string
+          provider_id: string
+          user_id: string
+          full_name: string
+          business_email: string
+          phone: string
+          message: string | null
+          status: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          provider_id: string
+          user_id: string
+          full_name: string
+          business_email: string
+          phone: string
+          message?: string | null
+          status?: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          provider_id?: string
+          user_id?: string
+          full_name?: string
+          business_email?: string
+          phone?: string
+          message?: string | null
+          status?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_claims_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
         ]
       }
     }

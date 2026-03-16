@@ -34,7 +34,12 @@ export default function Login() {
       if (loginType === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/dashboard');
+        const pendingClaimId = localStorage.getItem('pending_claim_id');
+        if (pendingClaimId) {
+          navigate(`/complete-claim?claim_id=${pendingClaimId}`);
+        } else {
+          navigate('/dashboard');
+        }
       }
     }
 

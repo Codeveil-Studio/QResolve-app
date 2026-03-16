@@ -111,9 +111,21 @@ export default function Onboarding() {
 
           <div className="text-center mb-8">
             <h2 className="text-2xl font-semibold tracking-tight">Set up your organization</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Create an organization to start managing your assets and issues
-            </p>
+            {localStorage.getItem('pending_claim_id') ? (
+              <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-lg text-sm text-primary">
+                <p className="font-medium">You have a business claim pending!</p>
+                <button 
+                  onClick={() => navigate(`/complete-claim?claim_id=${localStorage.getItem('pending_claim_id')}`)}
+                  className="mt-2 text-xs underline font-bold"
+                >
+                  Complete your claim instead →
+                </button>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Create an organization to start managing your assets and issues
+              </p>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">

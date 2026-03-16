@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { QrCode, Mail, Lock, User, ArrowRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +19,15 @@ export default function Signup() {
   const [emailSent, setEmailSent] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const claimId = searchParams.get('claim_id');
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (claimId) {
+      localStorage.setItem('pending_claim_id', claimId);
+    }
+  }, [claimId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

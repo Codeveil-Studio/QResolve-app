@@ -22,7 +22,8 @@ import {
     Tags,
     Trash2,
     Edit,
-    Plus
+    Plus,
+    ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,6 +63,7 @@ const TABS = {
     CATEGORIES: 'categories',
     ASSETS: 'assets',
     ISSUES: 'issues',
+    CLAIMS: 'claims',
     SETTINGS: 'settings'
 };
 
@@ -72,6 +74,7 @@ const navItems = [
     { id: TABS.CATEGORIES, label: 'Categories', icon: Tags },
     { id: TABS.ASSETS, label: 'Assets', icon: Package },
     { id: TABS.ISSUES, label: 'Issues', icon: AlertCircle },
+    { id: TABS.CLAIMS, label: 'Claim Requests', icon: ShieldCheck },
     { id: TABS.SETTINGS, label: 'Settings', icon: Settings },
 ];
 
@@ -100,6 +103,7 @@ export default function AdminDashboard() {
             case TABS.CATEGORIES: return <AdminCategoriesTab />;
             case TABS.ASSETS: return <AdminAssetsTab />;
             case TABS.ISSUES: return <AdminIssuesTab />;
+            case TABS.CLAIMS: return <AdminClaimsTab />;
             case TABS.SETTINGS: return <AdminSettingsTab />;
             default: return <AdminOverviewTab />;
         }
@@ -1186,4 +1190,194 @@ function AdminSettingsTab() {
             </CardContent>
         </Card>
     );
+}
+
+// --------------------------------------------------------------------------
+// CLAIMS TAB
+// --------------------------------------------------------------------------
+function AdminClaimsTab() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const fetchClaims = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('profile_claims')
+      .select(`
+        *,
+        provider:providers(provider_name, category, location),
+        user_profile:profiles!profile_claims_user_id_fkey(full_name, email)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching claims:', error);
+    } else {
+      setItems(data || []);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchClaims();
+  }, []);
+
+  const handleApprove = async (claim: any) => {
+    setActionLoading(claim.id);
+    try {
+      // 1. Update providers table
+      const { error: providerError } = await supabase
+        .from('providers')
+        .update({ owner_id: claim.user_id })
+        .eq('id', claim.provider_id);
+
+      if (providerError) throw providerError;
+
+      // 2. Update claim status
+      const { error: claimError } = await supabase
+        .from('profile_claims')
+        .update({ status: 'approved' })
+        .eq('id', claim.id);
+
+      if (claimError) throw claimError;
+
+      toast({
+        title: 'Claim approved',
+        description: `Ownership of ${claim.provider?.provider_name} has been assigned to ${claim.user_profile?.full_name}.`,
+      });
+      await fetchClaims();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Approval failed',
+        description: error.message,
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (claimId: string) => {
+    setActionLoading(claimId);
+    try {
+      const { error } = await supabase
+        .from('profile_claims')
+        .update({ status: 'rejected' })
+        .eq('id', claimId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Claim rejected',
+        description: 'The claim request has been marked as rejected.',
+      });
+      await fetchClaims();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Rejection failed',
+        description: error.message,
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const filteredItems = useMemo(() => {
+    return items.filter(i =>
+      (i.provider?.provider_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (i.user_profile?.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (i.business_email || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [items, searchQuery]);
+
+  return (
+    <div className="space-y-6">
+      <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search claims by provider or user..." />
+
+      <Card className="border-slate-800 bg-[#0f172a] shadow-md">
+        <CardHeader>
+          <CardTitle className="text-slate-100">Profile Claim Requests</CardTitle>
+          <CardDescription className="text-slate-400">Review and approve requests from service providers to claim their directory listings.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? <div className="text-sm text-slate-500">Loading data...</div> : (
+            <div className="rounded-lg border border-slate-800 overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-[#1e293b] text-slate-400 font-semibold border-b border-slate-800">
+                  <tr>
+                    <th className="px-5 py-3">Business Profile</th>
+                    <th className="px-5 py-3">Requester Details</th>
+                    <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3 text-right">Submitted</th>
+                    <th className="px-5 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {filteredItems.map(item => (
+                    <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                      <td className="px-5 py-4">
+                        <div className="font-semibold text-slate-200">{item.provider?.provider_name}</div>
+                        <div className="text-xs text-slate-500 mt-1">{item.provider?.category} • {item.provider?.location}</div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="font-medium text-slate-300">{item.full_name}</div>
+                        <div className="text-xs text-slate-500">{item.business_email}</div>
+                        <div className="text-xs text-slate-500">{item.phone}</div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`text-xs px-2.5 py-1 rounded-md font-medium uppercase tracking-wider shrink-0 ${
+                          item.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                          item.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+                          'bg-red-500/10 text-red-500 border border-red-500/20'
+                        }`}>
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-slate-400 text-right whitespace-nowrap">
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        {item.status === 'pending' && (
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 border-emerald-800 text-emerald-400 hover:bg-emerald-900/20"
+                              onClick={() => handleApprove(item)}
+                              disabled={actionLoading === item.id}
+                            >
+                              Approve
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 border-red-800 text-red-400 hover:bg-red-900/20"
+                              onClick={() => handleReject(item.id)}
+                              disabled={actionLoading === item.id}
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                        {item.status !== 'pending' && (
+                          <span className="text-xs text-slate-500 italic">No actions available</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredItems.length === 0 && (
+                    <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-500">No claim requests found.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

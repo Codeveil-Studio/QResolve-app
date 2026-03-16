@@ -177,9 +177,16 @@ export default async function ProviderPage({ params }: PageProps) {
                                 <p style={{ fontSize: "1rem", color: "var(--text-secondary)", lineHeight: 1.75, marginBottom: "1.5rem" }}>
                                     {provider.provider_name} has not yet completed the Relay verification process. Claiming this profile allows businesses to verify their expertise and build trust with direct performance metrics.
                                 </p>
-                                <a href="https://app.qresolve.com/signup" target="_blank" rel="noreferrer" className="btn btn-outline" style={{ display: "inline-flex" }}>
-                                    Claim This Profile →
-                                </a>
+                                {provider.owner_id ? (
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--accent)", fontWeight: 500 }}>
+                                        <CheckCircle2 size={18} />
+                                        This profile is claimed and managed by its owner.
+                                    </div>
+                                ) : (
+                                    <a href={`https://app.qresolve.com/signup?claim_id=${provider.id}`} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ display: "inline-flex" }}>
+                                        Claim This Profile →
+                                    </a>
+                                )}
                             </>
                         )}
                     </div>

@@ -17,6 +17,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import AssetTypes from "./pages/AssetTypes";
+import CompleteClaim from "./pages/CompleteClaim";
 
 const queryClient = new QueryClient();
 
@@ -98,6 +99,13 @@ const App = () => (
               <Route path="/issues" element={<ProtectedRoute><Issues /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/complete-claim" element={
+                <div className="qresolve-theme">
+                  <div className="min-h-screen bg-background">
+                    <CompleteClaim />
+                  </div>
+                </div>
+              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
