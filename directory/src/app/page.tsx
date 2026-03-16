@@ -72,7 +72,7 @@ const blogData: Record<string, { tag: string; title: string; date: string; body:
 
 export default function HomePage() {
   const router = useRouter();
-  const [city,] = useState("all");
+  const [city, setCity] = useState("all");
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeBlog, setActiveBlog] = useState<string | null>(null);
@@ -234,6 +234,25 @@ export default function HomePage() {
         <div className="section-label">Service categories</div>
         <h2 className="section-title">From coffee machines to cooling towers</h2>
         <p className="section-desc">Find specialists for the assets that keep your buildings running.</p>
+        
+        <div className="city-selector-container">
+          <button 
+            className={`city-pill ${city === "all" ? "active" : ""}`}
+            onClick={() => setCity("all")}
+          >
+            All India
+          </button>
+          {Object.keys(citySlugMap).map((cityName) => (
+            <button
+              key={cityName}
+              className={`city-pill ${city === cityName ? "active" : ""}`}
+              onClick={() => setCity(cityName)}
+            >
+              {cityName}
+            </button>
+          ))}
+        </div>
+
         <div className="categories-grid">
           {categories.map((cat) => (
             <div key={cat.slug} className="cat-card" onClick={() => handleCatClick(cat.slug)} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && handleCatClick(cat.slug)}>

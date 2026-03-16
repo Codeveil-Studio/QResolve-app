@@ -74,17 +74,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-[#050b18] border-r border-sidebar-border transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 transform bg-[#0f1613] border-r border-sidebar-border transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <img src="/favicon.svg" alt="QResolve logo" className="h-5 w-5" />
+            <div className="flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="h-6 w-6 text-primary">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="16" y="16" width="3" height="3" rx="0.5" />
+              </svg>
             </div>
-            <span className="text-lg font-bold text-sidebar-foreground">QResolve</span>
+            <a href="https://qresolve.com" className="text-xl font-bold text-sidebar-foreground hover:text-primary transition-colors">QResolve</a>
             <button
               onClick={() => setSidebarOpen(false)}
               className="ml-auto p-1 hover:bg-sidebar-accent lg:hidden"
@@ -184,12 +189,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="ml-3 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-              <img src="/favicon.svg" alt="QResolve logo" className="h-5 w-5" />
-            </div>
-            <span className="font-semibold">QResolve</span>
+          <div className="ml-3 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="h-6 w-6 text-primary">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="16" y="16" width="3" height="3" rx="0.5" />
+            </svg>
           </div>
+          <span className="ml-2 font-semibold">QResolve</span>
         </header>
 
         {/* Page content */}

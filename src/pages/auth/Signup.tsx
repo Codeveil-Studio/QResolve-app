@@ -66,7 +66,7 @@ export default function Signup() {
 
   if (emailSent) {
     return (
-      <div className="qresolve-auth grid min-h-screen lg:grid-cols-2 bg-white text-slate-900">
+      <div className="qresolve-auth grid min-h-screen lg:grid-cols-2 bg-background text-foreground">
         <div className="flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -74,10 +74,17 @@ export default function Signup() {
             transition={{ duration: 0.5 }}
             className="mx-auto w-full max-w-sm lg:w-96 text-center"
           >
-            <div className="flex items-center justify-center gap-2 mb-8">
-              <img src="/favicon.svg" alt="QResolve logo" className="h-10 w-10" />
-              <span className="text-xl font-semibold">QResolve</span>
-            </div>
+            <a href="https://qresolve.com" className="flex items-center justify-center gap-2 mb-8 no-underline">
+              <div className="flex items-center justify-center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="h-8 w-8 text-primary">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="16" y="16" width="3" height="3" rx="0.5" />
+                </svg>
+              </div>
+              <span className="text-2xl font-bold text-foreground tracking-tight">QResolve</span>
+            </a>
 
             <div className="mb-8 flex justify-center">
               <div className="rounded-full bg-green-100 p-3 text-green-600 dark:bg-green-900/30 dark:text-green-400">
@@ -108,8 +115,8 @@ export default function Signup() {
 
         {/* Right panel - Decorative */}
         <div className="relative hidden lg:block">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-accent">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(255,255,255,0.1),transparent_50%)]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(52,211,153,0.15),transparent_50%)]" />
             <div className="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center p-12">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -131,7 +138,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="qresolve-auth grid min-h-screen lg:grid-cols-2 bg-white text-slate-900">
+    <div className="qresolve-auth grid min-h-screen lg:grid-cols-2 bg-background text-foreground">
       {/* Left panel - Form */}
       <div className="flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24">
         <motion.div
@@ -141,10 +148,17 @@ export default function Signup() {
           className="mx-auto w-full max-w-sm lg:w-96"
         >
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <img src="/favicon.svg" alt="QResolve logo" className="h-10 w-10" />
-            <span className="text-xl font-semibold">QResolve</span>
-          </div>
+          <a href="https://qresolve.com" className="flex items-center gap-2 mb-8 no-underline">
+            <div className="flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="h-8 w-8 text-primary">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="16" y="16" width="3" height="3" rx="0.5" />
+              </svg>
+            </div>
+            <span className="text-2xl font-bold text-foreground tracking-tight">QResolve</span>
+          </a>
 
           <div>
             <h2 className="text-2xl font-semibold tracking-tight">Create your account</h2>
@@ -266,14 +280,14 @@ export default function Signup() {
 
       {/* Right panel - Decorative */}
       <div className="relative hidden lg:block">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-accent">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(255,255,255,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(52,211,153,0.15),transparent_50%)]" />
           <div className="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center p-12">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="text-center text-primary-foreground"
+              className="text-center text-white"
             >
               <img
                 src="/favicon.svg"

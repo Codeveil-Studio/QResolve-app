@@ -42,14 +42,14 @@ export default function Login() {
   };
 
   return (
-    <div className="qresolve-auth grid min-h-screen lg:grid-cols-2 bg-white text-slate-900">
+    <div className="qresolve-auth grid min-h-screen lg:grid-cols-2 bg-background text-foreground">
       {/* Left panel - Form */}
       <div className="flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24 relative">
         <div className="absolute top-6 left-6">
-          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors">
+          <a href="https://qresolve.com" className="text-sm font-medium text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors">
             <ArrowRight className="h-4 w-4 rotate-180" />
             Back to Home
-          </Link>
+          </a>
         </div>
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -58,10 +58,17 @@ export default function Login() {
           className="mx-auto w-full max-w-sm lg:w-96"
         >
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <img src="/favicon.svg" alt="QResolve logo" className="h-10 w-10" />
-            <span className="text-xl font-semibold">QResolve</span>
-          </div>
+          <a href="https://qresolve.com" className="flex items-center gap-2 mb-8 no-underline">
+            <div className="flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="h-8 w-8 text-primary">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="16" y="16" width="3" height="3" rx="0.5" />
+              </svg>
+            </div>
+            <span className="text-2xl font-bold text-foreground tracking-tight">QResolve</span>
+          </a>
 
           <div>
             <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
@@ -162,14 +169,14 @@ export default function Login() {
 
       {/* Right panel - Decorative */}
       <div className="relative hidden lg:block">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-accent">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(52,211,153,0.15),transparent_50%)]" />
           <div className="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center p-12">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="text-center text-primary-foreground"
+              className="text-center text-white"
             >
               <img
                 src="/favicon.svg"
