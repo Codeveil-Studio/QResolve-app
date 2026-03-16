@@ -17,7 +17,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Asset, Issue } from '@/lib/supabase-types';
-import { format } from 'date-fns';
+import { format, startOfDay, subDays, addDays, isValid } from 'date-fns';
 import {
   AreaChart,
   Area,
@@ -28,16 +28,14 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-// Mock chart data
-const chartData = [
-  { name: 'Mon', issues: 4, resolved: 3 },
-  { name: 'Tue', issues: 6, resolved: 5 },
-  { name: 'Wed', issues: 8, resolved: 6 },
-  { name: 'Thu', issues: 5, resolved: 7 },
-  { name: 'Fri', issues: 7, resolved: 4 },
-  { name: 'Sat', issues: 3, resolved: 2 },
-  { name: 'Sun', issues: 2, resolved: 3 },
-];
+type IssueTrendPoint = { name: string; issues: number; resolved: number };
+
+const buildEmptyWeek = (startDate: Date): IssueTrendPoint[] => {
+  return Array.from({ length: 7 }).map((_, idx) => {
+    const day = addDays(startDate, idx);
+    return { name: format(day, 'EEE'), issues: 0, resolved: 0 };
+  });
+};
 
 export default function Dashboard() {
   const { organization, profile } = useAuth();
@@ -46,14 +44,21 @@ export default function Dashboard() {
     activeIssues: 0,
     criticalAlerts: 0,
     resolvedThisWeek: 0,
+    resolvedTrendPct: 0,
   });
   const [recentIssues, setRecentIssues] = useState<Issue[]>([]);
+  const [issueTrendData, setIssueTrendData] = useState<IssueTrendPoint[]>(() =>
+    buildEmptyWeek(startOfDay(subDays(new Date(), 6)))
+  );
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = useCallback(async () => {
     if (!organization) return;
 
     try {
+      const startThisWeek = startOfDay(subDays(new Date(), 6));
+      const startLastWeek = startOfDay(subDays(startThisWeek, 7));
+
       // Fetch assets count
       const { count: assetsCount } = await supabase
         .from('assets')
@@ -75,6 +80,33 @@ export default function Dashboard() {
         .eq('priority', 'critical')
         .neq('status', 'closed');
 
+      const { data: newIssuesThisWeek, error: newIssuesErr } = await supabase
+        .from('issues')
+        .select('created_at')
+        .eq('org_id', organization.id)
+        .gte('created_at', startThisWeek.toISOString());
+      if (newIssuesErr) throw newIssuesErr;
+
+      const { data: resolvedThisWeekRows, error: resolvedThisWeekErr } = await supabase
+        .from('issues')
+        .select('resolved_at, updated_at, status')
+        .eq('org_id', organization.id)
+        .in('status', ['resolved', 'closed'])
+        .or(
+          `resolved_at.gte.${startThisWeek.toISOString()},and(resolved_at.is.null,updated_at.gte.${startThisWeek.toISOString()})`
+        );
+      if (resolvedThisWeekErr) throw resolvedThisWeekErr;
+
+      const { data: resolvedLastWeekRows, error: resolvedLastWeekErr } = await supabase
+        .from('issues')
+        .select('resolved_at, updated_at, status')
+        .eq('org_id', organization.id)
+        .in('status', ['resolved', 'closed'])
+        .or(
+          `and(resolved_at.gte.${startLastWeek.toISOString()},resolved_at.lt.${startThisWeek.toISOString()}),and(resolved_at.is.null,updated_at.gte.${startLastWeek.toISOString()},updated_at.lt.${startThisWeek.toISOString()})`
+        );
+      if (resolvedLastWeekErr) throw resolvedLastWeekErr;
+
       // Fetch recent issues
       const { data: issues } = await supabase
         .from('issues')
@@ -83,13 +115,41 @@ export default function Dashboard() {
         .order('created_at', { ascending: false })
         .limit(5);
 
+      const weekly = buildEmptyWeek(startThisWeek);
+
+      (newIssuesThisWeek || []).forEach((row: { created_at: string }) => {
+        const d = startOfDay(new Date(row.created_at));
+        if (!isValid(d)) return;
+        const diff = Math.floor((d.getTime() - startThisWeek.getTime()) / (24 * 60 * 60 * 1000));
+        if (diff >= 0 && diff < 7) weekly[diff].issues += 1;
+      });
+
+      (resolvedThisWeekRows || []).forEach((row: { resolved_at: string | null; updated_at: string; status: string }) => {
+        const rawDate = row.resolved_at || row.updated_at;
+        const d = startOfDay(new Date(rawDate));
+        if (!isValid(d)) return;
+        const diff = Math.floor((d.getTime() - startThisWeek.getTime()) / (24 * 60 * 60 * 1000));
+        if (diff >= 0 && diff < 7) weekly[diff].resolved += 1;
+      });
+
+      const resolvedThisWeekCount = (resolvedThisWeekRows || []).length;
+      const resolvedLastWeekCount = (resolvedLastWeekRows || []).length;
+      const resolvedTrendPct =
+        resolvedLastWeekCount === 0
+          ? resolvedThisWeekCount > 0
+            ? 100
+            : 0
+          : Math.round(((resolvedThisWeekCount - resolvedLastWeekCount) / resolvedLastWeekCount) * 100);
+
       setStats({
         totalAssets: assetsCount || 0,
         activeIssues: openIssues || 0,
         criticalAlerts: criticalCount || 0,
-        resolvedThisWeek: 12, // Mock for now
+        resolvedThisWeek: resolvedThisWeekCount,
+        resolvedTrendPct,
       });
 
+      setIssueTrendData(weekly);
       setRecentIssues((issues as Issue[]) || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -172,10 +232,10 @@ export default function Dashboard() {
         <StatCard
           title="Resolved This Week"
           value={stats.resolvedThisWeek}
-          description="+15% from last week"
+          description={`${stats.resolvedTrendPct >= 0 ? '+' : ''}${stats.resolvedTrendPct}% from last week`}
           icon={CheckCircle2}
           variant="success"
-          trend={{ value: 15, isPositive: true }}
+          trend={{ value: Math.abs(stats.resolvedTrendPct), isPositive: stats.resolvedTrendPct >= 0 }}
           delay={0.3}
         />
       </div>
@@ -207,7 +267,7 @@ export default function Dashboard() {
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
+              <AreaChart data={issueTrendData}>
                 <defs>
                   <linearGradient id="colorIssues" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(217, 91%, 45%)" stopOpacity={0.3} />
