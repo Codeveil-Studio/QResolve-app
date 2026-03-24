@@ -75,35 +75,58 @@ export function ProviderResults({ initialProviders, cityName }: ProviderResultsP
                     </div>
 
                     {/* Sort Dropdown */}
-                    <div className="sort-field" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <SortAsc size={16} style={{ color: "var(--text-muted)" }} />
+                    <div className="sort-field" style={{ position: "relative" }}>
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                             style={{
-                                padding: "10px 14px",
+                                padding: "10px 36px 10px 16px",
                                 borderRadius: "8px",
                                 border: "1px solid var(--border)",
                                 background: "var(--bg-card)",
                                 color: "var(--text-primary)",
+                                fontSize: "14px",
+                                fontWeight: 500,
                                 cursor: "pointer",
-                                outline: "none"
+                                outline: "none",
+                                appearance: "none",
+                                WebkitAppearance: "none",
+                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235c7a6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                                backgroundRepeat: "no-repeat",
+                                backgroundPosition: "right 12px center",
+                                transition: "border-color 0.2s"
                             }}
                         >
-                            <option value="rating">Top Rated</option>
-                            <option value="name">Alphabetical</option>
+                            <option value="rating">Sort: Top Rated</option>
+                            <option value="name">Sort: Alphabetical</option>
                         </select>
                     </div>
 
                     {/* Claimed Filter Toggle */}
-                    <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "8px 14px", borderRadius: "8px", background: "var(--bg-secondary)", border: "1px solid var(--border)", cursor: "pointer", fontSize: "14px" }}>
+                    <label 
+                        style={{ 
+                            display: "flex", 
+                            alignItems: "center", 
+                            gap: "8px", 
+                            padding: "9px 16px", 
+                            borderRadius: "8px", 
+                            background: filterClaimed ? "var(--accent-glow)" : "var(--bg-card)", 
+                            border: `1px solid ${filterClaimed ? "var(--accent)" : "var(--border)"}`, 
+                            color: filterClaimed ? "var(--accent)" : "var(--text-secondary)",
+                            cursor: "pointer", 
+                            fontSize: "14px",
+                            fontWeight: 500,
+                            transition: "all 0.2s"
+                        }}
+                    >
                         <input
                             type="checkbox"
                             checked={filterClaimed}
                             onChange={(e) => setFilterClaimed(e.target.checked)}
+                            style={{ display: "none" }}
                         />
-                        <ShieldCheck size={16} style={{ color: filterClaimed ? "var(--accent)" : "var(--text-muted)" }} />
-                        Managed Only
+                        <ShieldCheck size={16} />
+                        Verified Only
                     </label>
                 </div>
             </div>
@@ -133,7 +156,7 @@ export function ProviderResults({ initialProviders, cityName }: ProviderResultsP
                                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
                                             <span className="result-card-name" style={{ color: isClaimed ? "var(--text-primary)" : "inherit" }}>{provider.provider_name}</span>
                                             {isClaimed && (
-                                                <span className="result-card-badge" style={{ background: "rgba(59, 130, 246, 0.1)", color: "#3b82f6", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+                                                <span className="result-card-badge" style={{ background: "rgba(52, 211, 153, 0.1)", color: "#34d399", border: "1px solid rgba(52, 211, 153, 0.2)" }}>
                                                     <ShieldCheck size={11} /> Managed Listing
                                                 </span>
                                             )}

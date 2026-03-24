@@ -2935,3 +2935,113 @@ footer {
     gap: 6px;
   }
 }
+
+/* ==========================================
+   RESULTS FILTERS & SEARCH
+   ========================================== */
+.results-filter-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 280px;
+}
+
+.search-input-wrapper input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px 0 42px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input-wrapper input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.search-input-wrapper svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.filter-select {
+  height: 44px;
+  padding: 0 12px 0 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235c7a6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 36px;
+}
+
+.filter-select:hover {
+  border-color: var(--border-light);
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-toggle:hover {
+  background: var(--bg-card-hover);
+}
+
+.filter-toggle.active {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+.filter-toggle input {
+  display: none;
+}
+
+.managed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--accent-glow);
+  color: var(--accent);
+  border: 1px solid var(--accent-glow-strong);
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
