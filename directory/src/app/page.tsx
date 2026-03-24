@@ -16,38 +16,27 @@ import {
   Car,
   ChevronRight
 } from "lucide-react";
+import { categories as categoriesData, citySlugMap } from "@/data/categories";
+import { HeroSearch } from "@/components/HeroSearch";
 
-const citySlugMap: Record<string, string> = {
-  "Mumbai": "mumbai",
-  "Delhi NCR": "delhi",
-  "Bangalore": "bangalore",
-  "Hyderabad": "hyderabad",
-  "Chennai": "chennai",
-  "Pune": "pune",
-  "Kolkata": "kolkata",
-  "Ahmedabad": "ahmedabad",
+const iconMap: Record<string, React.ReactNode> = {
+  "vending-and-automated-retail": <Store size={22} />,
+  "ev-charger-maintenance": <Zap size={22} />,
+  "lift-and-escalator": <ArrowUpToLine size={22} />,
+  "hvac-refrigeration": <Wind size={22} />,
+  "commercial-cleaning": <Sparkles size={22} />,
+  "fire-safety-systems": <Flame size={22} />,
+  "security-and-access": <Shield size={22} />,
+  "solar-and-energy": <Sun size={22} />,
+  "electrical-services": <Plug2 size={22} />,
+  "plumbing-and-water": <Droplets size={22} />,
+  "car-repair-services": <Car size={22} />,
 };
 
-const slugify = (text: string) =>
-  text.toLowerCase().trim()
-    .replace(/&/g, "and")
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-const categories = [
-  { icon: <Store size={22} />, title: "Vending & Automated Retail", sub: "Machines, kiosks, micro-markets", slug: "vending-and-automated-retail" },
-  { icon: <Zap size={22} />, title: "EV Charger Maintenance", sub: "Charging posts, payment terminals", slug: "ev-charger-maintenance" },
-  { icon: <ArrowUpToLine size={22} />, title: "Lift Engineers", sub: "Passenger, freight, escalators", slug: "lift-and-escalator" },
-  { icon: <Wind size={22} />, title: "HVAC Servicing", sub: "Cooling, heating, ventilation", slug: "hvac-refrigeration" },
-  { icon: <Sparkles size={22} />, title: "Commercial Cleaning", sub: "Office, retail, industrial spaces", slug: "commercial-cleaning" },
-  { icon: <Flame size={22} />, title: "Fire Safety", sub: "Alarms, extinguishers, compliance", slug: "fire-safety-systems" },
-  { icon: <Shield size={22} />, title: "Security & Access", sub: "CCTV, access control, alarms", slug: "security-and-access" },
-  { icon: <Sun size={22} />, title: "Solar & Energy", sub: "Panels, battery, EPC", slug: "solar-and-energy" },
-  { icon: <Plug2 size={22} />, title: "Electrical Services", sub: "Testing, installation, emergency", slug: "electrical-services" },
-  { icon: <Droplets size={22} />, title: "Plumbing & Water", sub: "Pipes, boilers, water treatment", slug: "plumbing-and-water" },
-  { icon: <Car size={22} />, title: "Car Repair Services", sub: "Multi-brand car service & repair", slug: "car-repair-services" },
-];
+const categories = categoriesData.map((cat) => ({
+  ...cat,
+  icon: iconMap[cat.slug] || <Store size={22} />,
+}));
 
 const blogData: Record<string, { tag: string; title: string; date: string; body: string }> = {
   "trust-problem": {
@@ -162,11 +151,12 @@ export default function HomePage() {
 
       {/* HERO */}
       <div className="hero" id="top">
-        <div className="hero-badge"><span /> Building India&apos;s first performance-ranked maintenance directory</div>
+        <div className="hero-badge"><span />Building India&apos;s first performance-ranked maintenance directory</div>
         <h1>Find the right people<br />to fix <em>every asset</em></h1>
         <p className="hero-sub">
           One directory of maintenance service providers — ranked by <strong>real performance data</strong>, not just promises. Starting with Delhi NCR, expanding city by city.
         </p>
+        <HeroSearch />
         <div className="audience-split">
           <a href="#categories" className="audience-card">
             <div className="audience-label">I need a repair</div>
