@@ -96,3 +96,23 @@ export interface UsageHistory {
   change_amount: number;
   recorded_at: string;
 }
+
+export interface Provider {
+  id: string;
+  provider_name: string;
+  category: string | null;
+  location: string | null;
+  contact_info: string | null;
+  platform: string | null;
+  rating: string | null;
+  owner_id: string | null;
+  description: string | null;
+  website: string | null;
+  business_email: string | null;
+  phone: string | null;
+  is_verified: boolean;
+  trust_score: number;
+  response_time_avg: number;
+  created_at: string | null;
+}
+

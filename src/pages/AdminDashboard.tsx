@@ -1235,7 +1235,10 @@ function AdminClaimsTab() {
       // 1. Update providers table
       const { error: providerError, count } = await supabase
         .from('providers')
-        .update({ owner_id: claim.user_id })
+        .update({ 
+          owner_id: claim.user_id,
+          is_verified: true 
+        })
         .eq('id', claim.provider_id)
         .select();
 
@@ -1246,7 +1249,28 @@ function AdminClaimsTab() {
         console.warn('Provider update affected 0 rows. Check RLS policies or Provider ID.');
       }
 
-      // 2. Update claim status
+      // 2. Auto-sync Organization Name
+      // Find the user's owned organization and rename it to the business name
+      const { data: membership } = await supabase
+        .from('organization_memberships')
+        .select('org_id')
+        .eq('user_id', claim.user_id)
+        .eq('role', 'owner')
+        .maybeSingle();
+
+      if (membership) {
+        const { error: orgError } = await supabase
+          .from('organizations')
+          .update({ name: claim.provider?.provider_name || 'My Business' })
+          .eq('id', membership.org_id);
+        
+        if (orgError) {
+          console.error('Failed to sync organization name:', orgError);
+          // We don't throw here as the main provider ownership was successful
+        }
+      }
+
+      // 3. Update claim status
       const { error: claimError } = await supabase
         .from('profile_claims')
         .update({ status: 'approved' })
@@ -1256,7 +1280,7 @@ function AdminClaimsTab() {
 
       toast({
         title: 'Claim approved',
-        description: `Ownership of ${claim.provider?.provider_name} has been assigned successfully.`,
+        description: `Ownership of ${claim.provider?.provider_name} has been assigned and organization renamed.`,
       });
       await fetchClaims();
     } catch (error: any) {

@@ -18,6 +18,8 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import AssetTypes from "./pages/AssetTypes";
 import CompleteClaim from "./pages/CompleteClaim";
+import OwnerDashboard from "./pages/OwnerDashboard";
+import EditBusinessProfile from "./pages/EditBusinessProfile";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +96,8 @@ const App = () => (
               <Route path="/report/:assetId" element={<ReportIssue />} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/owner-dashboard" element={<ProtectedRoute><OwnerDashboard /></ProtectedRoute>} />
+              <Route path="/edit-business-profile" element={<ProtectedRoute><EditBusinessProfile /></ProtectedRoute>} />
               <Route path="/assets" element={<ProtectedRoute><Assets /></ProtectedRoute>} />
               <Route path="/asset-types" element={<ProtectedRoute><AssetTypes /></ProtectedRoute>} />
               <Route path="/issues" element={<ProtectedRoute><Issues /></ProtectedRoute>} />

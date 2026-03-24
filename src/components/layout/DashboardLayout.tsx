@@ -13,9 +13,12 @@ import {
   ChevronDown,
   Building2,
   QrCode,
-  Tags
+  Tags,
+  ShieldCheck,
+  Store
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -45,6 +48,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, organization, signOut } = useAuth();
+  const [provider, setProvider] = useState<any>(null);
+
+  React.useEffect(() => {
+    const fetchProvider = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('providers')
+        .select('id, is_verified')
+        .eq('owner_id', user.id)
+        .maybeSingle();
+      setProvider(data);
+    };
+    fetchProvider();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -138,6 +155,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Link>
               );
             })}
+
+            {provider && (
+              <>
+                <div className="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground opacity-50">
+                  Business Center
+                </div>
+                <Link
+                  to="/owner-dashboard"
+                  onClick={() => setSidebarOpen(false)}
+                  className={cn(
+                    "sidebar-link",
+                    location.pathname === '/owner-dashboard' && "active"
+                  )}
+                >
+                  <Store className="h-5 w-5" />
+                  <span className="font-bold">OIC Dashboard</span>
+                </Link>
+              </>
+            )}
           </nav>
 
           {/* User section */}
