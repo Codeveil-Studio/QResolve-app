@@ -168,13 +168,15 @@ export default function HomePage() {
           One directory of maintenance service providers — ranked by <strong>real performance data</strong>, not just promises. Starting with Delhi NCR, expanding city by city.
         </p>
         <div className="audience-split">
-          <a href="#categories" className="audience-card">
+          <a href="#categories" className="audience-card" style={{ position: "relative" }}>
+            <div style={{ position: "absolute", top: 18, right: 18, fontSize: "0.7rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, opacity: 0.75 }}>QResolve Directory</div>
             <div className="audience-label">I need a repair</div>
             <h3>Find a verified provider</h3>
             <p>Search by asset type and location. Compare providers on actual response times, resolution rates, and verified reviews.</p>
             <span className="audience-action">Browse categories <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></span>
           </a>
-          <a href="https://app.qresolve.com/signup" className="audience-card">
+          <a href="https://app.qresolve.com/signup" className="audience-card" style={{ position: "relative" }}>
+            <div style={{ position: "absolute", top: 18, right: 18, fontSize: "0.7rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, opacity: 0.75 }}>QResolve Relay</div>
             <div className="audience-label">I&apos;m a service provider</div>
             <h3>Grow with Relay</h3>
             <p>Get a free directory listing. Upgrade to Relay for QR-based fault reporting, job tracking, and the verified badge that wins contracts.</p>
