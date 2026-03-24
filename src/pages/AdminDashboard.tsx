@@ -1208,7 +1208,7 @@ function AdminClaimsTab() {
       .from('profile_claims')
       .select(`
         *,
-        provider:providers(provider_name, category, location)
+        provider:providers(provider_name, category, sub_locality, contact_info)
       `)
       .order('created_at', { ascending: false });
 

@@ -102,6 +102,8 @@ export interface Provider {
   provider_name: string;
   category: string | null;
   location: string | null;
+  sub_locality: string | null;
+  city_slug: string | null;
   contact_info: string | null;
   platform: string | null;
   rating: string | null;

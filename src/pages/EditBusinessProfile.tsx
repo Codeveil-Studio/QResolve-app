@@ -37,9 +37,9 @@ export default function EditBusinessProfile() {
     provider_name: '',
     description: '',
     business_email: '',
-    phone: '',
+    contact_info: '',
     website: '',
-    location: '',
+    sub_locality: '',
   });
 
   useEffect(() => {
@@ -62,9 +62,9 @@ export default function EditBusinessProfile() {
             provider_name: providerData.provider_name || '',
             description: providerData.description || '',
             business_email: providerData.business_email || '',
-            phone: providerData.phone || '',
+            contact_info: providerData.contact_info || '',
             website: providerData.website || '',
-            location: providerData.location || '',
+            sub_locality: providerData.sub_locality || '',
           });
         }
 
@@ -94,9 +94,9 @@ export default function EditBusinessProfile() {
           provider_name: formData.provider_name,
           description: formData.description,
           business_email: formData.business_email,
-          phone: formData.phone,
+          contact_info: formData.contact_info,
           website: formData.website,
-          location: formData.location,
+          sub_locality: formData.sub_locality,
         })
         .eq('id', provider.id);
 
@@ -181,11 +181,11 @@ export default function EditBusinessProfile() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="location">Primary City/Location</Label>
+                  <Label htmlFor="sub_locality">Primary City/Location</Label>
                   <Input 
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    id="sub_locality"
+                    value={formData.sub_locality}
+                    onChange={(e) => setFormData({ ...formData, sub_locality: e.target.value })}
                     placeholder="e.g. Bangalore"
                   />
                 </div>
@@ -219,13 +219,13 @@ export default function EditBusinessProfile() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Public Phone Number</Label>
+                  <Label htmlFor="contact_info">Public Phone Number</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      id="contact_info"
+                      value={formData.contact_info}
+                      onChange={(e) => setFormData({ ...formData, contact_info: e.target.value })}
                       placeholder="+91 00000 00000"
                       className="pl-10"
                     />

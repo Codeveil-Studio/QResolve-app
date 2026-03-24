@@ -106,11 +106,17 @@ export default async function ProviderPage({ params }: PageProps) {
                             Business Profile
                         </h2>
                         <p style={{ fontSize: "1.05rem", color: "var(--text-secondary)", lineHeight: 1.8 }}>
-                            {provider.provider_name} is a leading {provider.category.toLowerCase()} professional serving the {provider.sub_locality} area in {cityName}.
-                            As a verified member of the QResolve directory, they maintain high standards of service and customer satisfaction.
-                            {isVerified
-                                ? " This provider has opted into the Relay verification system, meaning their work performance and resolution rates are tracked via real-world data points."
-                                : " This profile is currently unverified. Verified providers receive priority placement and the 'Verified' badge by connecting their performance data."}
+                            {provider.description ? (
+                                provider.description
+                            ) : (
+                                <>
+                                    {provider.provider_name} is a leading {provider.category?.toLowerCase() || 'service'} professional serving the {provider.sub_locality} area in {cityName}.
+                                    As a verified member of the QResolve directory, they maintain high standards of service and customer satisfaction.
+                                    {isVerified
+                                        ? " This provider has opted into the Relay verification system, meaning their work performance and resolution rates are tracked via real-world data points."
+                                        : " This profile is currently unverified. Verified providers receive priority placement and the 'Verified' badge by connecting their performance data."}
+                                </>
+                            )}
                         </p>
                     </div>
 
