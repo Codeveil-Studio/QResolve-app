@@ -14,7 +14,15 @@ import {
   Plug2,
   Droplets,
   Car,
-  ChevronRight
+  ChevronRight,
+  PhoneOff,
+  MessageSquare,
+  VolumeX,
+  TrendingDown,
+  Search,
+  Puzzle,
+  CheckCircle,
+  Smartphone
 } from "lucide-react";
 import { categories as categoriesData, citySlugMap } from "@/data/categories";
 import { HeroSearch } from "@/components/HeroSearch";
@@ -64,6 +72,7 @@ export default function HomePage() {
   const [city, setCity] = useState("all");
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeHowTab, setActiveHowTab] = useState<"dir" | "relay">("dir");
   const [activeBlog, setActiveBlog] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState(false);
   const revealRefs = useRef<HTMLElement[]>([]);
@@ -152,68 +161,244 @@ export default function HomePage() {
       {/* HERO */}
       <div className="hero" id="top">
         <div className="hero-badge"><span />Building India&apos;s first performance-ranked maintenance directory</div>
-        <h1>Find the right people<br />to fix <em>every asset</em></h1>
+        <h1>Find the right provider.<br /><em>Fix it</em> before anyone notices.</h1>
         <p className="hero-sub">
-          One directory of maintenance service providers — ranked by <strong>real performance data</strong>, not just promises. Starting with Delhi NCR, expanding city by city.
+          Two products. One mission. QResolve is the marketplace where operators find verified service providers. Relay is the operating system that replaces WhatsApp chaos with structured dispatch. Together, they create a flywheel no standalone tool can match.
         </p>
         <HeroSearch />
-        <div className="audience-split">
-          <a href="#categories" className="audience-card" style={{ position: "relative" }}>
-            <div style={{ position: "absolute", top: 18, right: 18, fontSize: "0.7rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, opacity: 0.75 }}>QResolve Directory</div>
-            <div className="audience-label">I need a repair</div>
-            <h3>Find a verified provider</h3>
-            <p>Search by asset type and location. Compare providers on actual response times, resolution rates, and verified reviews.</p>
-            <span className="audience-action">Browse categories <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></span>
-          </a>
-          <a href="https://app.qresolve.com/signup" className="audience-card" style={{ position: "relative" }}>
-            <div style={{ position: "absolute", top: 18, right: 18, fontSize: "0.7rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, opacity: 0.75 }}>QResolve Relay</div>
-            <div className="audience-label">I&apos;m a service provider</div>
-            <h3>Grow with Relay</h3>
-            <p>Get a free directory listing. Upgrade to Relay for QR-based fault reporting, job tracking, and the verified badge that wins contracts.</p>
-            <span className="audience-action">Explore Relay <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></span>
-          </a>
-        </div>
       </div>
 
       <div className="divider"><div className="divider-line" /></div>
 
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" className="qr-explainer reveal" ref={addReveal}>
-        <div className="qr-left">
-          <div className="section-label">How it works</div>
-          <h2 className="section-title">A QR sticker on every asset.<br /><em>Anyone</em> can report a fault.</h2>
-          <p className="section-desc">The &ldquo;Q&rdquo; in QResolve is the QR code. Providers stick a code on each asset they maintain. When something breaks, anyone — a cleaner, a guard, a tenant — scans it and reports the issue in under 10 seconds. No app download, no training.</p>
-          <div className="qr-steps">
-            {[
-              { n: "1", h: "Scan the QR code", p: "Any smartphone camera. Opens directly in the browser — no app needed." },
-              { n: "2", h: "Asset auto-identified", p: "Name, location, and service history are pre-loaded. Reporter just describes the fault." },
-              { n: "3", h: "Right technician dispatched", p: "The provider's dashboard triages by priority. Technician gets a push notification with full context." },
-              { n: "4", h: "Everything is logged", p: "Response time, resolution, client confirmation — all timestamped. This data builds the provider's verified profile." },
-            ].map((s) => (
-              <div className="qr-step" key={s.n}>
-                <div className="qr-step-num">{s.n}</div>
-                <div><h4>{s.h}</h4><p>{s.p}</p></div>
-              </div>
-            ))}
+      {/* TWO PRODUCTS SPLIT */}
+      <section className="split reveal" id="products" ref={addReveal}>
+        <div style={{ textAlign: "center", marginBottom: 60 }}>
+          <h2 className="section-title" style={{ margin: "0 auto" }}>Two products. One flywheel.</h2>
+          <p className="section-desc" style={{ margin: "16px auto 0" }}>Each one is powerful alone. Together, they compound — every lead from the directory makes Relay stickier, and every Relay customer strengthens the directory.</p>
+        </div>
+        
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }} className="audience-split">
+          {/* DIRECTORY CARD */}
+          <div className="product-card directory">
+            <div className="pc-badge">◉ The Marketplace</div>
+            <h3>QResolve.com</h3>
+            <p className="pc-tagline">India&apos;s first specialized directory for built environment maintenance. Not a generic listing site — a performance-ranked marketplace where operators find providers who actually show up.</p>
+            
+            <ul className="pc-features">
+              <li><ChevronRight size={16} /> Search by asset type: vending, EV chargers, lifts, HVAC, cleaning, fire safety</li>
+              <li><ChevronRight size={16} /> Providers ranked by real resolution data — not just reviews</li>
+              <li><ChevronRight size={16} /> &ldquo;Verified by Relay&rdquo; badge = proof the provider uses structured operations</li>
+              <li><ChevronRight size={16} /> Submit urgent repair requests — matched to top providers in your area</li>
+            </ul>
+            
+            <div className="pc-who">
+              <div className="pc-who-label">Who is this for?</div>
+              <p>Facility managers, building operators, fleet operators, and anyone managing physical assets who needs a reliable service provider — fast.</p>
+            </div>
+            
+            <a href="#categories" className="btn btn-accent" style={{ width: "100%", justifyContent: "center" }}>Search Providers on QResolve →</a>
+          </div>
+
+          {/* RELAY CARD */}
+          <div className="product-card relay">
+            <div className="pc-badge">◉ The SaaS Operating System</div>
+            <h3>Relay by QResolve</h3>
+            <p className="pc-tagline">The operating system for maintenance service providers. Replace WhatsApp groups, missed calls, and lost photos with QR-triggered tickets, structured dispatch, and an immutable audit trail.</p>
+            
+            <ul className="pc-features">
+              <li><ChevronRight size={16} /> QR code on each asset — anyone scans, reports a fault in 30 seconds</li>
+              <li><ChevronRight size={16} /> Instant structured ticket: location, photos, fault type, severity</li>
+              <li><ChevronRight size={16} /> Smart dispatch to the right technician based on skill, proximity, load</li>
+              <li><ChevronRight size={16} /> Immutable audit trail — every status change timestamped and read-only</li>
+            </ul>
+            
+            <div className="pc-who">
+              <div className="pc-who-label">Who is this for?</div>
+              <p>Maintenance service providers, vending operators, EV charging networks, elevator contractors — anyone managing a fleet of physical assets.</p>
+            </div>
+            
+            <a href="https://app.qresolve.com/signup" className="btn btn-purple" style={{ width: "100%", justifyContent: "center" }}>Start Free with Relay →</a>
           </div>
         </div>
-        <div className="qr-demo-visual">
-          <div className="qr-phone-mock">
-            <div className="qr-phone-notch" />
-            <div className="qr-phone-screen">
-              <div className="qr-icon">
-                <div className="qr-grid">
-                  {[1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1].map((f, i) => (
-                    <span key={i} className={f ? "filled" : "empty"} />
-                  ))}
+      </section>
+
+      <div className="divider"><div className="divider-line" /></div>
+
+      {/* PAIN */}
+      <section className="pain" id="pain">
+        <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }} className="reveal" ref={addReveal}>
+          <h2 className="section-title" style={{ margin: "0 auto" }}>The status quo is expensive. You just can&apos;t see it.</h2>
+          <p className="section-desc" style={{ margin: "16px auto 48px" }}>Every unreported fault is invisible revenue loss. Every WhatsApp message is an audit trail that doesn&apos;t exist. Here&apos;s what&apos;s actually happening.</p>
+          <div className="pain-grid">
+            <div className="pain-card">
+              <div className="pain-icon"><PhoneOff size={32} /></div>
+              <h4>Faults go unreported</h4>
+              <p>A broken EV charger, a jammed vending machine, a stuck lift — users walk away. You find out days later from an angry tweet, not a ticket.</p>
+            </div>
+            <div className="pain-card">
+              <div className="pain-icon"><MessageSquare size={32} /></div>
+              <h4>WhatsApp is your &ldquo;system&rdquo;</h4>
+              <p>Photos in group chats. Voice notes from technicians. No timestamps, no SLAs, no way to know who&apos;s accountable for what.</p>
+            </div>
+            <div className="pain-card">
+              <div className="pain-icon"><VolumeX size={32} /></div>
+              <h4>No audit trail exists</h4>
+              <p>When a client asks &ldquo;how quickly did you fix that?&rdquo;, you scroll through 300 WhatsApp messages. If you can find them at all.</p>
+            </div>
+            <div className="pain-card">
+              <div className="pain-icon"><TrendingDown size={32} /></div>
+              <h4>Silent revenue bleed</h4>
+              <p>For a 50-charger EV network, even 10% downtime improvement can recover ₹2–3 lakh per month. But you can&apos;t fix what you can&apos;t see.</p>
+            </div>
+            <div className="pain-card">
+              <div className="pain-icon"><Search size={32} /></div>
+              <h4>No way to prove quality</h4>
+              <p>You&apos;re a great service provider. But without data, your pitch is &ldquo;trust us&rdquo; — same as every competitor. No proof, no differentiation.</p>
+            </div>
+            <div className="pain-card">
+              <div className="pain-icon"><Puzzle size={32} /></div>
+              <h4>Finding providers is luck</h4>
+              <p>Facility managers rely on word-of-mouth and Justdial for maintenance providers. No specialization, no performance data, no accountability.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FLYWHEEL */}
+      <section className="flywheel reveal" id="flywheel" ref={addReveal}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <div className="pc-badge" style={{ background: "var(--accent-glow)", color: "var(--accent)" }}>◈ The QResolve Flywheel</div>
+            <h2 className="section-title" style={{ margin: "0 auto" }}>The more they use it, the stronger it gets.</h2>
+            <p className="section-desc" style={{ margin: "16px auto 0" }}>QResolve and Relay aren&apos;t two separate products duct-taped together. They&apos;re a closed loop — each one makes the other more valuable.</p>
+          </div>
+          <div className="fw-steps">
+            <div className="fw-step">
+              <div className="fw-num">01</div>
+              <h4>Directory generates leads</h4>
+              <p>Facility managers search QResolve.com for providers. Inbound leads flow to listed providers.</p>
+            </div>
+            <div className="fw-step">
+              <div className="fw-num">02</div>
+              <h4>Providers adopt Relay</h4>
+              <p>To manage those leads efficiently, providers sign up for Relay. No more WhatsApp chaos.</p>
+            </div>
+            <div className="fw-step">
+              <div className="fw-num">03</div>
+              <h4>Relay earns &ldquo;Verified&rdquo; badge</h4>
+              <p>Providers processing tickets transparently earn the performance-backed &ldquo;Verified by Relay&rdquo; badge.</p>
+            </div>
+            <div className="fw-step">
+              <div className="fw-num">04</div>
+              <h4>Badge boosts rankings</h4>
+              <p>Verified providers rank higher on QResolve → more leads → more Relay usage. Loop closed.</p>
+            </div>
+          </div>
+          <div className="fw-loop">↻ Cycle repeats — each revolution makes both products more valuable</div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS (TABS) */}
+      <section className="how" id="how-it-works">
+        <div style={{ maxWidth: 1100, margin: "0 auto" }} className="reveal" ref={addReveal}>
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <h2 className="section-title" style={{ margin: "0 auto" }}>How it works</h2>
+            <p className="section-desc" style={{ margin: "16px auto 0" }}>Two different user journeys. One connected system.</p>
+          </div>
+          <div className="how-tabs">
+            <button 
+              className={`how-tab ${activeHowTab === "dir" ? "active-dir" : ""}`}
+              onClick={() => setActiveHowTab("dir")}
+            >
+              QResolve Directory
+            </button>
+            <button 
+              className={`how-tab ${activeHowTab === "relay" ? "active-relay" : ""}`}
+              onClick={() => setActiveHowTab("relay")}
+            >
+              Relay by QResolve
+            </button>
+          </div>
+
+          {activeHowTab === "dir" && (
+            <div className="how-panel-dir" style={{ animation: "fadeUp 0.4s ease" }}>
+              <div className="how-steps">
+                <div className="how-step">
+                  <div className="step-num">01</div>
+                  <h4>Search by asset type & location</h4>
+                  <p>Need a vending machine technician in Mumbai? An EV charger service provider in Bangalore? Search QResolve by what you need and where.</p>
+                </div>
+                <div className="how-step">
+                  <div className="step-num">02</div>
+                  <h4>Compare real performance data</h4>
+                  <p>Providers are ranked by response times, resolution rates, and specialization — not just Google reviews. &ldquo;Verified by Relay&rdquo; means they use structured operations.</p>
+                </div>
+                <div className="how-step">
+                  <div className="step-num">03</div>
+                  <h4>Connect & dispatch</h4>
+                  <p>Send a repair request directly through QResolve. Matched to the top 3 verified providers near you. First to respond gets the job.</p>
                 </div>
               </div>
-              <div className="qr-phone-title">Report a Fault</div>
-              <div className="qr-phone-subtitle">Vending Machine · Lobby B, Tower 3</div>
-              <div className="qr-phone-field"><div className="qr-phone-field-label">Asset</div><div className="qr-phone-field-value">Freshcase VM-200 #0847</div></div>
-              <div className="qr-phone-field"><div className="qr-phone-field-label">Issue</div><div className="qr-phone-field-value">Card reader not accepting UPI</div></div>
-              <div className="qr-phone-btn">Submit Report →</div>
-              <div className="qr-phone-timer">Avg. time to submit: <strong>8 seconds</strong></div>
+            </div>
+          )}
+
+          {activeHowTab === "relay" && (
+            <div className="how-panel-relay" style={{ animation: "fadeUp 0.4s ease" }}>
+              <div className="how-steps">
+                <div className="how-step">
+                  <div className="step-num" style={{ color: "var(--purple)" }}>01</div>
+                  <h4>Stick a QR code on the asset</h4>
+                  <p>Every asset — charger, vending machine, lift — gets a unique QR code. Anyone can scan it. No app download, no login required.</p>
+                </div>
+                <div className="how-step">
+                  <div className="step-num" style={{ color: "var(--purple)" }}>02</div>
+                  <h4>Fault reported in 30 seconds</h4>
+                  <p>The reporter selects fault type, takes a photo, adds a note. Ticket auto-tagged with asset ID, location, timestamp. Structured from the start.</p>
+                </div>
+                <div className="how-step">
+                  <div className="step-num" style={{ color: "var(--purple)" }}>03</div>
+                  <h4>Right technician dispatched</h4>
+                  <p>Relay routes the ticket to the right person based on skill, proximity, and workload. Full audit trail — every status change timestamped and immutable.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* QR DEMO (NO-APP) */}
+      <section className="reveal" ref={addReveal}>
+        <div className="qr-explainer">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
+            <div style={{ width: 180, height: 180, background: "var(--surface)", border: "2px solid var(--purple)", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+              <div style={{ position: "absolute", inset: -8, border: "1px dashed rgba(167, 139, 250, 0.3)", borderRadius: 20 }} />
+              <div className="qr-grid" style={{ width: 120, height: 120, gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
+                {[1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1].map((f, i) => (
+                  <span key={i} className={f ? "filled" : "empty"} style={{ background: f ? "var(--purple)" : "var(--surface)" }} />
+                ))}
+              </div>
+            </div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 13, color: "var(--purple)", letterSpacing: "1px", textTransform: "uppercase", fontWeight: 600 }}>Scan → Report → Resolved</div>
+          </div>
+          <div>
+            <div className="section-label">The No-App Mandate</div>
+            <h2 className="section-title" style={{ fontSize: 32, marginBottom: 16 }}>Fast. Frictionless. <span style={{ color: "var(--purple)", fontStyle: "italic" }}>Foolproof.</span></h2>
+            <p className="section-desc" style={{ marginBottom: 24 }}>Relay&apos;s QR codes open right in the browser. No app store. No login. No friction. A user at a broken EV charger scans, taps the fault type, takes a photo, and walks away. The ticket is live.</p>
+            <p className="section-desc" style={{ marginBottom: 32 }}>This is intentional. The person reporting a fault isn&apos;t your employee — they&apos;re a stranger. The lower the friction, the more faults get reported, the faster you fix them, the less revenue you lose.</p>
+            
+            <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 600, color: "var(--purple)" }}>&lt;30s</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>Report time</div>
+              </div>
+              <div>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 600, color: "var(--purple)" }}>0</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>Apps to install</div>
+              </div>
+              <div>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 600, color: "var(--purple)" }}>0</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>Logins required</div>
+              </div>
             </div>
           </div>
         </div>
@@ -306,71 +491,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* HONESTY */}
-      <div className="honesty-section" id="early-access">
-        <div className="honesty-inner reveal" ref={addReveal}>
-          <div>
-            <div className="section-label">Where we are today</div>
-            <h2 className="section-title">We&apos;re early. And we&apos;re being honest about it.</h2>
-            <p className="section-desc" style={{ marginTop: 16 }}>Most directories launch with inflated numbers. We&apos;d rather show you exactly where we stand and grow alongside the providers who believe in transparent, data-backed service delivery.</p>
-          </div>
-          <div className="honesty-right">
-            {[
-              { v: "Delhi NCR", l: "Our launch city — proving the model here first" },
-              { v: "6", l: "Service categories live and growing" },
-              { v: "Free", l: "To list your business during early access" },
-              { v: "30 days", l: "Free Relay trial for founding providers" },
-            ].map((s) => (
-              <div className="honesty-stat" key={s.l}><div className="honesty-stat-value">{s.v}</div><div className="honesty-stat-label">{s.l}</div></div>
-            ))}
-            <div className="honesty-note"><strong>Founding provider perks:</strong> Early providers help shape the platform and get priority placement, a locked-in rate, and direct access to our team. We grow when you grow.</div>
-          </div>
-        </div>
-      </div>
-
-      {/* RELAY */}
-      <section id="relay" className="reveal" ref={addReveal}>
-        <div className="relay-teaser-inner">
-          <div>
-            <div className="relay-label">For Service Providers</div>
-            <h2>Relay — the operating system for <em>your</em> service business</h2>
-            <p className="relay-teaser-desc">You handle the repairs. Relay handles everything else — fault reports via QR code, job tracking, technician dispatch, compliance logs, and the verified performance data that wins you contracts on QResolve.</p>
-            <div className="relay-features-mini">
-              {["QR fault reporting", "OIC dashboard", "Technician dispatch", "Audit trail", "Verified badge", "Procurement intel"].map((f) => (
-                <span className="relay-feat-tag" key={f}>{f}</span>
-              ))}
-            </div>
-            <div className="relay-pricing-hint">Starting at <strong>₹4,999/month</strong> · Free 30-day trial · No credit card required</div>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <a href="#list-your-business" className="btn btn-purple">Start Free Trial</a>
-              <a href="#pricing" className="btn btn-outline">See Pricing →</a>
-            </div>
-          </div>
-          <div className="relay-preview-card">
-            <div className="relay-preview-header">
-              <div className="relay-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-              </div>
-              <div><div className="relay-preview-title">Relay Dashboard</div><div className="relay-preview-subtitle">PrecisionMaint Services · Today</div></div>
-            </div>
-            <div className="relay-mini-stats">
-              {[{ l: "Open tickets", v: "7", c: "warn" }, { l: "Resolved today", v: "12", c: "good" }, { l: "Avg response", v: "11m", c: "good" }, { l: "SLA compliance", v: "98%", c: "good" }].map((s) => (
-                <div className="relay-mini-stat" key={s.l}><div className="relay-mini-stat-label">{s.l}</div><div className={`relay-mini-stat-value ${s.c}`}>{s.v}</div></div>
-              ))}
-            </div>
-            <div className="relay-job-list">
-              {[
-                { n: "VM-200 #0847 · Card reader", s: "active", l: "In Progress" },
-                { n: "VM-150 #0392 · Display error", s: "resolved", l: "Resolved" },
-                { n: "VM-200 #1104 · Coin jam", s: "resolved", l: "Resolved" },
-              ].map((j) => (
-                <div className="relay-job" key={j.n}><span className="relay-job-name">{j.n}</span><span className={`relay-job-status ${j.s}`}>{j.l}</span></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       <div className="divider"><div className="divider-line" /></div>
 
       {/* PRICING */}
@@ -378,167 +498,51 @@ export default function HomePage() {
         <div style={{ textAlign: "center", marginBottom: 8 }}>
           <div className="section-label">Pricing</div>
           <h2 className="section-title" style={{ margin: "0 auto" }}>Simple plans. No hidden costs.</h2>
-          <p className="section-desc" style={{ margin: "16px auto 0", textAlign: "center" }}>Both plans include a free 30-day trial. No credit card required to start.</p>
+          <p className="section-desc" style={{ margin: "16px auto 0", textAlign: "center" }}>Start free on the directory. Upgrade when you're ready to grow.</p>
         </div>
-        <div className="pricing-grid">
+        <div className="pricing-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+          <div className="pricing-card">
+            <div className="pricing-name" style={{ color: "var(--accent)" }}>Free Listing</div>
+            <div className="pricing-price">₹0 <span>/forever</span></div>
+            <p className="pricing-desc">A professional directory presence on QResolve. Ideal for providers looking to generate inbound leads.</p>
+            <ul className="pricing-features">
+              <li>Category & City placement</li>
+              <li>Basic company profile</li>
+              <li>Receive direct repair requests</li>
+              <li>Customer reviews</li>
+            </ul>
+            <a href="https://app.qresolve.com/signup" className="btn btn-outline" style={{ width: "100%", justifyContent: "center" }}>Claim Free Profile</a>
+          </div>
           <div className="pricing-card">
             <div className="pricing-name">Relay Starter</div>
             <div className="pricing-price">₹4,999 <span>/month</span></div>
-            <p className="pricing-desc">For providers managing up to 100 assets across a single city. Everything you need to look professional and prove your performance.</p>
+            <p className="pricing-desc">For providers managing up to 100 assets. Everything you need to look professional and prove your performance.</p>
             <ul className="pricing-features">
-              {["QR code generation & asset mapping", "No-app fault reporting (under 10 seconds)", "OIC Dashboard with revenue-impact triage", "Technician assignment & notifications", "Immutable audit log & compliance exports", '"Verified by Relay" badge on QResolve', "Real-time status URL for reporters"].map((f) => <li key={f}>{f}</li>)}
+              <li>QR fault reporting (no-app)</li>
+              <li>OIC Dashboard & triaging</li>
+              <li>Technician dispatch</li>
+              <li>Immutable audit log</li>
+              <li>"Verified by Relay" badge</li>
             </ul>
-            <a href="#list-your-business" className="btn btn-accent" style={{ width: "100%", justifyContent: "center" }}>Start Free 30-Day Trial</a>
+            <a href="https://app.qresolve.com/signup" className="btn btn-accent" style={{ width: "100%", justifyContent: "center" }}>Start Free Trial</a>
           </div>
           <div className="pricing-card featured">
             <div className="pricing-name">Relay Pro</div>
             <div className="pricing-price">₹12,999 <span>/month</span></div>
             <p className="pricing-desc">For providers scaling across multiple clients and cities. Advanced analytics that turn fault data into strategic advantage.</p>
             <ul className="pricing-features">
-              {["Everything in Starter", "Unlimited assets & multi-city support", "Procurement Intelligence reports", "Vendor Reliability & TCO analysis", "Micro-Friction Index per asset", "Priority lead access on QResolve", '"Relay Elite" badge & top placement'].map((f) => <li key={f}>{f}</li>)}
+              <li>Everything in Starter</li>
+              <li>Unlimited assets & multi-city</li>
+              <li>Procurement Intelligence reports</li>
+              <li>Vendor Reliability analysis</li>
+              <li>Priority lead access on QResolve</li>
             </ul>
-            <a href="#list-your-business" className="btn btn-purple" style={{ width: "100%", justifyContent: "center" }}>Start Free 30-Day Trial</a>
+            <a href="https://app.qresolve.com/signup" className="btn btn-purple" style={{ width: "100%", justifyContent: "center" }}>Start Free Trial</a>
           </div>
         </div>
       </section>
 
       <div className="divider"><div className="divider-line" /></div>
-
-      {/* BLOG */}
-      <section id="blog" className="reveal" ref={addReveal}>
-        <div className="section-label">From the blog</div>
-        <h2 className="section-title">Thinking about maintenance, differently</h2>
-        <p className="section-desc">Insights on building a transparent service economy in India.</p>
-        <div className="blog-grid">
-          {[
-            { slug: "trust-problem", tag: "Industry", emoji: "📊", title: "Why India's ₹4 lakh crore maintenance market has a trust problem", excerpt: "The gap between what service providers promise and what they deliver costs facility managers crores every year." },
-            { slug: "qr-scan", tag: "Product", emoji: "📱", title: "How a 10-second QR scan replaces a 4-hour fault reporting chain", excerpt: "The average time from fault to work order in Indian commercial buildings is over 4 hours. We built Relay to make it under 60 seconds." },
-            { slug: "law-to-saas", tag: "Founder", emoji: "🏢", title: "From law school to SaaS: why I'm building for India's service providers", excerpt: "How studying evidence law at Leeds led me to build a platform that proves service provider performance with data." },
-          ].map((post) => (
-            <a key={post.slug} href="#blog" className="blog-card" onClick={(e) => { e.preventDefault(); setActiveBlog(post.slug); document.body.style.overflow = "hidden"; }}>
-              <div className="blog-card-image">
-                <div className="blog-card-image-inner">{post.emoji}</div>
-                <span className="blog-card-tag">{post.tag}</span>
-              </div>
-              <div className="blog-card-body">
-                <div className="blog-card-title">{post.title}</div>
-                <div className="blog-card-excerpt">{post.excerpt}</div>
-                <div className="blog-card-date">March 2026</div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* BLOG OVERLAY */}
-      {activeBlog && blogData[activeBlog] && (
-        <div className="blog-page-overlay open" id="blog-page-overlay">
-          <div className="blog-page-nav">
-            <button className="blog-back-btn" onClick={() => { setActiveBlog(null); document.body.style.overflow = ""; }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-              Back to QResolve
-            </button>
-            <a href="#list-your-business" className="nav-cta" onClick={() => { setActiveBlog(null); document.body.style.overflow = ""; }} style={{ padding: "8px 20px", background: "var(--accent)", color: "var(--bg-primary)", borderRadius: "100px", fontWeight: 600, fontSize: 13, textDecoration: "none" }}>List Your Business</a>
-          </div>
-          <div className="blog-page-content">
-            <span className="blog-page-tag">{blogData[activeBlog].tag}</span>
-            <h1>{blogData[activeBlog].title}</h1>
-            <div className="blog-page-meta">{blogData[activeBlog].date} · QResolve Blog</div>
-            <div className="blog-page-body" dangerouslySetInnerHTML={{ __html: blogData[activeBlog].body }} />
-            <div className="blog-page-cta">
-              <h3>Interested in QResolve?</h3>
-              <p>List your service business for free during early access.</p>
-              <a href="#list-your-business" className="btn btn-accent" onClick={() => { setActiveBlog(null); document.body.style.overflow = ""; }}>Claim Your Free Listing</a>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="divider"><div className="divider-line" /></div>
-
-      {/* FOUNDER */}
-      <section id="about" className="reveal" ref={addReveal}>
-        <div className="section-label">Our story</div>
-        <h2 className="section-title" style={{ marginBottom: 32 }}>Why I&apos;m building QResolve</h2>
-        <div className="founder-strip">
-          <div className="founder-avatar-lg">S</div>
-          <div className="founder-body">
-            <div className="founder-meta">
-              <span className="founder-meta-name">Founder</span>
-              <div className="founder-meta-tags">
-                <span>Law · Leeds &amp; Exeter</span>
-                <span>SaaS Builder</span>
-                <span>Delhi NCR</span>
-              </div>
-            </div>
-            <blockquote>&ldquo;A vending machine goes down, someone calls someone, who texts someone, who maybe sends a technician tomorrow. No data, no accountability, no proof anything happened.&rdquo;</blockquote>
-            <p className="founder-text">
-              I studied law — not the obvious path to building a maintenance SaaS. But law taught me that <strong>evidence matters</strong>, and India&apos;s commercial maintenance industry has almost none. QResolve fixes that with a QR code on every asset, 10-second fault reporting, and a verified performance record that lets the next facility manager choose based on data, not sales pitches.
-            </p>
-            <a href="#contact" className="founder-cta">
-              Say hello <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* CONTACT */}
-      <div className="contact-section" id="contact">
-        <div className="contact-inner reveal" ref={addReveal}>
-          <div>
-            <div className="section-label">Get in touch</div>
-            <h2 className="section-title">We&apos;d love to hear from you</h2>
-            <p className="section-desc" style={{ marginTop: 16 }}>Whether you&apos;re a facility manager looking for providers, a service company exploring Relay, or just curious — drop us a line.</p>
-            <div className="contact-channels">
-              {[
-                { href: "mailto:hello@qresolve.com", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>, h: "Email us", p: "hello@qresolve.com" },
-                { href: "https://twitter.com/qresolvesupport", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231z" fill="currentColor" stroke="none" /></svg>, h: "Follow on X", p: "@qresolvesupport" },
-                { href: "https://linkedin.com/company/qresolve", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg>, h: "LinkedIn", p: "Q-Resolve Analytics" },
-              ].map((ch) => (
-                <a key={ch.h} href={ch.href} className="contact-channel" target={ch.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
-                  <div className="contact-channel-icon">{ch.icon}</div>
-                  <div><h4>{ch.h}</h4><p>{ch.p}</p></div>
-                </a>
-              ))}
-            </div>
-          </div>
-          <div id="list-your-business">
-            <h3 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, marginBottom: 6 }}>List your business</h3>
-            <p style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 24 }}>Free during early access. Takes 2 minutes.</p>
-            {!formSuccess ? (
-              <form className="contact-form" onSubmit={handleSubmit}>
-                <div className="contact-row">
-                  <div className="contact-field"><label htmlFor="name">Your name</label><input type="text" id="name" placeholder="Full name" required /></div>
-                  <div className="contact-field"><label htmlFor="email">Email</label><input type="email" id="email" placeholder="you@company.com" required /></div>
-                </div>
-                <div className="contact-field"><label htmlFor="company">Company name</label><input type="text" id="company" placeholder="Your service company name" /></div>
-                <div className="contact-row">
-                  <div className="contact-field">
-                    <label htmlFor="category">Service category</label>
-                    <select id="category">
-                      <option value="">Select a category...</option>
-                      {categories.map((c) => <option key={c.slug}>{c.title}</option>)}
-                      <option>Other</option>
-                    </select>
-                  </div>
-                  <div className="contact-field"><label htmlFor="city">City</label><input type="text" id="city" placeholder="e.g. Delhi NCR, Mumbai" /></div>
-                </div>
-                <div className="contact-field"><label htmlFor="message">Anything else? (optional)</label><textarea id="message" placeholder="Tell us about your business..." /></div>
-                <button type="submit" className="btn btn-accent" style={{ width: "100%", justifyContent: "center", padding: "14px 28px", fontSize: 15 }}>
-                  Submit — Get Your Free Listing
-                </button>
-                <p style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "center" }}>Free during early access · We&apos;ll reach out within 24 hours</p>
-              </form>
-            ) : (
-              <div style={{ textAlign: "center", padding: "48px 24px" }}>
-                <div style={{ fontSize: 48, marginBottom: 16, color: "var(--accent)" }}>✓</div>
-                <h3 style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 500, marginBottom: 8 }}>You&apos;re in!</h3>
-                <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>We&apos;ll be in touch within 24 hours to get your listing set up. Welcome to QResolve.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* FINAL CTA */}
       <section style={{ textAlign: "center", paddingTop: 60, paddingBottom: 80 }} className="reveal" ref={addReveal}>
@@ -549,8 +553,8 @@ export default function HomePage() {
           QResolve brings you the clients. Relay helps you keep them. List for free, upgrade to Verified, and let your performance data do the selling.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="#list-your-business" className="btn btn-accent">Claim Your Free Listing</a>
-          <a href="#relay" className="btn btn-outline">Explore Relay →</a>
+          <a href="https://app.qresolve.com/signup" className="btn btn-accent">Claim Your Free Listing</a>
+          <a href="#how-it-works" className="btn btn-outline" onClick={(e) => { e.preventDefault(); document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }); setActiveHowTab('relay'); }}>Explore Relay →</a>
         </div>
       </section>
 
@@ -571,25 +575,20 @@ export default function HomePage() {
               <ul className="footer-links">
                 <li><a href="#categories">Browse Categories</a></li>
                 <li><a href="#verified">Verified Providers</a></li>
-                <li><a href="#early-access">Delhi NCR</a></li>
-                <li><a href="#contact">Request a Category</a></li>
               </ul>
             </div>
             <div>
               <div className="footer-col-title">For Providers</div>
               <ul className="footer-links">
                 <li><a href="https://app.qresolve.com/signup">List Your Business</a></li>
-                <li><a href="#relay">Relay Features</a></li>
+                <li><a href="#how-it-works" onClick={(e) => { e.preventDefault(); document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }); setActiveHowTab('relay'); }}>Relay Features</a></li>
                 <li><a href="#pricing">Pricing</a></li>
-                <li><a href="#early-access">Founding Provider Program</a></li>
               </ul>
             </div>
             <div>
               <div className="footer-col-title">Company</div>
               <ul className="footer-links">
-                <li><a href="#about">Our Story</a></li>
-                <li><a href="#blog">Blog</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a href="mailto:hello@qresolve.com">Contact</a></li>
                 <li><a href="#privacy">Privacy Policy</a></li>
                 <li><a href="#terms">Terms of Service</a></li>
               </ul>
@@ -614,3 +613,4 @@ export default function HomePage() {
     </>
   );
 }
+

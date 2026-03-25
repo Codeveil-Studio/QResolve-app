@@ -32,6 +32,28 @@
   --radius-xl: 28px;
 }
 
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* ==========================================
    Custom Scrollbar
    ========================================== */
@@ -2512,6 +2534,202 @@ footer {
 }
 
 /* ==========================================
+   HOMEPAGE NEW SECTIONS (03/25)
+   ========================================== */
+
+/* Split Section */
+.split { padding: 80px 40px; }
+.product-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  background: var(--bg-card);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, border-color 0.3s, background 0.3s;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-light);
+  background: var(--bg-card-hover);
+}
+.product-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+.product-card.relay::before {
+  background: linear-gradient(90deg, var(--purple), transparent);
+}
+.pc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.directory .pc-badge { background: var(--accent-glow); color: var(--accent); }
+.relay .pc-badge { background: var(--purple-glow); color: var(--purple); }
+.product-card h3 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+.directory h3 { color: var(--accent); }
+.relay h3 { color: var(--purple); }
+.pc-tagline { font-size: 16px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px; }
+.pc-features { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+.pc-features li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+.pc-features li svg { flex-shrink: 0; color: var(--accent); }
+.relay .pc-features li svg { color: var(--purple); }
+.pc-who {
+  padding: 20px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  margin-bottom: 32px;
+  border: 1px solid var(--border);
+}
+.pc-who-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+.pc-who p { font-size: 14px; color: var(--text-secondary); }
+
+/* Pain Points Grid */
+.pain { padding: 80px 40px; background: var(--bg-secondary); }
+.pain-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 48px;
+}
+.pain-card {
+  padding: 32px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color 0.3s;
+}
+.pain-card:hover { border-color: var(--border-light); }
+.pain-icon { margin-bottom: 16px; color: var(--accent); }
+.pain-card h4 { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+.pain-card p { font-size: 15px; color: var(--text-secondary); line-height: 1.6; }
+
+/* Flywheel Diagram */
+.flywheel { padding: 100px 40px; }
+.fw-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  position: relative;
+  margin-top: 48px;
+}
+.fw-step {
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+.fw-step:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+.fw-step:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+.fw-step:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 24px;
+  color: var(--accent);
+  z-index: 2;
+  background: transparent;
+}
+.fw-num {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--accent);
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.fw-step h4 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+.fw-step p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+.fw-loop {
+  text-align: center;
+  margin-top: 32px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* How It Works (Tabs) */
+.how { padding: 80px 40px; background: var(--bg-secondary); }
+.how-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 40px 0;
+}
+.how-tab {
+  padding: 12px 24px;
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  background: transparent;
+}
+.how-tab.active-dir {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.how-tab.active-relay {
+  background: var(--purple-glow);
+  border-color: var(--purple);
+  color: var(--purple);
+}
+.how-tab:hover:not(.active-dir):not(.active-relay) {
+  border-color: var(--border-light);
+  color: var(--text-primary);
+}
+.how-panel { display: none; }
+.how-panel.active { display: block; animation: fadeUp 0.4s ease; }
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.how-step {
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+}
+.how-step .step-num {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+.how-panel-dir .step-num { color: var(--accent); }
+.how-panel-relay .step-num { color: var(--purple); }
+.how-step h4 { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+.how-step p { font-size: 15px; color: var(--text-secondary); line-height: 1.6; }
+
+/* ==========================================
    RESPONSIVE
    ========================================== */
 @media (max-width: 900px) {
@@ -2532,6 +2750,21 @@ footer {
   }
 
   .audience-split {
+    grid-template-columns: 1fr;
+  }
+
+  .pain-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fw-steps {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .fw-step:nth-child(2)::after { display: none; }
+  .fw-step { border-radius: var(--radius-md) !important; }
+
+  .how-steps {
     grid-template-columns: 1fr;
   }
 
@@ -2635,9 +2868,13 @@ footer {
    ========================================== */
 .hero-search-wrapper {
   position: relative;
-  max-width: 680px;
-  margin: 32px auto 0;
+  width: 100%;
+  max-width: 1000px;
+  margin: 40px auto 0;
   z-index: 10;
+  animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  animation-delay: 0.15s;
 }
 
 .hero-search {
