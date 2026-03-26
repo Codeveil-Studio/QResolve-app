@@ -8,24 +8,24 @@ interface StatusBadgeProps {
 }
 
 const assetStatusStyles: Record<AssetStatus, string> = {
-  active: 'status-badge-active',
-  inactive: 'status-badge-inactive',
-  maintenance: 'status-badge-pending',
-  retired: 'status-badge-inactive',
+  active: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+  inactive: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+  maintenance: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+  retired: 'bg-red-500/10 text-red-500 border-red-500/20',
 };
 
 const issueStatusStyles: Record<IssueStatus, string> = {
-  open: 'status-badge-pending',
-  in_progress: 'bg-primary/10 text-primary',
-  resolved: 'status-badge-active',
-  closed: 'status-badge-inactive',
+  open: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+  in_progress: 'bg-primary/10 text-primary border-primary/20',
+  resolved: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+  closed: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
 };
 
 const priorityStyles: Record<IssuePriority, string> = {
-  low: 'bg-success/10 text-success',
-  medium: 'bg-warning/10 text-warning',
-  high: 'bg-destructive/10 text-destructive',
-  critical: 'bg-destructive text-destructive-foreground',
+  low: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+  medium: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+  high: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+  critical: 'bg-red-500/10 text-red-600 border-red-500/30 font-bold',
 };
 
 const formatLabel = (status: string) => {
@@ -33,7 +33,7 @@ const formatLabel = (status: string) => {
 };
 
 export function StatusBadge({ status, type = 'asset' }: StatusBadgeProps) {
-  let styleClass = 'status-badge-inactive';
+  let styleClass = 'bg-slate-500/10 text-slate-400 border-slate-500/20';
   
   if (type === 'asset' && status in assetStatusStyles) {
     styleClass = assetStatusStyles[status as AssetStatus];
@@ -44,8 +44,11 @@ export function StatusBadge({ status, type = 'asset' }: StatusBadgeProps) {
   }
 
   return (
-    <span className={cn('status-badge', styleClass)}>
-      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+    <span className={cn(
+      'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium border transition-all duration-200', 
+      styleClass
+    )}>
+      <span className="h-1 w-1 rounded-full bg-current animate-pulse-subtle" />
       {formatLabel(status)}
     </span>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, AlertCircle, MoreHorizontal, Trash2, Edit, CheckCircle } from 'lucide-react';
+import { Plus, Search, Filter, AlertCircle, MoreHorizontal, Trash2, Edit, CheckCircle, XCircle } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -37,8 +37,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Issue, Asset, IssueStatus, IssuePriority } from '@/lib/supabase-types';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 type IssueWithAsset = Issue & {
+  revenue_impact?: 'high' | 'low';
   asset?: {
     name: string;
     asset_type?: {
@@ -48,7 +51,7 @@ type IssueWithAsset = Issue & {
 };
 
 export default function Issues() {
-  const { organization, user } = useAuth();
+  const { organization, membership, isAdmin, user } = useAuth();
   const { toast } = useToast();
   const [issues, setIssues] = useState<IssueWithAsset[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -172,6 +175,25 @@ export default function Issues() {
     }
   };
 
+  const handleImpactChange = async (issue: Issue, newImpact: 'high' | 'low') => {
+    try {
+      const { error } = await supabase
+        .from('issues')
+        .update({ revenue_impact: newImpact } as any)
+        .eq('id', issue.id);
+
+      if (error) throw error;
+      toast({ title: `Revenue Impact set to ${newImpact.toUpperCase()}` });
+      fetchIssues();
+    } catch (error: unknown) {
+      toast({
+        variant: 'destructive',
+        title: 'Failed to update impact',
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  };
+
   const handleDelete = async (issue: Issue) => {
     if (!confirm('Are you sure you want to delete this issue?')) return;
 
@@ -218,9 +240,26 @@ export default function Issues() {
       key: 'asset_type',
       header: 'Asset Type',
       render: (issue: IssueWithAsset) => (
-        <span className="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded-md">
-          {issue.asset?.asset_type?.name || 'N/A'}
+        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-primary/5 text-primary/80 border border-primary/10">
+          {issue.asset?.asset_type?.name || 'Unassigned'}
         </span>
+      ),
+    },
+    {
+      key: 'revenue_impact',
+      header: 'Revenue Impact',
+      render: (issue: IssueWithAsset) => (
+        <Badge 
+          className={cn(
+            "uppercase text-[10px] font-bold tracking-tight px-2 py-0.5 rounded-full border shadow-sm transition-all duration-300",
+            issue.revenue_impact === 'high' 
+              ? "bg-orange-500/10 text-orange-500 border-orange-500/20 hover:bg-orange-500/20" 
+              : "bg-blue-500/10 text-blue-500 border-blue-500/20 hover:bg-blue-500/20"
+          )}
+          variant="outline"
+        >
+          {issue.revenue_impact || 'low'}
+        </Badge>
       ),
     },
     {
@@ -262,14 +301,36 @@ export default function Issues() {
               <CheckCircle className="mr-2 h-4 w-4" />
               Mark Resolved
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => handleDelete(issue)}
-              className="text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+            <DropdownMenuItem onClick={() => handleStatusChange(issue, 'closed')}>
+              <XCircle className="mr-2 h-4 w-4" />
+              Mark Closed
             </DropdownMenuItem>
+            
+            <DropdownMenuSeparator />
+            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Triage Impact
+            </div>
+            <DropdownMenuItem onClick={() => handleImpactChange(issue, 'high')}>
+              <div className="h-2 w-2 rounded-full bg-red-500 mr-2" />
+              High Impact
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleImpactChange(issue, 'low')}>
+              <div className="h-2 w-2 rounded-full bg-blue-500 mr-2" />
+              Low Impact
+            </DropdownMenuItem>
+
+            {(isAdmin) && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => handleDelete(issue)}
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -312,14 +373,14 @@ export default function Issues() {
                 <div>
                   <Label htmlFor="asset">Related Asset</Label>
                   <Select
-                    value={formData.asset_id}
-                    onValueChange={(value) => setFormData({ ...formData, asset_id: value })}
+                    value={formData.asset_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, asset_id: value === "none" ? "" : value })}
                   >
                     <SelectTrigger className="mt-1.5">
                       <SelectValue placeholder="Select asset" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {assets.map((asset) => (
                         <SelectItem key={asset.id} value={asset.id}>
                           {asset.name}

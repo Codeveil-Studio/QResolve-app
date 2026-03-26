@@ -43,6 +43,7 @@ import { Asset, AssetStatus, Issue } from '@/lib/supabase-types';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { getPlan } from '@/lib/subscription';
 
 type AssetTypeOption = {
   id: string;
@@ -62,6 +63,7 @@ export default function Assets() {
   const [assets, setAssets] = useState<AssetWithType[]>([]);
   const [loading, setLoading] = useState(true);
   const [issuesLoading, setIssuesLoading] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -117,12 +119,23 @@ export default function Assets() {
     setAssetTypes(data || []);
   }, [organization]);
 
+  const fetchSubscription = useCallback(async () => {
+    if (!organization) return;
+    const { data } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('org_id', organization.id)
+      .maybeSingle();
+    setSubscription(data);
+  }, [organization]);
+
   useEffect(() => {
     if (organization) {
       fetchAssets();
       fetchAssetTypes();
+      fetchSubscription();
     }
-  }, [organization, fetchAssets, fetchAssetTypes]);
+  }, [organization, fetchAssets, fetchAssetTypes, fetchSubscription]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +146,17 @@ export default function Assets() {
         variant: 'destructive',
         title: 'Missing Information',
         description: 'Please add at least one Issue Type tag.',
+      });
+      return;
+    }
+
+    // Check Plan Limits
+    const currentPlan = getPlan(subscription?.status, assets.length);
+    if (assets.length >= currentPlan.maxAssets) {
+      toast({
+        variant: 'destructive',
+        title: 'Limit Reached',
+        description: `Your ${subscription?.status || 'trial'} plan is limited to ${currentPlan.maxAssets} assets. Please upgrade in Settings to add more.`,
       });
       return;
     }

@@ -13,6 +13,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getPlan, PLAN_LIMITS } from '@/lib/subscription';
+import { cn } from '@/lib/utils';
+import { QrCode, AlertCircle, Users, CheckCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function Settings() {
   const { user, profile, organization } = useAuth();
@@ -31,6 +35,25 @@ export default function Settings() {
     weeklyReports: false,
     criticalOnly: false,
   });
+  const [subscription, setSubscription] = useState<any>(null);
+  const [assetCount, setAssetCount] = useState(0);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      if (!organization) return;
+      
+      const [subRes, assetsRes] = await Promise.all([
+        supabase.from('subscriptions').select('*').eq('org_id', organization.id).maybeSingle(),
+        supabase.from('assets').select('id', { count: 'exact', head: true }).eq('org_id', organization.id)
+      ]);
+
+      setSubscription(subRes.data);
+      setAssetCount(assetsRes.count || 0);
+    };
+    fetchData();
+  }, [organization]);
+
+  const currentPlan = getPlan(subscription?.status, assetCount);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,31 +296,76 @@ export default function Settings() {
             <h3 className="text-lg font-semibold mb-1">Billing & Subscription</h3>
             <p className="text-sm text-muted-foreground mb-6">Manage your subscription and payment methods</p>
 
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-6 mb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Current Plan</p>
-                  <p className="text-2xl font-semibold">Trial</p>
-                  <p className="text-sm text-muted-foreground mt-1">Free for 14 days</p>
-                </div>
-                <Button>Upgrade Plan</Button>
-              </div>
+            <div className="grid gap-6 lg:grid-cols-3 mb-8">
+              {Object.entries(PLAN_LIMITS).map(([key, plan]) => {
+                const isCurrent = (subscription?.status === key) || (key === 'trial' && (!subscription || subscription.status === 'trialing'));
+                
+                return (
+                  <div 
+                    key={key} 
+                    className={cn(
+                      "relative rounded-xl border p-6 transition-all",
+                      isCurrent 
+                        ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                        : "border-border bg-card hover:border-primary/50"
+                    )}
+                  >
+                    {isCurrent && (
+                      <Badge className="absolute -top-3 left-4 bg-primary text-primary-foreground">
+                        Current Plan
+                      </Badge>
+                    )}
+                    <h4 className="text-xl font-bold capitalize mb-1">{key}</h4>
+                    <p className="text-3xl font-bold mb-4">
+                      {plan.price === 0 ? 'Free' : `₹${plan.price.toLocaleString()}`}
+                      <span className="text-sm font-normal text-muted-foreground"> /mo</span>
+                    </p>
+                    <ul className="space-y-2 mb-6">
+                      {plan.features.map((f, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm">
+                          <CheckCircle className="h-4 w-4 text-primary" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button 
+                      variant={isCurrent ? "outline" : "default"} 
+                      className="w-full"
+                      disabled={isCurrent}
+                      onClick={() => toast({ title: "Redirecting to Stripe...", description: "Secure checkout opening soon." })}
+                    >
+                      {isCurrent ? "Manage" : "Upgrade"}
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-medium">Usage This Month</h4>
+              <h4 className="font-medium">Plan Usage</h4>
               <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-lg bg-muted/50 p-4">
-                  <p className="text-sm text-muted-foreground">Assets</p>
-                  <p className="text-2xl font-semibold">0 / 50</p>
+                <div className="rounded-lg bg-muted/50 p-4 border border-border">
+                  <p className="text-sm text-muted-foreground mb-1">Assets Used</p>
+                  <div className="flex items-end justify-between">
+                    <p className="text-2xl font-bold">{assetCount}</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Limit: {currentPlan.maxAssets === Infinity ? 'Unlimited' : currentPlan.maxAssets}
+                    </p>
+                  </div>
+                  <div className="h-1.5 w-full bg-border rounded-full mt-2 overflow-hidden">
+                    <div 
+                      className="h-full bg-primary" 
+                      style={{ width: `${Math.min((assetCount / (currentPlan.maxAssets === Infinity ? assetCount : currentPlan.maxAssets)) * 100, 100)}%` }} 
+                    />
+                  </div>
                 </div>
-                <div className="rounded-lg bg-muted/50 p-4">
-                  <p className="text-sm text-muted-foreground">Issues</p>
-                  <p className="text-2xl font-semibold">0 / 100</p>
+                <div className="rounded-lg bg-muted/50 p-4 border border-border opacity-60">
+                  <p className="text-sm text-muted-foreground mb-1">Team Seats</p>
+                  <p className="text-2xl font-bold">1 / 5</p>
                 </div>
-                <div className="rounded-lg bg-muted/50 p-4">
-                  <p className="text-sm text-muted-foreground">Team Members</p>
-                  <p className="text-2xl font-semibold">1 / 5</p>
+                <div className="rounded-lg bg-muted/50 p-4 border border-border opacity-60">
+                  <p className="text-sm text-muted-foreground mb-1">Reports Generated</p>
+                  <p className="text-2xl font-bold">0 / 50</p>
                 </div>
               </div>
             </div>

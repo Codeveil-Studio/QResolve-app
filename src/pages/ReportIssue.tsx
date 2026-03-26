@@ -90,7 +90,22 @@ export default function ReportIssue() {
             });
             setError(null);
           } else {
-            setError('Could not verify asset details. Please scan the code again or try refreshing.');
+            // Guerrilla QR Logic: Redirect to directory if asset not found and no static info
+            console.log('Unmapped QR code detected. Redirecting to directory...');
+            const directoryUrl = window.location.hostname === 'localhost' 
+              ? 'http://localhost:3000' 
+              : 'https://qresolve.com';
+            
+            toast({
+              title: "Unmapped Asset",
+              description: "This QR code isn't linked to a specific asset yet. Redirecting you to our directory...",
+            });
+            
+            setTimeout(() => {
+              window.location.href = `${directoryUrl}?reason=unmapped_qr`;
+            }, 2000);
+            
+            setError('Unmapped QR code. Redirecting you to the directory...');
           }
         } else {
           setAsset(data as any);
@@ -109,7 +124,10 @@ export default function ReportIssue() {
           });
           setError(null);
         } else {
-          setError('Failed to load asset.');
+          const directoryUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : 'https://qresolve.com';
+          window.location.href = directoryUrl;
         }
       } finally {
         setLoading(false);

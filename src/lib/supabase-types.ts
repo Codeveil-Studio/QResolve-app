@@ -75,6 +75,7 @@ export interface Issue {
   reported_by: string | null;
   assigned_to: string | null;
   resolved_at: string | null;
+  revenue_impact: 'high' | 'low' | null;
   created_at: string;
   updated_at: string;
 }
