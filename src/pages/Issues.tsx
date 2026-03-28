@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, AlertCircle, MoreHorizontal, Trash2, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Filter, AlertCircle, MoreHorizontal, Trash2, Edit, CheckCircle, XCircle, Calendar, Clock } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -17,6 +17,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,6 +70,9 @@ export default function Issues() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
+  const [issueDetailOpen, setIssueDetailOpen] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<IssueWithAsset | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -194,11 +207,15 @@ export default function Issues() {
     }
   };
 
-  const handleDelete = async (issue: Issue) => {
-    if (!confirm('Are you sure you want to delete this issue?')) return;
+  const openIssueDetails = useCallback((issue: IssueWithAsset) => {
+    setSelectedIssue(issue);
+    setIssueDetailOpen(true);
+  }, []);
 
+  const handleDelete = async () => {
+    if (!issueToDelete) return;
     try {
-      const { error } = await supabase.from('issues').delete().eq('id', issue.id);
+      const { error } = await supabase.from('issues').delete().eq('id', issueToDelete.id);
       if (error) throw error;
       toast({ title: 'Issue deleted successfully' });
       fetchIssues();
@@ -208,6 +225,8 @@ export default function Issues() {
         title: 'Failed to delete issue',
         description: error instanceof Error ? error.message : 'Unknown error',
       });
+    } finally {
+      setIssueToDelete(null);
     }
   };
 
@@ -222,14 +241,15 @@ export default function Issues() {
     {
       key: 'title',
       header: 'Issue',
+      className: 'max-w-xs',
       render: (issue: IssueWithAsset) => (
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-warning/10">
             <AlertCircle className="h-5 w-5 text-warning" />
           </div>
-          <div>
-            <p className="font-medium">{issue.title}</p>
-            <p className="text-sm text-muted-foreground line-clamp-1">
+          <div className="min-w-0">
+            <p className="font-medium truncate">{issue.title}</p>
+            <p className="text-sm text-muted-foreground truncate">
               {issue.description || 'No description'}
             </p>
           </div>
@@ -270,6 +290,7 @@ export default function Issues() {
     {
       key: 'status',
       header: 'Status',
+      className: 'whitespace-nowrap',
       render: (issue: Issue) => <StatusBadge status={issue.status} type="issue" />,
     },
     {
@@ -288,42 +309,57 @@ export default function Issues() {
       render: (issue: Issue) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => e.stopPropagation()}
+            >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleStatusChange(issue, 'in_progress')}>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); handleStatusChange(issue, 'in_progress'); }}
+            >
               <Edit className="mr-2 h-4 w-4" />
               Mark In Progress
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange(issue, 'resolved')}>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); handleStatusChange(issue, 'resolved'); }}
+            >
               <CheckCircle className="mr-2 h-4 w-4" />
               Mark Resolved
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange(issue, 'closed')}>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); handleStatusChange(issue, 'closed'); }}
+            >
               <XCircle className="mr-2 h-4 w-4" />
               Mark Closed
             </DropdownMenuItem>
-            
+
             <DropdownMenuSeparator />
             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Triage Impact
             </div>
-            <DropdownMenuItem onClick={() => handleImpactChange(issue, 'high')}>
-              <div className="h-2 w-2 rounded-full bg-red-500 mr-2" />
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); handleImpactChange(issue, 'high'); }}
+            >
+              <div className="h-2 w-2 rounded-full bg-destructive mr-2" />
               High Impact
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleImpactChange(issue, 'low')}>
-              <div className="h-2 w-2 rounded-full bg-blue-500 mr-2" />
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); handleImpactChange(issue, 'low'); }}
+            >
+              <div className="h-2 w-2 rounded-full bg-primary mr-2" />
               Low Impact
             </DropdownMenuItem>
 
-            {(isAdmin) && (
+            {(isAdmin || membership?.role === 'owner' || membership?.role === 'admin') && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => handleDelete(issue)}
+                  onClick={(e) => { e.stopPropagation(); setIssueToDelete(issue); }}
                   className="text-destructive focus:text-destructive focus:bg-destructive/10"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -485,8 +521,122 @@ export default function Issues() {
           columns={columns}
           isLoading={loading}
           emptyMessage="No issues found. That's great news!"
+          onRowClick={openIssueDetails}
         />
       </motion.div>
+      {/* Issue Detail Dialog */}
+      <Dialog
+        open={issueDetailOpen}
+        onOpenChange={(open) => {
+          setIssueDetailOpen(open);
+          if (!open) setSelectedIssue(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Issue Details</DialogTitle>
+            <DialogDescription>{selectedIssue?.title}</DialogDescription>
+          </DialogHeader>
+
+          {selectedIssue && (
+            <div className="grid gap-6 sm:grid-cols-[1fr_1fr]">
+              {/* Left panel — core metadata */}
+              <div className="rounded-xl border border-border/50 bg-card p-4 space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Status</p>
+                  <div className="mt-1">
+                    <StatusBadge status={selectedIssue.status} type="issue" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Priority</p>
+                  <div className="mt-1">
+                    <StatusBadge status={selectedIssue.priority} type="priority" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Revenue Impact</p>
+                  <div className="mt-1">
+                    <Badge
+                      className={cn(
+                        "uppercase text-[10px] font-bold tracking-tight px-2 py-0.5 rounded-full border",
+                        selectedIssue.revenue_impact === 'high'
+                          ? "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                          : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                      )}
+                      variant="outline"
+                    >
+                      {selectedIssue.revenue_impact || 'low'}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Asset</p>
+                  <p className="text-sm font-medium mt-0.5">
+                    {selectedIssue.asset?.name || 'Unassigned'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Asset Type</p>
+                  <p className="text-sm font-medium mt-0.5">
+                    {selectedIssue.asset?.asset_type?.name || 'Unassigned'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right panel — description + dates */}
+              <div className="rounded-xl border border-border/50 bg-card p-4 space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Description</p>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                    {selectedIssue.description || 'No description provided.'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Reported</p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    <p className="text-sm font-medium">
+                      {format(new Date(selectedIssue.created_at), 'MMM d, yyyy')}
+                    </p>
+                  </div>
+                </div>
+                {selectedIssue.resolved_at && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Resolved</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      <p className="text-sm font-medium">
+                        {format(new Date(selectedIssue.resolved_at), 'MMM d, yyyy')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!issueToDelete} onOpenChange={(open) => !open && setIssueToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Issue</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <span className="font-medium text-foreground">"{issueToDelete?.title}"</span>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

@@ -46,6 +46,16 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type OwnerProfile = Pick<Profile, 'user_id' | 'full_name' | 'email'>;
 type OrganizationWithOwner = Organization & { owner_profile: OwnerProfile | null };
@@ -711,14 +721,14 @@ function AdminOrganizationsTab() {
                                         <ShieldAlert className="h-6 w-6" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-slate-100">Delete Organization</h3>
-                                        <p className="text-slate-400 text-sm">
+                                        <h3 className="text-lg font-semibold text-foreground font-serif">Delete Organization</h3>
+                                        <p className="text-muted-foreground text-sm">
                                             Delete <strong>{confirmDialog.org?.name}</strong> and all its assets?
                                         </p>
                                     </div>
                                 </div>
 
-                                <p className="text-slate-500 text-sm mb-6">
+                                <p className="text-muted-foreground/70 text-sm mb-6">
                                     This action is permanent and cannot be undone.
                                 </p>
 
@@ -1053,7 +1063,7 @@ function AdminAssetsTab() {
                                     </div>
                                 </div>
                             ))}
-                            {filteredItems.length === 0 && <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-slate-500 py-12 border border-slate-800 border-dashed rounded-xl">No assets match your search.</div>}
+                            {filteredItems.length === 0 && <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-muted-foreground py-12 border border-border border-dashed rounded-xl">No assets match your search.</div>}
                         </div>
                     )}
                 </CardContent>
@@ -1076,19 +1086,33 @@ function AdminIssuesTab() {
     const [items, setItems] = useState<IssueWithAsset[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [issueToDelete, setIssueToDelete] = useState<IssueWithAsset | null>(null);
+    const { toast } = useToast();
+
+    const fetchIssues = async () => {
+        const { data } = await supabase
+            .from('issues')
+            .select('*, asset:assets(name)')
+            .order('created_at', { ascending: false });
+        setItems((data as IssueWithAsset[]) || []);
+        setLoading(false);
+    };
 
     useEffect(() => {
-        const fetch = async () => {
-            const { data, error } = await supabase
-                .from('issues')
-                .select('*, asset:assets(name)')
-                .order('created_at', { ascending: false });
-
-            setItems((data as IssueWithAsset[]) || []);
-            setLoading(false);
-        };
-        fetch();
+        fetchIssues();
     }, []);
+
+    const handleDelete = async () => {
+        if (!issueToDelete) return;
+        const { error } = await supabase.from('issues').delete().eq('id', issueToDelete.id);
+        if (error) {
+            toast({ variant: 'destructive', title: 'Failed to delete issue', description: error.message });
+        } else {
+            toast({ title: 'Issue deleted' });
+            fetchIssues();
+        }
+        setIssueToDelete(null);
+    };
 
     const filteredItems = useMemo(() => {
         return items.filter(i =>
@@ -1117,6 +1141,7 @@ function AdminIssuesTab() {
                                         <th className="px-5 py-3">Status</th>
                                         <th className="px-5 py-3">Priority</th>
                                         <th className="px-5 py-3 text-right">Date</th>
+                                        <th className="px-5 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
@@ -1151,10 +1176,21 @@ function AdminIssuesTab() {
                                             <td className="px-5 py-4 text-muted-foreground text-right whitespace-nowrap">
                                                 {new Date(item.created_at).toLocaleDateString()}
                                             </td>
+                                            <td className="px-5 py-4 text-right">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    onClick={() => setIssueToDelete(item)}
+                                                    title="Delete issue"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </td>
                                         </tr>
                                     ))}
                                     {filteredItems.length === 0 && (
-                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-muted-foreground">No issues found.</td></tr>
+                                        <tr><td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">No issues found.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -1162,6 +1198,26 @@ function AdminIssuesTab() {
                     )}
                 </CardContent>
             </Card>
+
+            <AlertDialog open={!!issueToDelete} onOpenChange={(open) => !open && setIssueToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Issue</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete <span className="font-medium text-foreground">"{issueToDelete?.title}"</span>? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

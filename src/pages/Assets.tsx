@@ -944,15 +944,21 @@ export default function Assets() {
             <DialogTitle>Asset QR Code</DialogTitle>
             <DialogDescription>{selectedAsset?.name}</DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col items-center py-6">
+          <div className="flex flex-col items-center py-4">
             {selectedAsset && (
               <>
-                <div className="rounded-xl border border-border bg-background p-4">
-                  <QRCodeSVG
-                    value={selectedAsset ? generateReportUrl(selectedAsset) : ''}
-                    size={200}
-                    level="H"
-                  />
+                {/* Outer styled ring — purely decorative, never clips the QR */}
+                <div className="rounded-xl border border-border bg-muted p-3">
+                  {/* Inner white quiet-zone container — white background is required by QR spec */}
+                  <div className="rounded-md bg-white p-4">
+                    <QRCodeSVG
+                      value={selectedAsset ? generateReportUrl(selectedAsset) : ''}
+                      size={200}
+                      level="H"
+                      bgColor="#ffffff"
+                      fgColor="#000000"
+                    />
+                  </div>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground text-center">
                   Scan to report issues for this asset
