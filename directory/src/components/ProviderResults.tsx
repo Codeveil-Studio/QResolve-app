@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
-import { MapPin, Star, CheckCircle2, Building, Search, ArrowRight, ShieldCheck, SortAsc, Filter } from "lucide-react";
+import { MapPin, Star, CheckCircle2, Building, Search, ArrowRight, ShieldCheck, ChevronDown, Check } from "lucide-react";
 
 interface Provider {
     id: string;
@@ -26,10 +26,34 @@ interface ProviderResultsProps {
 const capitalize = (s: string) =>
     s ? s.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : "";
 
+const SORT_OPTIONS = [
+    { value: "rating", label: "Top Rated" },
+    { value: "name",   label: "Alphabetical" },
+] as const;
+
+type SortValue = typeof SORT_OPTIONS[number]["value"];
+
 export function ProviderResults({ initialProviders, cityName }: ProviderResultsProps) {
     const [searchQuery, setSearchQuery] = useState("");
-    const [sortBy, setSortBy] = useState("rating"); // 'rating' | 'name'
+    const [sortBy, setSortBy] = useState<SortValue>("rating");
     const [filterClaimed, setFilterClaimed] = useState(false);
+    const [sortOpen, setSortOpen] = useState(false);
+    const sortRef = useRef<HTMLDivElement>(null);
+
+    // Close the custom dropdown when the user clicks outside it
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+                setSortOpen(false);
+            }
+        }
+        if (sortOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [sortOpen]);
 
     const filteredAndSortedProviders = useMemo(() => {
         let result = initialProviders.filter((p) =>
@@ -52,83 +76,66 @@ export function ProviderResults({ initialProviders, cityName }: ProviderResultsP
     return (
         <div className="results-wrapper">
             {/* Filters and Search Bar */}
-            <div className="filters-bar" style={{ marginBottom: "2rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
-                    {/* Search Field */}
-                    <div className="search-field" style={{ flex: 1, minWidth: "250px", position: "relative" }}>
-                        <Search className="search-icon" size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                        <input
-                            type="text"
-                            placeholder="Search by business name..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{
-                                width: "100%",
-                                padding: "10px 10px 10px 38px",
-                                borderRadius: "8px",
-                                border: "1px solid var(--border)",
-                                background: "var(--bg-card)",
-                                color: "var(--text-primary)",
-                                outline: "none"
-                            }}
-                        />
-                    </div>
-
-                    {/* Sort Dropdown */}
-                    <div className="sort-field" style={{ position: "relative" }}>
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            style={{
-                                padding: "10px 36px 10px 16px",
-                                borderRadius: "8px",
-                                border: "1px solid var(--border)",
-                                background: "var(--bg-card)",
-                                color: "var(--text-primary)",
-                                fontSize: "14px",
-                                fontWeight: 500,
-                                cursor: "pointer",
-                                outline: "none",
-                                appearance: "none",
-                                WebkitAppearance: "none",
-                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235c7a6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
-                                backgroundRepeat: "no-repeat",
-                                backgroundPosition: "right 12px center",
-                                transition: "border-color 0.2s"
-                            }}
-                        >
-                            <option value="rating">Sort: Top Rated</option>
-                            <option value="name">Sort: Alphabetical</option>
-                        </select>
-                    </div>
-
-                    {/* Claimed Filter Toggle */}
-                    <label 
-                        style={{ 
-                            display: "flex", 
-                            alignItems: "center", 
-                            gap: "8px", 
-                            padding: "9px 16px", 
-                            borderRadius: "8px", 
-                            background: filterClaimed ? "var(--accent-glow)" : "var(--bg-card)", 
-                            border: `1px solid ${filterClaimed ? "var(--accent)" : "var(--border)"}`, 
-                            color: filterClaimed ? "var(--accent)" : "var(--text-secondary)",
-                            cursor: "pointer", 
-                            fontSize: "14px",
-                            fontWeight: 500,
-                            transition: "all 0.2s"
-                        }}
-                    >
-                        <input
-                            type="checkbox"
-                            checked={filterClaimed}
-                            onChange={(e) => setFilterClaimed(e.target.checked)}
-                            style={{ display: "none" }}
-                        />
-                        <ShieldCheck size={16} />
-                        Verified Only
-                    </label>
+            <div className="results-filter-bar">
+                {/* Search Field */}
+                <div className="search-input-wrapper">
+                    <Search size={16} />
+                    <input
+                        type="text"
+                        placeholder="Search by business name..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                 </div>
+
+                {/* Sort Dropdown — custom div-based so we fully own the panel styling */}
+                <div className="custom-select-wrapper" ref={sortRef}>
+                    <button
+                        type="button"
+                        className={`custom-select-trigger${sortOpen ? " open" : ""}`}
+                        onClick={() => setSortOpen((prev) => !prev)}
+                        aria-haspopup="listbox"
+                        aria-expanded={sortOpen}
+                    >
+                        {SORT_OPTIONS.find((o) => o.value === sortBy)?.label}
+                    </button>
+                    <ChevronDown
+                        size={16}
+                        className={`custom-select-chevron${sortOpen ? " open" : ""}`}
+                    />
+                    {sortOpen && (
+                        <div className="custom-select-panel" role="listbox">
+                            {SORT_OPTIONS.map((option) => (
+                                <div
+                                    key={option.value}
+                                    role="option"
+                                    aria-selected={sortBy === option.value}
+                                    className={`custom-select-option${sortBy === option.value ? " selected" : ""}`}
+                                    onClick={() => {
+                                        setSortBy(option.value);
+                                        setSortOpen(false);
+                                    }}
+                                >
+                                    {option.label}
+                                    {sortBy === option.value && (
+                                        <Check size={14} className="custom-select-option-check" />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Claimed Filter Toggle */}
+                <label className={`filter-toggle${filterClaimed ? " active" : ""}`}>
+                    <input
+                        type="checkbox"
+                        checked={filterClaimed}
+                        onChange={(e) => setFilterClaimed(e.target.checked)}
+                    />
+                    <ShieldCheck size={16} />
+                    Verified Only
+                </label>
             </div>
 
             {/* Header row */}
