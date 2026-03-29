@@ -135,9 +135,8 @@ export default function HomePage() {
           <li><a href="#how-it-works">How It Works</a></li>
           <li><a href="#categories">Categories</a></li>
           <li><a href="#verified">Why Verified</a></li>
-          <li><a href="#relay">For Providers</a></li>
-          <li><a href="#about">Our Story</a></li>
-          <li><a href="#contact">Contact</a></li>
+          <li><a href="#products">For Providers</a></li>
+          <li><a href="#pricing">Pricing</a></li>
           <li><a href="https://app.qresolve.com/login">Login</a></li>
           <li><a href="https://app.qresolve.com/signup" className="nav-cta">List Your Business</a></li>
         </ul>
@@ -152,10 +151,13 @@ export default function HomePage() {
 
       {/* MOBILE MENU */}
       <div className={`mobile-menu ${menuOpen ? "open" : ""}`}>
-        {["#how-it-works", "#categories", "#verified", "#relay", "#pricing", "#about", "#blog", "#contact"].map((href) => (
-          <a key={href} href={href} onClick={closeMobileMenu}>{href.replace("#", "").replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</a>
-        ))}
-        <a href="#list-your-business" className="mobile-cta" onClick={closeMobileMenu}>List Your Business — Free</a>
+        <a href="#how-it-works" onClick={closeMobileMenu}>How It Works</a>
+        <a href="#categories" onClick={closeMobileMenu}>Categories</a>
+        <a href="#verified" onClick={closeMobileMenu}>Why Verified</a>
+        <a href="#products" onClick={closeMobileMenu}>For Providers</a>
+        <a href="#pricing" onClick={closeMobileMenu}>Pricing</a>
+        <a href="https://app.qresolve.com/login" onClick={closeMobileMenu}>Login</a>
+        <a href="https://app.qresolve.com/signup" className="mobile-cta" onClick={closeMobileMenu}>List Your Business — Free</a>
       </div>
 
       {/* HERO */}
