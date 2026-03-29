@@ -85,17 +85,56 @@ interface SummaryStats {
   avgResolutionDays: number;
 }
 
-// ── Tooltip style — shared across all charts ───────────────────────────────
-const tooltipStyle = {
-  contentStyle: {
-    backgroundColor: 'hsl(160, 20%, 8%)',
-    border: '1px solid hsl(160, 15%, 18%)',
-    borderRadius: '8px',
-    color: 'hsl(160, 20%, 95%)',
-    fontSize: '12px',
-  },
-  labelStyle: { color: 'hsl(160, 10%, 55%)' },
-};
+// ── Custom Tooltip ────────────────────────────────────────────────────────
+// Recharts' default tooltip injects hardcoded light-mode inline styles that
+// clash with the Forest Green dark theme. Using a fully custom `content`
+// component gives us complete Tailwind-token control and eliminates all
+// default Recharts styling from the popup box.
+interface TooltipPayloadEntry {
+  name: string;
+  value: number | string;
+  color: string;
+  dataKey?: string;
+}
+
+interface ChartTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+  // Optional formatter so each chart can customise the value display
+  valueFormatter?: (value: number | string, name: string) => string;
+}
+
+function ChartTooltip({ active, payload, label, valueFormatter }: ChartTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null;
+  return (
+    <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-lg text-xs">
+      {label !== undefined && label !== '' && (
+        <p className="mb-1.5 font-medium text-muted-foreground">{label}</p>
+      )}
+      <div className="flex flex-col gap-1">
+        {payload.map((entry, i) => {
+          const displayValue = valueFormatter
+            ? valueFormatter(entry.value, entry.name)
+            : String(entry.value);
+          return (
+            <div key={i} className="flex items-center gap-2">
+              <span
+                className="inline-block h-2 w-2 flex-shrink-0 rounded-full"
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="text-muted-foreground capitalize">{entry.name}:</span>
+              <span className="font-semibold text-foreground">{displayValue}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// cursor overlay shown behind hovered bars — matches the card surface at low opacity
+const barCursorStyle = { fill: 'hsl(160, 15%, 18%)', opacity: 0.4 };
 
 // ── Axis style — shared across all charts ─────────────────────────────────
 const axisStyle = {
@@ -443,7 +482,14 @@ export default function Reports() {
                   <CartesianGrid {...gridStyle} />
                   <XAxis dataKey="month" {...axisStyle} />
                   <YAxis {...axisStyle} allowDecimals={false} />
-                  <Tooltip {...tooltipStyle} />
+                  <Tooltip
+                    content={(props) => (
+                      <ChartTooltip
+                        {...props}
+                        valueFormatter={(v) => String(v)}
+                      />
+                    )}
+                  />
                   <Legend content={renderThemeLegend} />
                   <Line
                     type="monotone"
@@ -502,8 +548,12 @@ export default function Reports() {
                     ))}
                   </Pie>
                   <Tooltip
-                    {...tooltipStyle}
-                    formatter={(value: number, name: string) => [value, name]}
+                    content={(props) => (
+                      <ChartTooltip
+                        {...props}
+                        valueFormatter={(v) => String(v)}
+                      />
+                    )}
                   />
                   <Legend content={renderThemeLegend} />
                 </PieChart>
@@ -539,8 +589,13 @@ export default function Reports() {
                     width={90}
                   />
                   <Tooltip
-                    {...tooltipStyle}
-                    formatter={(value: number) => [value, 'Assets']}
+                    cursor={barCursorStyle}
+                    content={(props) => (
+                      <ChartTooltip
+                        {...props}
+                        valueFormatter={(v) => `${v} assets`}
+                      />
+                    )}
                   />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                     {assetsByStatus.map((entry, index) => (
@@ -575,8 +630,13 @@ export default function Reports() {
                   <XAxis dataKey="category" {...axisStyle} />
                   <YAxis {...axisStyle} />
                   <Tooltip
-                    {...tooltipStyle}
-                    formatter={(value: number) => [`${value} days`, 'Avg Time']}
+                    cursor={barCursorStyle}
+                    content={(props) => (
+                      <ChartTooltip
+                        {...props}
+                        valueFormatter={(v) => `${v} days`}
+                      />
+                    )}
                   />
                   <Bar dataKey="avgDays" radius={[4, 4, 0, 0]}>
                     {resolutionTime.map((entry, index) => (
