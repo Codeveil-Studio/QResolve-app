@@ -1961,6 +1961,7 @@ section {
 footer {
   border-top: 1px solid var(--border);
   background: var(--bg-secondary);
+  padding: 60px 24px 24px;
 }
 
 .footer-inner {
@@ -2730,6 +2731,90 @@ footer {
 .how-step p { font-size: 15px; color: var(--text-secondary); line-height: 1.6; }
 
 /* ==========================================
+   HOMEPAGE LAYOUT CLASSES
+   (replaces inline grid styles for responsive control)
+   ========================================== */
+
+/* Three Pillars grid */
+.pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+/* Pillar card CTAs */
+.pillars-grid .btn {
+  width: 100%;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Flywheel steps grid */
+.flywheel-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  position: relative;
+}
+
+/* Connector arrows between flywheel steps — hidden on mobile */
+.flywheel-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  font-size: 20px;
+  padding: 0 4px;
+  align-self: center;
+}
+
+/* About two-column grid */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+/* About stats grid */
+.about-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Footer layout */
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+/* Footer brand block */
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.footer-brand-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: -0.2px;
+  margin-bottom: 10px;
+}
+
+.footer-brand-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  max-width: 280px;
+}
+
+/* ==========================================
    RESPONSIVE
    ========================================== */
 @media (max-width: 900px) {
@@ -2827,6 +2912,49 @@ footer {
     gap: 32px;
   }
 
+  /* Pillars: 1 column on tablet/mobile */
+  .pillars-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  /* Flywheel: 2 columns on tablet */
+  .flywheel-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  /* Hide horizontal arrows on tablet — layout changes */
+  .flywheel-arrow {
+    display: none;
+  }
+
+  /* About: single column on tablet */
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  /* About stats: keep 2 cols on tablet, stack on small mobile */
+  .about-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Footer brand block: full width, stacks naturally in 1-col grid */
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+
+  .footer-brand-desc {
+    max-width: 100%;
+  }
+
   .qresolve-page .profile-layout {
     grid-template-columns: 1fr;
   }
@@ -2860,6 +2988,137 @@ footer {
 
   .qresolve-page .info-tiles {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================
+   MOBILE (≤768px) — Homepage sections
+   ========================================== */
+@media (max-width: 768px) {
+  /* General section horizontal padding */
+  section {
+    padding: 60px 16px;
+  }
+
+  .divider {
+    padding: 0 16px;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 110px 16px 56px;
+  }
+
+  /* Demo banner padding */
+  .demo-banner {
+    padding: 48px 16px !important;
+  }
+
+  /* Tech stack */
+  .tech-stack {
+    padding: 48px 16px !important;
+  }
+
+  /* Three Pillars */
+  .pillars-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Pillar card: prevent content overflow */
+  .product-card {
+    padding: 24px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Flywheel: 1 column on mobile, no arrows */
+  .flywheel-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .flywheel-arrow {
+    display: none;
+  }
+
+  /* About section: single column */
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  /* About section text alignment */
+  .about-grid .section-title {
+    text-align: left;
+  }
+
+  /* About stats: stack to single column on small mobile */
+  .about-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Footer grid: full single column */
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .footer-brand {
+    grid-column: auto;
+  }
+
+  .footer-brand-desc {
+    max-width: 100%;
+  }
+}
+
+/* ==========================================
+   MOBILE (≤640px) — Finer adjustments
+   ========================================== */
+@media (max-width: 640px) {
+  /* Section headings: prevent horizontal overflow */
+  .section-title {
+    font-size: clamp(22px, 7vw, 32px);
+    word-break: break-word;
+  }
+
+  /* Hero heading */
+  .hero h1 {
+    font-size: clamp(32px, 9vw, 52px);
+    letter-spacing: -1px;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+  }
+
+  /* Hero CTAs: stack on very small screens */
+  .hero-ctas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-ctas .btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* About stats: stack fully */
+  .about-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Flywheel cycle note: wraps properly */
+  .flywheel-cycle-note {
+    font-size: 0.8rem;
+    padding: 0 16px;
+  }
+
+  /* Pricing featured card: remove scale transform that causes overflow */
+  .pricing-featured-scale {
+    transform: none !important;
   }
 }
 
@@ -3623,5 +3882,89 @@ footer {
 
   .about-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================
+   SECTION BASE PADDING
+   (inline styles removed from JSX so CSS
+   media queries can fully control these)
+   ========================================== */
+.pillars    { padding: 80px 24px; }
+.flywheel   { padding: 80px 24px; }   /* overrides the 100px 40px above */
+.categories { padding: 80px 24px; }
+.testimonials { padding: 80px 24px; }
+.about      { padding: 80px 24px; }
+/* .pricing already has padding: 80px 24px in the block above */
+/* .demo-banner already has padding: 60px 24px in the block above */
+
+@media (max-width: 900px) {
+  .pillars, .flywheel, .categories, .testimonials, .about, .pricing {
+    padding: 60px 20px;
+  }
+  .demo-banner { padding: 48px 20px; }
+}
+
+@media (max-width: 768px) {
+  .pillars, .flywheel, .categories, .testimonials, .about, .pricing {
+    padding: 52px 16px;
+  }
+  .demo-banner { padding: 40px 16px; }
+
+  /* Product cards: reduce padding so content has room */
+  .product-card {
+    padding: 22px 18px;
+  }
+
+  /* Flywheel step cards */
+  .flywheel .flywheel-grid > div {
+    padding: 16px;
+  }
+
+  /* About grid gap tighter on mobile */
+  .about-grid {
+    gap: 24px;
+  }
+
+  /* About stats: 2 cols on mobile until 480px */
+  .about-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Footer */
+  footer.footer {
+    padding: 40px 16px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pillars, .flywheel, .categories, .testimonials, .about, .pricing {
+    padding: 44px 16px;
+  }
+
+  /* About stats: single column on very small screens */
+  .about-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Product card headings shrink on small screens */
+  .product-card h3 {
+    font-size: 1.25rem;
+  }
+
+  /* Flywheel step number */
+  .flywheel-grid > div > div:first-child {
+    font-size: 1.6rem;
+  }
+
+  /* Demo banner heading */
+  .demo-banner h2 {
+    font-size: 1.5rem !important;
+  }
+
+  /* Footer grid already 1-col, just tighten gap */
+  .footer-grid {
+    gap: 24px;
   }
 }

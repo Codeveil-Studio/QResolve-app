@@ -135,7 +135,6 @@ export default function HomePage() {
         </p>
         <HeroSearch />
         <div className="hero-ctas" style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 28, flexWrap: "wrap" }}>
-          <a href="#categories" className="btn btn-accent">Visit QResolve.com →</a>
           <a href="https://app.qresolve.com/signup" className="btn btn-accent">Start Free with Relay →</a>
           <a href="/demo" className="btn btn-ghost" style={{ border: "1px solid var(--border)" }}>
             <Play size={16} style={{ marginRight: 6 }} /> Try the Demo
@@ -160,40 +159,41 @@ export default function HomePage() {
       <div className="divider"><div className="divider-line" /></div>
 
       {/* THREE PILLARS */}
-      <section className="pillars reveal" id="products" ref={addReveal} style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
+      <section className="pillars reveal" id="products" ref={addReveal} style={{ maxWidth: 1200, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 60 }}>
-          <h2 className="section-title">Three pillars. One ecosystem.</h2>
-          <p className="section-desc">Each product strengthens the other. Together, they build a compounding advantage no standalone tool can match.</p>
+          <h2 className="section-title" style={{ margin: "0 auto" }}>Three pillars. One ecosystem.</h2>
+          <p className="section-desc" style={{ margin: "16px auto 0" }}>Each product strengthens the other. Together, they build a compounding advantage no standalone tool can match.</p>
         </div>
 
-        <div className="pillars-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28 }}>
+        {/* pillars-grid: CSS class controls columns — 3 on desktop, 1 on mobile */}
+        <div className="pillars-grid">
           {/* DIRECTORY PILLAR */}
-          <div className="product-card directory" style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 32 }}>
-            <div className="pc-badge" style={{ display: "inline-block", fontSize: "0.8rem", color: "var(--accent)", background: "var(--accent-glow)", padding: "6px 12px", borderRadius: 6, marginBottom: 16 }}>◉ The Marketplace</div>
-            <h3 style={{ fontSize: "1.5rem", marginBottom: 12 }}>QResolve.com</h3>
-            <p className="pc-tagline" style={{ fontSize: "0.95rem", color: "var(--text-secondary)", marginBottom: 20 }}>India's first specialized directory for built environment maintenance. Not a generic listing site — a performance-ranked marketplace where operators find providers who actually show up.</p>
+          <div className="product-card directory">
+            <div className="pc-badge">◉ The Marketplace</div>
+            <h3>QResolve.com</h3>
+            <p className="pc-tagline">India's first specialized directory for built environment maintenance. Not a generic listing site — a performance-ranked marketplace where operators find providers who actually show up.</p>
 
-            <ul className="pc-features" style={{ listStyle: "none", marginBottom: 20 }}>
-              <li style={{ marginBottom: 12, display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>Search by asset type: vending, EV chargers, lifts, HVAC, cleaning, fire safety</span></li>
-              <li style={{ marginBottom: 12, display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>Providers ranked by real resolution data — not just reviews</span></li>
-              <li style={{ marginBottom: 12, display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>"Verified by Relay" badge = proof the provider uses structured operations</span></li>
-              <li style={{ display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>Submit urgent repair requests — matched to top providers in your area</span></li>
+            <ul className="pc-features">
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Search by asset type: vending, EV chargers, lifts, HVAC, cleaning, fire safety</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Providers ranked by real resolution data — not just reviews</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>&ldquo;Verified by Relay&rdquo; badge = proof the provider uses structured operations</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Submit urgent repair requests — matched to top providers in your area</span></li>
             </ul>
 
             <a href="#categories" className="btn btn-accent" style={{ width: "100%", justifyContent: "center", marginTop: 24 }}>Search Providers →</a>
           </div>
 
           {/* RELAY PILLAR */}
-          <div className="product-card relay" id="relay-pillar" style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 32 }}>
-            <div className="pc-badge" style={{ display: "inline-block", fontSize: "0.8rem", color: "var(--accent)", background: "var(--accent-glow)", padding: "6px 12px", borderRadius: 6, marginBottom: 16 }}>◉ The SaaS Operating System</div>
-            <h3 style={{ fontSize: "1.5rem", marginBottom: 12 }}>Relay OS</h3>
-            <p className="pc-tagline" style={{ fontSize: "0.95rem", color: "var(--text-secondary)", marginBottom: 20 }}>The operating system for maintenance service providers. Replace WhatsApp groups, missed calls, and lost photos with QR-triggered tickets, structured dispatch, and an immutable audit trail.</p>
+          <div className="product-card relay" id="relay-pillar">
+            <div className="pc-badge">◉ The SaaS Operating System</div>
+            <h3>Relay OS</h3>
+            <p className="pc-tagline">The operating system for maintenance service providers. Replace WhatsApp groups, missed calls, and lost photos with QR-triggered tickets, structured dispatch, and an immutable audit trail.</p>
 
-            <ul className="pc-features" style={{ listStyle: "none", marginBottom: 20 }}>
-              <li style={{ marginBottom: 12, display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>QR code on each asset — anyone scans, reports a fault in 30 seconds</span></li>
-              <li style={{ marginBottom: 12, display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>Instant structured ticket: location, photos, fault type, severity</span></li>
-              <li style={{ marginBottom: 12, display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>Smart dispatch to the right technician based on skill, proximity, load</span></li>
-              <li style={{ display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>Immutable audit trail — every status change timestamped and read-only</span></li>
+            <ul className="pc-features">
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>QR code on each asset — anyone scans, reports a fault in 30 seconds</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Instant structured ticket: location, photos, fault type, severity</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Smart dispatch to the right technician based on skill, proximity, load</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Immutable audit trail — every status change timestamped and read-only</span></li>
             </ul>
 
             <div style={{ marginTop: 24 }}>
@@ -205,16 +205,16 @@ export default function HomePage() {
           </div>
 
           {/* AI PILLAR */}
-          <div className="product-card ai" style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 32 }}>
-            <div className="pc-badge" style={{ display: "inline-block", fontSize: "0.8rem", color: "var(--accent)", background: "var(--accent-glow)", padding: "6px 12px", borderRadius: 6, marginBottom: 16 }}>◈ The Intelligence Engine</div>
-            <h3 style={{ fontSize: "1.5rem", marginBottom: 12 }}>QResolve AI</h3>
-            <p className="pc-tagline" style={{ fontSize: "0.95rem", color: "var(--text-secondary)", marginBottom: 20 }}>Prescriptive maintenance intelligence powered by Google Gemini. Turn fault data into predictive insights before problems compound.</p>
+          <div className="product-card ai">
+            <div className="pc-badge">◈ The Intelligence Engine</div>
+            <h3>QResolve AI</h3>
+            <p className="pc-tagline">Prescriptive maintenance intelligence powered by Google Gemini. Turn fault data into predictive insights before problems compound.</p>
 
-            <ul className="pc-features" style={{ listStyle: "none", marginBottom: 20 }}>
-              <li style={{ marginBottom: 12, display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>Micro-Friction Index — daily asset health scores</span></li>
-              <li style={{ marginBottom: 12, display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>Predictive fault alerts before downtime strikes</span></li>
-              <li style={{ marginBottom: 12, display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>Vendor Reliability reports auto-generated from Relay data</span></li>
-              <li style={{ display: "flex", gap: 8 }}><ChevronRight size={16} className="flex-shrink-0" style={{ color: "var(--accent)", marginTop: 2 }} /> <span>Procurement Intelligence for smarter maintenance budgets</span></li>
+            <ul className="pc-features">
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Micro-Friction Index — daily asset health scores</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Predictive fault alerts before downtime strikes</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Vendor Reliability reports auto-generated from Relay data</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Procurement Intelligence for smarter maintenance budgets</span></li>
             </ul>
 
             <a href="https://app.qresolve.com/login" className="btn btn-accent" style={{ width: "100%", justifyContent: "center", marginTop: 24 }}>Explore AI Insights →</a>
@@ -225,7 +225,7 @@ export default function HomePage() {
       <div className="divider"><div className="divider-line" /></div>
 
       {/* DEMO BANNER */}
-      <section className="demo-banner" id="demo" style={{ background: "rgba(52, 211, 153, 0.04)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", padding: "60px 24px", textAlign: "center" }}>
+      <section className="demo-banner" id="demo" style={{ background: "rgba(52, 211, 153, 0.04)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", textAlign: "center" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <div style={{ fontSize: "0.8rem", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Interactive Demo</div>
           <h2 style={{ fontSize: "2rem", fontWeight: 600, marginBottom: 12 }}>See Relay in action. No signup needed.</h2>
@@ -239,7 +239,7 @@ export default function HomePage() {
       <div className="divider"><div className="divider-line" /></div>
 
       {/* CATEGORIES */}
-      <section className="categories reveal" id="categories" ref={addReveal} style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
+      <section className="categories reveal" id="categories" ref={addReveal} style={{ maxWidth: 1200, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <div style={{ fontSize: "0.8rem", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Service Categories</div>
           <h2 className="section-title" style={{ margin: "0 auto" }}>Find a specialist for every asset</h2>
@@ -266,7 +266,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 20 }}>
           {categories.map((cat) => (
             <button
               key={cat.slug}
@@ -295,14 +295,15 @@ export default function HomePage() {
       <div className="divider"><div className="divider-line" /></div>
 
       {/* FLYWHEEL */}
-      <section className="flywheel reveal" id="flywheel" ref={addReveal} style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
+      <section className="flywheel reveal" id="flywheel" ref={addReveal} style={{ maxWidth: 1200, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 60 }}>
           <div style={{ display: "inline-block", fontSize: "0.8rem", color: "var(--accent)", background: "var(--accent-glow)", padding: "6px 12px", borderRadius: 6, marginBottom: 16 }}>◈ The QResolve Flywheel</div>
           <h2 className="section-title" style={{ margin: "0 auto" }}>The more they use it, the stronger it gets.</h2>
-          <p className="section-desc" style={{ margin: "16px auto 0" }}>QResolve and Relay aren't two separate products duct-taped together. They're a closed loop — each one makes the other more valuable.</p>
+          <p className="section-desc" style={{ margin: "16px auto 0" }}>QResolve and Relay aren&apos;t two separate products duct-taped together. They&apos;re a closed loop — each one makes the other more valuable.</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+        {/* flywheel-grid: CSS class controls columns — 4 on desktop, 1 on mobile */}
+        <div className="flywheel-grid">
           {[
             { num: "01", title: "Directory generates leads", desc: "Facility managers search QResolve.com for providers. Inbound leads flow to listed providers." },
             { num: "02", title: "Providers adopt Relay", desc: "To manage those leads efficiently, providers sign up for Relay. No more WhatsApp chaos." },
@@ -317,26 +318,28 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div style={{ textAlign: "center", marginTop: 40, fontSize: "0.9rem", color: "var(--text-secondary)" }}>↻ Cycle repeats — each revolution makes both products more valuable</div>
+        <div className="flywheel-cycle-note" style={{ textAlign: "center", marginTop: 40, fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+          ↻ Cycle repeats — each revolution makes both products more valuable
+        </div>
       </section>
 
       <div className="divider"><div className="divider-line" /></div>
 
       {/* TESTIMONIALS */}
-      <section className="testimonials reveal" id="testimonials" ref={addReveal} style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
+      <section className="testimonials reveal" id="testimonials" ref={addReveal} style={{ maxWidth: 1200, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <h2 className="section-title" style={{ margin: "0 auto" }}>Trusted by facility teams across India</h2>
           <p className="section-desc" style={{ margin: "12px auto 0" }}>Real outcomes from real operations.</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
           {[
             { quote: "Response times dropped from hours to minutes after we started using Relay. Our clients noticed before we even sent the monthly report.", role: "Operations Manager, Large Retail Chain" },
             { quote: "Finally a way to vet contractors with actual data — not just who someone's cousin recommended. The verified badge means something.", role: "Facility Director, Commercial Real Estate Group" },
             { quote: "Every maintenance request is tracked end-to-end. No more chasing WhatsApp threads. Our whole workflow runs through QResolve now.", role: "Head of Maintenance, Co-working Network" },
           ].map((t, i) => (
             <div key={i} style={{ padding: 28, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16 }}>
-              <p style={{ fontSize: "1rem", lineHeight: 1.6, marginBottom: 20, color: "var(--text-primary)", fontStyle: "italic" }}>"{t.quote}"</p>
+              <p style={{ fontSize: "1rem", lineHeight: 1.6, marginBottom: 20, color: "var(--text-primary)", fontStyle: "italic" }}>&ldquo;{t.quote}&rdquo;</p>
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 500 }}>— {t.role}</p>
             </div>
           ))}
@@ -346,12 +349,12 @@ export default function HomePage() {
       <div className="divider"><div className="divider-line" /></div>
 
       {/* PRICING */}
-      <section className="pricing reveal" id="pricing" ref={addReveal} style={{ padding: "80px 24px", maxWidth: 1100, margin: "0 auto" }}>
+      <section className="pricing reveal" id="pricing" ref={addReveal} style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 60 }}>
           <h2 className="section-title" style={{ margin: "0 auto" }}>Simple plans. No hidden costs.</h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
           {[
             {
               name: "Free Listing",
@@ -382,9 +385,22 @@ export default function HomePage() {
               featured: true
             },
           ].map((plan, i) => (
-            <div key={i} style={{ padding: 32, background: "var(--bg-card)", border: plan.featured ? "2px solid var(--accent)" : "1px solid var(--border)", borderRadius: 16, display: "flex", flexDirection: "column", position: plan.featured ? "relative" : "static", transform: plan.featured ? "scale(1.05)" : "scale(1)" }}>
+            <div
+              key={i}
+              className={plan.featured ? "pricing-featured-scale" : ""}
+              style={{
+                padding: 32,
+                background: "var(--bg-card)",
+                border: plan.featured ? "2px solid var(--accent)" : "1px solid var(--border)",
+                borderRadius: 16,
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                transform: plan.featured ? "scale(1.05)" : "scale(1)",
+              }}
+            >
               {plan.featured && (
-                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "var(--accent)", color: "#000", padding: "4px 12px", borderRadius: 4, fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase" }}>Recommended</div>
+                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "var(--accent)", color: "#000", padding: "4px 12px", borderRadius: 4, fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", whiteSpace: "nowrap" }}>Recommended</div>
               )}
               <h3 style={{ fontSize: "1.3rem", fontWeight: 600, marginBottom: 8 }}>{plan.name}</h3>
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: 16 }}>{plan.description}</p>
@@ -411,18 +427,20 @@ export default function HomePage() {
       <div className="divider"><div className="divider-line" /></div>
 
       {/* ABOUT */}
-      <section className="about reveal" id="about" ref={addReveal} style={{ padding: "80px 24px", maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+      {/* about-grid: CSS class controls columns — 2 on desktop, 1 on mobile */}
+      <section className="about reveal" id="about" ref={addReveal} style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div className="about-grid">
           <div>
-            <h2 className="section-title" style={{ margin: "0 0 24px 0", textAlign: "left" }}>Built for India's maintenance ecosystem</h2>
+            <h2 className="section-title" style={{ margin: "0 0 24px 0", textAlign: "left" }}>Built for India&apos;s maintenance ecosystem</h2>
             <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--text-secondary)", marginBottom: 16 }}>
-              QResolve was founded with a simple observation: India's ₹4 lakh crore maintenance market operates almost entirely on WhatsApp, spreadsheets, and trust. No data. No accountability. No way to prove who's actually good at their job.
+              QResolve was founded with a simple observation: India&apos;s ₹4 lakh crore maintenance market operates almost entirely on WhatsApp, spreadsheets, and trust. No data. No accountability. No way to prove who&apos;s actually good at their job.
             </p>
             <p style={{ fontSize: "1rem", lineHeight: 1.6, color: "var(--text-secondary)" }}>
-              We're building the infrastructure layer that turns maintenance from a mystery into a data-backed science. Every scan creates a timestamp. Every dispatch creates a log. Every resolution creates proof.
+              We&apos;re building the infrastructure layer that turns maintenance from a mystery into a data-backed science. Every scan creates a timestamp. Every dispatch creates a log. Every resolution creates proof.
             </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          {/* about-stats-grid: CSS class controls columns — 2 on desktop, 1 on mobile */}
+          <div className="about-stats-grid">
             {[
               { stat: "11", label: "Service categories" },
               { stat: "2", label: "Products, 1 flywheel" },
@@ -440,26 +458,38 @@ export default function HomePage() {
       <div className="divider"><div className="divider-line" /></div>
 
       {/* FOOTER */}
-      <footer className="footer" style={{ background: "var(--bg-secondary)", padding: "60px 24px 24px", borderTop: "1px solid var(--border)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", marginBottom: 40 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 40, marginBottom: 40 }}>
-            {[
-              { title: "Product", links: [{ label: "Directory", href: "#products" }, { label: "Relay OS", href: "#relay-pillar" }, { label: "AI Insights", href: "https://app.qresolve.com/login" }] },
-              { title: "Company", links: [{ label: "About", href: "#about" }, { label: "Contact", href: "mailto:hello@qresolve.com" }, { label: "Privacy", href: "#privacy" }, { label: "Terms", href: "#terms" }] },
-            ].map((col, i) => (
-              <div key={i}>
-                <h4 style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: 16, color: "var(--text-primary)" }}>{col.title}</h4>
-                <ul style={{ listStyle: "none" }}>
-                  {col.links.map((link, j) => (
-                    <li key={j} style={{ marginBottom: 12 }}>
-                      <a href={link.href} style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.9rem" }}>
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+      <footer className="footer" style={{ background: "var(--bg-secondary)", borderTop: "1px solid var(--border)" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          {/* footer-grid: CSS class — brand col + 2 link cols on desktop, stacks on mobile */}
+          <div className="footer-grid">
+            {/* Brand description — first column */}
+            <div className="footer-brand">
+              <span className="footer-brand-name">QResolve</span>
+              <p className="footer-brand-desc">
+                India&apos;s first maintenance provider directory ranked by verified performance data. QR-powered fault reporting that keeps buildings running.
+              </p>
+            </div>
+
+            {/* Product links */}
+            <div>
+              <h4 className="footer-col-title">Product</h4>
+              <ul className="footer-links">
+                <li><a href="#products">Directory</a></li>
+                <li><a href="#relay-pillar">Relay OS</a></li>
+                <li><a href="https://app.qresolve.com/login">AI Insights</a></li>
+              </ul>
+            </div>
+
+            {/* Company links */}
+            <div>
+              <h4 className="footer-col-title">Company</h4>
+              <ul className="footer-links">
+                <li><a href="#about">About</a></li>
+                <li><a href="mailto:hello@qresolve.com">Contact</a></li>
+                <li><a href="#privacy">Privacy</a></li>
+                <li><a href="#terms">Terms</a></li>
+              </ul>
+            </div>
           </div>
 
           <div style={{ borderTop: "1px solid var(--border)", paddingTop: 24, textAlign: "center", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
