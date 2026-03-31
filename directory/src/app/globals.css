@@ -107,6 +107,7 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 80px;
+  overflow-x: hidden;
 }
 
 body {
@@ -433,6 +434,7 @@ section {
   max-width: 1200px;
   margin: 0 auto;
   position: relative;
+  overflow: hidden;
 }
 
 .hero::before {
@@ -3930,6 +3932,17 @@ footer {
   .about-stats-grid {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+  }
+
+  /* Navbar */
+  nav {
+    padding: 0 20px;
+  }
+  .nav-links {
+    display: none;
+  }
+  .nav-hamburger {
+    display: block;
   }
 
   /* Footer */
