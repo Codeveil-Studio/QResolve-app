@@ -135,7 +135,6 @@ export default function HomePage() {
         </p>
         <HeroSearch />
         <div className="hero-ctas" style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 28, flexWrap: "wrap" }}>
-          <a href="#categories" className="btn btn-accent">Visit QResolve.com →</a>
           <a href="https://app.qresolve.com/signup" className="btn btn-accent">Start Free with Relay →</a>
           <a href="/demo" className="btn btn-ghost" style={{ border: "1px solid var(--border)" }}>
             <Play size={16} style={{ marginRight: 6 }} /> Try the Demo
