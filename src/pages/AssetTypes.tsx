@@ -20,10 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Tags, Search, Trash2, Edit } from 'lucide-react';
+import { Plus, Tags, Search, Trash2, Edit, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 
@@ -37,6 +38,7 @@ interface AssetType {
   name: string;
   description: string | null;
   category_id: string;
+  issue_types: string[];
   created_at: string;
   category?: {
     name: string;
@@ -55,7 +57,9 @@ export default function AssetTypes() {
     name: '',
     description: '',
     category_id: '',
+    issue_types: [] as string[],
   });
+  const [currentIssueType, setCurrentIssueType] = useState('');
 
   useEffect(() => {
     if (organization) {
@@ -102,13 +106,15 @@ export default function AssetTypes() {
         name: formData.name,
         description: formData.description || null,
         category_id: formData.category_id,
+        issue_types: formData.issue_types,
       });
 
       if (error) throw error;
 
       toast({ title: 'Asset type created successfully' });
       setDialogOpen(false);
-      setFormData({ name: '', description: '', category_id: '' });
+      setFormData({ name: '', description: '', category_id: '', issue_types: [] });
+      setCurrentIssueType('');
       fetchData();
     } catch (error: any) {
       toast({
@@ -134,6 +140,25 @@ export default function AssetTypes() {
         description: 'Failed to delete asset type',
       });
     }
+  };
+
+  const handleAddIssueType = () => {
+    if (currentIssueType.trim()) {
+      if (!formData.issue_types.includes(currentIssueType.trim())) {
+        setFormData({
+          ...formData,
+          issue_types: [...formData.issue_types, currentIssueType.trim()],
+        });
+      }
+      setCurrentIssueType('');
+    }
+  };
+
+  const handleRemoveIssueType = (tag: string) => {
+    setFormData({
+      ...formData,
+      issue_types: formData.issue_types.filter((t) => t !== tag),
+    });
   };
 
   const filteredTypes = assetTypes.filter((type) =>
@@ -201,6 +226,43 @@ export default function AssetTypes() {
                   placeholder="Optional details..."
                   className="mt-1.5"
                 />
+              </div>
+              <div>
+                <Label htmlFor="issue-type">Issue Templates <span className="text-xs font-normal text-muted-foreground">(Optional)</span></Label>
+                <div className="mt-1.5 flex gap-2">
+                  <Input
+                    id="issue-type"
+                    value={currentIssueType}
+                    onChange={(e) => setCurrentIssueType(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddIssueType();
+                      }
+                    }}
+                    placeholder="e.g., Screen Cracked"
+                    className="flex-1"
+                  />
+                  <Button type="button" variant="outline" size="icon" onClick={handleAddIssueType}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {formData.issue_types.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {formData.issue_types.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="flex items-center gap-1.5 pr-1">
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveIssueType(tag)}
+                          className="ml-1 hover:opacity-70"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>

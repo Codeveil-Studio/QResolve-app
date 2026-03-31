@@ -190,6 +190,22 @@
 }
 
 /* ==========================================
+   Scrollbar hide utility
+   Hides the scrollbar visually while keeping
+   the element scrollable (cross-browser).
+   Usage: className="overflow-y-auto scrollbar-hide"
+   ========================================== */
+@layer utilities {
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ==========================================
    Custom Scrollbar (matching Next.js directory)
    ========================================== */
 * {

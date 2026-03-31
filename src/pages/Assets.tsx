@@ -141,15 +141,6 @@ export default function Assets() {
     e.preventDefault();
     if (!organization || !user) return;
 
-    if (formData.issue_types.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Missing Information',
-        description: 'Please add at least one Issue Type tag.',
-      });
-      return;
-    }
-
     // Check Plan Limits
     const currentPlan = getPlan(subscription?.status, assets.length);
     if (assets.length >= currentPlan.maxAssets) {
@@ -170,7 +161,7 @@ export default function Assets() {
         location: formData.location,
         serial_number: formData.serial_number,
         status: formData.status,
-        issue_types: formData.issue_types, // Save the dynamic tags
+        issue_types: formData.issue_types.includes('Others') ? formData.issue_types : [...formData.issue_types, 'Others'], // Save the dynamic tags (always include Others)
         org_id: organization.id,
         created_by: user.id,
       };
@@ -220,6 +211,24 @@ export default function Assets() {
     });
   };
 
+  const handleAssetTypeChange = async (assetTypeId: string) => {
+    setFormData(prev => ({ ...prev, asset_type_id: assetTypeId }));
+    if (!assetTypeId) return;
+
+    try {
+      const { data } = await supabase
+        .from('asset_types')
+        .select('issue_types')
+        .eq('id', assetTypeId)
+        .single();
+
+      if (data?.issue_types?.length > 0) {
+        setFormData(prev => ({ ...prev, issue_types: data.issue_types }));
+      }
+    } catch (error) {
+      console.error('Error fetching asset type templates:', error);
+    }
+  };
 
   const handleDelete = async (asset: AssetWithType) => {
     if (!confirm('Are you sure you want to delete this asset?')) return;
@@ -653,7 +662,7 @@ export default function Assets() {
                 <Label htmlFor="asset_type">Asset Type</Label>
                 <Select
                   value={formData.asset_type_id}
-                  onValueChange={(val) => setFormData({ ...formData, asset_type_id: val })}
+                  onValueChange={handleAssetTypeChange}
                 >
                   <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder="Select Asset Type" />
@@ -809,12 +818,13 @@ export default function Assets() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-3xl">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle>Asset Details</DialogTitle>
             <DialogDescription>{selectedAsset?.name}</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-6 sm:grid-cols-[1fr_1.2fr]">
+          <div className="overflow-y-auto scrollbar-hide min-h-0 flex-1">
+          <div className="grid gap-6 sm:grid-cols-[220px_minmax(0,1fr)]">
             <div className="rounded-xl border border-border/50 bg-card p-4">
               <div className="space-y-4">
                 <div>
@@ -843,13 +853,13 @@ export default function Assets() {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Description</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground break-words">
                     {selectedAsset?.description || 'No description'}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border border-border/50 bg-card p-4">
+            <div className="min-w-0 rounded-xl border border-border/50 bg-card p-4">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-semibold">Reported Issues</p>
                 <span className="text-xs text-muted-foreground">{assetIssues.length}</span>
@@ -887,6 +897,7 @@ export default function Assets() {
                 </div>
               )}
             </div>
+          </div>
           </div>
         </DialogContent>
       </Dialog>

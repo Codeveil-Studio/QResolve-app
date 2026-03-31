@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, AlertCircle, MoreHorizontal, Trash2, Edit, CheckCircle, XCircle, Calendar, Clock } from 'lucide-react';
+import { Plus, Search, Filter, AlertCircle, MoreHorizontal, Trash2, Edit, CheckCircle, XCircle, Calendar, Clock, ArrowDownToLine, X } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -79,6 +79,7 @@ export default function Issues() {
     asset_id: '',
     priority: 'medium' as IssuePriority,
   });
+  const [photoPreviewOpen, setPhotoPreviewOpen] = useState(false);
 
   const fetchIssues = useCallback(async () => {
     if (!organization) return;
@@ -529,17 +530,21 @@ export default function Issues() {
         open={issueDetailOpen}
         onOpenChange={(open) => {
           setIssueDetailOpen(open);
-          if (!open) setSelectedIssue(null);
+          if (!open) {
+            setSelectedIssue(null);
+            setPhotoPreviewOpen(false);
+          }
         }}
       >
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle>Issue Details</DialogTitle>
             <DialogDescription>{selectedIssue?.title}</DialogDescription>
           </DialogHeader>
 
           {selectedIssue && (
-            <div className="grid gap-6 sm:grid-cols-[1fr_1fr]">
+            <div className="overflow-y-auto scrollbar-hide min-h-0 flex-1">
+            <div className="grid gap-6 sm:grid-cols-[220px_minmax(0,1fr)]">
               {/* Left panel — core metadata */}
               <div className="rounded-xl border border-border/50 bg-card p-4 space-y-4">
                 <div>
@@ -584,14 +589,115 @@ export default function Issues() {
                 </div>
               </div>
 
-              {/* Right panel — description + dates */}
-              <div className="rounded-xl border border-border/50 bg-card p-4 space-y-4">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">Description</p>
-                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                    {selectedIssue.description || 'No description provided.'}
-                  </p>
-                </div>
+              {/* Right panel — description + dates + photo */}
+              <div className="min-w-0 rounded-xl border border-border/50 bg-card p-4 space-y-4">
+                {/* Parse structured JSON description (new format) or fall back to raw text */}
+                {(() => {
+                  let parsed: { note?: string | null; issue_type?: string | null; reporter_name?: string | null; reporter_contact?: string | null; photo_url?: string | null } | null = null;
+                  try { if (selectedIssue.description) parsed = JSON.parse(selectedIssue.description); } catch { /* legacy plain text */ }
+
+                  if (parsed) {
+                    return (
+                      <>
+                        {parsed.issue_type && (
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground">Issue Type</p>
+                            <p className="text-sm font-medium mt-0.5">{parsed.issue_type}</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground">Description</p>
+                          <p className="text-sm text-muted-foreground mt-1 leading-relaxed break-words">
+                            {parsed.note || 'No description provided.'}
+                          </p>
+                        </div>
+                        {parsed.reporter_name && (
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground">Reported By</p>
+                            <p className="text-sm font-medium mt-0.5">{parsed.reporter_name}</p>
+                          </div>
+                        )}
+                        {parsed.reporter_contact && (
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground">Contact</p>
+                            <p className="text-sm font-medium mt-0.5 break-words">{parsed.reporter_contact}</p>
+                          </div>
+                        )}
+                      </>
+                    );
+                  }
+
+                  // Legacy plain-text description (old issues)
+                  return (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Description</p>
+                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed whitespace-pre-line break-words">
+                        {selectedIssue.description?.trim() || 'No description provided.'}
+                      </p>
+                    </div>
+                  );
+                })()}
+
+                {/* Photo Evidence */}
+                {(() => {
+                  let photoUrl: string | null | undefined = null;
+                  try { if (selectedIssue.description) photoUrl = JSON.parse(selectedIssue.description)?.photo_url; } catch { photoUrl = selectedIssue.description?.match(/Photo: (https?:\/\/\S+)/)?.[1]; }
+                  if (!photoUrl) return null;
+                  return (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Photo Evidence</p>
+                      <button
+                        type="button"
+                        className="w-full overflow-hidden rounded-lg border border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => setPhotoPreviewOpen(true)}
+                        aria-label="View full-size photo"
+                      >
+                        <img
+                          src={photoUrl}
+                          alt="Issue photo evidence"
+                          className="w-full object-cover max-h-[240px] rounded-lg cursor-pointer transition-opacity hover:opacity-90"
+                        />
+                      </button>
+                      <a
+                        href={photoUrl}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-2 w-full justify-center rounded-md border border-border/50 bg-card px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <ArrowDownToLine className="h-4 w-4" />
+                        Download Photo
+                      </a>
+
+                      {/* Full-screen preview overlay */}
+                      {photoPreviewOpen && (
+                        <div
+                          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                          onClick={() => setPhotoPreviewOpen(false)}
+                          role="dialog"
+                          aria-modal="true"
+                          aria-label="Full-size photo preview"
+                        >
+                          <button
+                            type="button"
+                            className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            onClick={(e) => { e.stopPropagation(); setPhotoPreviewOpen(false); }}
+                            aria-label="Close preview"
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
+                          <img
+                            src={photoUrl}
+                            alt="Issue photo evidence — full size"
+                            className="max-w-full max-h-[90vh] rounded-lg object-contain shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Reported</p>
                   <div className="flex items-center gap-1.5 mt-1">
@@ -613,6 +719,7 @@ export default function Issues() {
                   </div>
                 )}
               </div>
+            </div>
             </div>
           )}
         </DialogContent>

@@ -28,9 +28,9 @@ const CHART_COLORS = {
   primary: 'hsl(160, 84%, 39%)',   // --primary  (emerald green)
   accent:  'hsl(160, 84%, 45%)',   // --accent   (bright emerald)
   warning: 'hsl(38, 92%, 50%)',    // --warning  (amber)
-  danger:  'hsl(0, 84%, 60%)',     // --destructive (red)
+  destructive: 'hsl(0, 84%, 60%)',     // --destructive (red)
   success: 'hsl(142, 76%, 36%)',   // --success  (green)
-  muted:   'hsl(160, 15%, 40%)',   // derived from --muted-foreground
+  muted:   'hsl(160, 10%, 55%)',   // derived from --muted-foreground
 };
 
 // Priority ordering for consistent display across charts
@@ -38,7 +38,7 @@ const PRIORITY_ORDER = ['critical', 'high', 'medium', 'low'];
 
 // Color mapping per priority — uses theme tokens directly
 const PRIORITY_COLORS: Record<string, string> = {
-  critical: CHART_COLORS.danger,
+  critical: CHART_COLORS.destructive,
   high:     CHART_COLORS.warning,
   medium:   CHART_COLORS.primary,
   low:      CHART_COLORS.success,
@@ -49,7 +49,7 @@ const STATUS_COLORS: Record<string, string> = {
   active:      CHART_COLORS.primary,
   inactive:    CHART_COLORS.muted,
   maintenance: CHART_COLORS.warning,
-  retired:     CHART_COLORS.danger,
+  retired:     CHART_COLORS.destructive,
 };
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -401,9 +401,9 @@ export default function Reports() {
       label: 'Resolved Issues',
       value: stats.resolvedIssues,
       icon:  TrendingDown,
-      accent: 'text-accent',
-      bg:     'bg-accent/10',
-      border: 'border-accent/20',
+      accent: 'text-success',
+      bg:     'bg-success/10',
+      border: 'border-success/20',
     },
     {
       label: 'Avg Resolution',

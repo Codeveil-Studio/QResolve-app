@@ -78,6 +78,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          issue_types: string[] | null
           name: string
           org_id: string
         }
@@ -87,6 +88,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          issue_types?: string[] | null
           name: string
           org_id: string
         }
@@ -96,6 +98,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          issue_types?: string[] | null
           name?: string
           org_id?: string
         }
