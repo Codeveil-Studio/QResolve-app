@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, TrendingUp, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Insight {
   id: string;
@@ -18,39 +21,45 @@ interface Insight {
 export function AssetInsights() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [insights, setInsights] = useState<Insight[]>([]);
+  const { toast } = useToast();
+  const { organization } = useAuth();
 
-  const generateInsights = () => {
+  const storageKey = organization ? `ai_insights_${organization.id}` : null;
+
+  // Load cached insights from localStorage on mount
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      const cached = localStorage.getItem(storageKey);
+      if (cached) setInsights(JSON.parse(cached));
+    } catch {
+      // ignore corrupted cache
+    }
+  }, [storageKey]);
+
+  const generateInsights = async () => {
     setIsGenerating(true);
-    // Simulate AI analysis delay
-    setTimeout(() => {
-      setInsights([
-        {
-          id: '1',
-          type: 'warning',
-          title: 'Repeat Fault Pattern: Vending M-04',
-          description: 'Coin validator has failed 3 times in 14 days. Suggest full module replacement instead of field repair to avoid further downtime.',
-          impact: 'high',
-          score: 85
-        },
-        {
-          id: '2',
-          type: 'optimization',
-          title: 'Optimal Dispatch Window',
-          description: 'Historical data shows 92% of faults in BKC area occur between 2PM-4PM. Adjusting technician proximity during this window could reduce response time by 12 mins.',
-          impact: 'medium',
-          score: 72
-        },
-        {
-          id: '3',
-          type: 'preventive',
-          title: 'Predictive Cooling Tower Service',
-          description: 'Based on vibratory sensors and ambient temperature rise, Cooling Tower #2 is predicted to overheat within 72 hours.',
-          impact: 'high',
-          score: 94
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-insights');
+      if (error) {
+        let message = error.message;
+        try {
+          const body = await (error as unknown as { context: Response }).context?.json?.();
+          if (body?.error) message = body.error;
+        } catch {
+          // ignore parse failure, use generic message
         }
-      ]);
+        throw new Error(message);
+      }
+      const fresh = data.insights ?? [];
+      setInsights(fresh);
+      if (storageKey) localStorage.setItem(storageKey, JSON.stringify(fresh));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to generate insights';
+      toast({ title: 'AI Insights error', description: message, variant: 'destructive' });
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   return (

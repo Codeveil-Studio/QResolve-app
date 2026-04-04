@@ -3944,6 +3944,30 @@ footer {
   .nav-hamburger {
     display: block;
   }
+  .nav-hamburger {
+    width: 34px;
+    height: 34px;
+  }
+  .nav-hamburger span {
+    width: 18px;
+    left: 9px;
+    height: 2px;
+  }
+  .mobile-menu {
+    padding: 18px 18px;
+    gap: 4px;
+  }
+  .mobile-menu a {
+    font-size: 14px;
+    padding: 12px 0;
+    line-height: 1.25;
+  }
+  .mobile-menu a.mobile-cta {
+    margin-top: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.2;
+  }
 
   /* Footer */
   footer.footer {
