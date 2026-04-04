@@ -211,10 +211,10 @@ export default function HomePage() {
             <p className="pc-tagline">Prescriptive maintenance intelligence powered by Google Gemini. Turn fault data into predictive insights before problems compound.</p>
 
             <ul className="pc-features">
-              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Micro-Friction Index — daily asset health scores</span></li>
-              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Predictive fault alerts before downtime strikes</span></li>
-              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Vendor Reliability reports auto-generated from Relay data</span></li>
-              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Procurement Intelligence for smarter maintenance budgets</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Preventive recommendations — act before a fault becomes downtime</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Warning signals — flagged patterns from your last 90 days of tickets</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Optimization suggestions — reduce resolution time and operational friction</span></li>
+              <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Confidence-scored — every insight ranked by AI confidence %</span></li>
             </ul>
 
             <a href="https://app.qresolve.com/login" className="btn btn-accent" style={{ width: "100%", justifyContent: "center", marginTop: 24 }}>Explore AI Insights →</a>
