@@ -450,37 +450,18 @@ export default function ReportIssue() {
           ? `${priority.charAt(0).toUpperCase() + priority.slice(1)} issue`
           : 'Issue Report';
 
-      // Build structured JSON description so Issues page can display fields cleanly
-      const structuredDescription = JSON.stringify({
-        note: description.trim() || null,
-        issue_type: selectedIssueTags[0] ?? (priority ? `${priority.charAt(0).toUpperCase() + priority.slice(1)} priority` : null),
-        reporter_name: reporterName.trim() || null,
-        reporter_contact: reporterContact.trim() || null,
-        photo_url: null, // filled in after upload below
-      });
+      // Generate the ID client-side so we don't need .select().single() after insert.
+      // The RETURNING clause in Supabase is subject to SELECT (USING) policies — anon users
+      // have no SELECT policy on issues, so reading back the new row would fail with RLS error.
+      const newIssueId = getUUID();
 
-      const { data: insertedIssue, error: submitError } = await supabase
-        .from('issues')
-        .insert({
-          org_id: orgId,
-          asset_id: finalAssetId,
-          title: generatedTitle,
-          description: structuredDescription,
-          priority: priority ?? 'medium',
-          status: 'open',
-          reported_by: getUUID(),
-          issue_tags: selectedIssueTags,
-        })
-        .select('id')
-        .single();
-
-      if (submitError) throw submitError;
-
-      // Upload photo to Supabase Storage (non-blocking — failure does not prevent submission)
-      if (photoFile && insertedIssue?.id) {
+      // Upload photo BEFORE inserting so the URL is available in the initial INSERT.
+      // This avoids a follow-up UPDATE (which anon users also cannot do due to RLS).
+      let photoUrl: string | null = null;
+      if (photoFile) {
         try {
           const ext = photoFile.name.split('.').pop() ?? 'jpg';
-          const storagePath = `${orgId}/${insertedIssue.id}/${Date.now()}.${ext}`;
+          const storagePath = `${orgId}/${newIssueId}/${Date.now()}.${ext}`;
           const { error: uploadError } = await supabase.storage
             .from('issue-photos')
             .upload(storagePath, photoFile, { upsert: false });
@@ -489,25 +470,37 @@ export default function ReportIssue() {
             const { data: publicUrlData } = supabase.storage
               .from('issue-photos')
               .getPublicUrl(storagePath);
-
-            if (publicUrlData?.publicUrl) {
-              const updatedDescription = JSON.stringify({
-                note: description.trim() || null,
-                issue_type: selectedIssueTags[0] ?? (priority ? `${priority.charAt(0).toUpperCase() + priority.slice(1)} priority` : null),
-                reporter_name: reporterName.trim() || null,
-                reporter_contact: reporterContact.trim() || null,
-                photo_url: publicUrlData.publicUrl,
-              });
-              await supabase
-                .from('issues')
-                .update({ description: updatedDescription })
-                .eq('id', insertedIssue.id);
-            }
+            photoUrl = publicUrlData?.publicUrl ?? null;
           }
         } catch {
-          console.warn('Photo upload failed but issue was submitted successfully.');
+          console.warn('Photo upload failed; issue will be submitted without photo.');
         }
       }
+
+      // Build structured JSON description so Issues page can display fields cleanly
+      const structuredDescription = JSON.stringify({
+        note: description.trim() || null,
+        issue_type: selectedIssueTags[0] ?? (priority ? `${priority.charAt(0).toUpperCase() + priority.slice(1)} priority` : null),
+        reporter_name: reporterName.trim() || null,
+        reporter_contact: reporterContact.trim() || null,
+        photo_url: photoUrl,
+      });
+
+      const { error: submitError } = await supabase
+        .from('issues')
+        .insert({
+          id: newIssueId,
+          org_id: orgId,
+          asset_id: finalAssetId,
+          title: generatedTitle,
+          description: structuredDescription,
+          priority: priority ?? 'medium',
+          status: 'open',
+          reported_by: getUUID(),
+          issue_tags: selectedIssueTags,
+        });
+
+      if (submitError) throw submitError;
 
       setSuccess(true);
     } catch (err: unknown) {
