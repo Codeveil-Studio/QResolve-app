@@ -54,6 +54,7 @@ type IssueWithAsset = Issue & {
   revenue_impact?: 'high' | 'low';
   asset?: {
     name: string;
+    location?: string | null;
     asset_type?: {
       name: string;
     } | null;
@@ -91,6 +92,7 @@ export default function Issues() {
           *,
           asset:assets (
             name,
+            location,
             asset_type:asset_types (
               name
             )
@@ -585,6 +587,12 @@ export default function Issues() {
                   <p className="text-xs font-medium text-muted-foreground">Asset Type</p>
                   <p className="text-sm font-medium mt-0.5">
                     {selectedIssue.asset?.asset_type?.name || 'Unassigned'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Asset Location</p>
+                  <p className="text-sm font-medium mt-0.5">
+                    {selectedIssue.asset?.location || 'N/A'}
                   </p>
                 </div>
               </div>
