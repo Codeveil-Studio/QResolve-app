@@ -30,8 +30,8 @@ export function Navbar() {
                 <li><Link href="/#categories">Categories</Link></li>
                 <li><Link href="/#verified">Why Verified</Link></li>
                 <li><Link href="/#relay">For Providers</Link></li>
-                <li><Link href="https://app.qresolve.com/login">Login</Link></li>
-                <li><Link href="https://app.qresolve.com/signup" className="nav-cta">List Your Business</Link></li>
+                <li><Link href="https://relay.qresolve.com/login">Login</Link></li>
+                <li><Link href="https://relay.qresolve.com/signup" className="nav-cta">List Your Business</Link></li>
             </ul>
         </nav>
     );

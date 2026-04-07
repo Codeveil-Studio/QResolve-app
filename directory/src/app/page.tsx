@@ -68,6 +68,47 @@ export default function HomePage() {
   const [formSuccess, setFormSuccess] = useState(false);
   const revealRefs = useRef<HTMLElement[]>([]);
 
+  const heroCtaBaseStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    padding: "14px 28px",
+    borderRadius: 999,
+    fontWeight: 700,
+    fontSize: 15,
+    letterSpacing: "0.01em",
+    textDecoration: "none",
+    border: "1px solid var(--border)",
+    background: "var(--bg-card)",
+    color: "var(--text-primary)",
+    transition: "transform 0.2s, box-shadow 0.2s, background 0.2s, border-color 0.2s",
+    whiteSpace: "nowrap",
+  };
+
+  const heroCtaPrimaryStyle: React.CSSProperties = {
+    ...heroCtaBaseStyle,
+    background: "var(--accent)",
+    color: "var(--bg-primary)",
+    borderColor: "transparent",
+    boxShadow: "0 10px 30px var(--accent-glow-strong)",
+  };
+
+  const heroCtaSecondaryStyle: React.CSSProperties = {
+    ...heroCtaBaseStyle,
+    background: "var(--warning)",
+    color: "var(--bg-primary)",
+    borderColor: "transparent",
+    boxShadow: "0 10px 30px rgba(251, 191, 36, 0.25)",
+  };
+
+  const heroCtaOutlineStyle: React.CSSProperties = {
+    ...heroCtaBaseStyle,
+    background: "transparent",
+    borderColor: "var(--border)",
+    color: "var(--text-primary)",
+  };
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
@@ -129,8 +170,8 @@ export default function HomePage() {
           <li><a href="#relay">For Providers</a></li>
           <li><a href="#about">Our Story</a></li>
           <li><a href="#contact">Contact</a></li>
-          <li><a href="https://app.qresolve.com/login">Login</a></li>
-          <li><a href="https://app.qresolve.com/signup" className="nav-cta">List Your Business</a></li>
+          <li><a href="https://relay.qresolve.com/login">Login</a></li>
+          <li><a href="https://relay.qresolve.com/signup" className="nav-cta">List Your Business</a></li>
         </ul>
         <button
           className={`nav-hamburger ${menuOpen ? "open" : ""}`}
@@ -157,20 +198,21 @@ export default function HomePage() {
           One directory of maintenance service providers — ranked by <strong>real performance data</strong>, not just promises. Starting with Delhi NCR, expanding city by city.
         </p>
         <HeroSearch />
-        <div className="audience-split">
-          <a href="#categories" className="audience-card" style={{ position: "relative" }}>
-            <div style={{ position: "absolute", top: 18, right: 18, fontSize: "0.7rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, opacity: 0.75 }}>QResolve Directory</div>
-            <div className="audience-label">I need a repair</div>
-            <h3>Find a verified provider</h3>
-            <p>Search by asset type and location. Compare providers on actual response times, resolution rates, and verified reviews.</p>
-            <span className="audience-action">Browse categories <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></span>
+        <div className="hero-ctas" style={{ display: "flex", gap: 18, marginTop: 36, flexWrap: "wrap" }}>
+          <a href="#categories" className="hero-cta-btn hero-cta-primary" style={heroCtaPrimaryStyle}>
+            Explore the Directory
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </a>
-          <a href="https://app.qresolve.com/signup" className="audience-card" style={{ position: "relative" }}>
-            <div style={{ position: "absolute", top: 18, right: 18, fontSize: "0.7rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, opacity: 0.75 }}>QResolve Relay</div>
-            <div className="audience-label">I&apos;m a service provider</div>
-            <h3>Grow with Relay</h3>
-            <p>Get a free directory listing. Upgrade to Relay for QR-based fault reporting, job tracking, and the verified badge that wins contracts.</p>
-            <span className="audience-action">Explore Relay <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></span>
+          <a href="#relay" className="hero-cta-btn hero-cta-secondary" style={heroCtaSecondaryStyle}>
+            See Relay in Action
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </a>
+          <a href="#how-it-works" className="hero-cta-btn hero-cta-outline" style={heroCtaOutlineStyle}>
+            How They Connect
           </a>
         </div>
       </div>
@@ -578,7 +620,7 @@ export default function HomePage() {
             <div>
               <div className="footer-col-title">For Providers</div>
               <ul className="footer-links">
-                <li><a href="https://app.qresolve.com/signup">List Your Business</a></li>
+                <li><a href="https://relay.qresolve.com/signup">List Your Business</a></li>
                 <li><a href="#relay">Relay Features</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="#early-access">Founding Provider Program</a></li>

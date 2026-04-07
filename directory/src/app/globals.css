@@ -507,10 +507,76 @@ section {
   animation: fadeUp 0.6s ease 0.3s both;
 }
 
+/* Hero CTAs */
+.hero-ctas {
+  display: flex;
+  gap: 18px;
+  margin-top: 36px;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.6s ease 0.3s both;
+}
+
+.hero-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+
+.hero-cta-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-light);
+}
+
+.hero-cta-primary {
+  background: var(--accent);
+  color: var(--bg-primary);
+  border-color: transparent;
+  box-shadow: 0 10px 30px var(--accent-glow-strong);
+}
+
+.hero-cta-primary:hover {
+  box-shadow: 0 14px 40px var(--accent-glow-strong);
+}
+
+.hero-cta-secondary {
+  background: var(--warning);
+  color: var(--bg-primary);
+  border-color: transparent;
+  box-shadow: 0 10px 30px rgba(251, 191, 36, 0.25);
+}
+
+.hero-cta-secondary:hover {
+  box-shadow: 0 14px 40px rgba(251, 191, 36, 0.25);
+}
+
+.hero-cta-outline {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.hero-cta-outline:hover {
+  background: var(--bg-card-hover);
+}
+
 .audience-card {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 36px 32px;
+  background: var(--bg-card);
   background: var(--bg-card);
   transition: border-color 0.3s, background 0.3s, transform 0.3s;
   cursor: pointer;
@@ -603,6 +669,19 @@ section {
 
 .audience-card:hover .audience-action svg {
   transform: translateX(3px);
+}
+
+@media (max-width: 860px) {
+  .hero-ctas {
+    flex-direction: column;
+    align-items: stretch;
+    max-width: 520px;
+  }
+
+  .hero-cta-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* ==========================================
@@ -3044,4 +3123,4 @@ footer {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
+}
