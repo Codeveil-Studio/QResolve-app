@@ -16,7 +16,7 @@ export default function DemoPage() {
           <p style={{ fontSize: "0.7rem", color: "#34d399", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 2 }}>Interactive Demo</p>
           <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#e8efe9" }}>Relay by QResolve</p>
         </div>
-        <a href="https://app.qresolve.com/signup" style={{ padding: "8px 16px", background: "#34d399", color: "#000", borderRadius: 8, textDecoration: "none", fontSize: "0.85rem", fontWeight: 600 }}>
+        <a href="https://relay.qresolve.com/signup" style={{ padding: "8px 16px", background: "#34d399", color: "#000", borderRadius: 8, textDecoration: "none", fontSize: "0.85rem", fontWeight: 600 }}>
           Start Free
         </a>
       </div>

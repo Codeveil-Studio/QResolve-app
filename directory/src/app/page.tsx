@@ -143,8 +143,8 @@ export default function HomePage() {
           <li><a href="#relay">For Providers</a></li>
           <li><a href="#about">Our Story</a></li>
           <li><a href="#contact">Contact</a></li>
-          <li><a href="https://app.qresolve.com/login">Login</a></li>
-          <li><a href="https://app.qresolve.com/signup" className="nav-cta">List Your Business</a></li>
+          <li><a href="https://relay.qresolve.com/login">Login</a></li>
+          <li><a href="https://relay.qresolve.com/signup" className="nav-cta">List Your Business</a></li>
         </ul>
         <button
           className={`nav-hamburger ${menuOpen ? "open" : ""}`}
@@ -163,8 +163,8 @@ export default function HomePage() {
         <a href="#testimonials" onClick={closeMobileMenu}>Testimonials</a>
         <a href="#pricing" onClick={closeMobileMenu}>Pricing</a>
         <a href="#about" onClick={closeMobileMenu}>About</a>
-        <a href="https://app.qresolve.com/login" onClick={closeMobileMenu}>Login</a>
-        <a href="https://app.qresolve.com/signup" className="mobile-cta" onClick={closeMobileMenu}>Start Free</a>
+        <a href="https://relay.qresolve.com/login" onClick={closeMobileMenu}>Login</a>
+        <a href="https://relay.qresolve.com/signup" className="mobile-cta" onClick={closeMobileMenu}>Start Free</a>
       </div>
 
       {/* HERO */}
@@ -183,7 +183,7 @@ export default function HomePage() {
             <p>Search by asset type and location. Compare providers on actual response times, resolution rates, and verified reviews.</p>
             <span className="audience-action">Browse categories <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg></span>
           </a>
-          <a href="https://app.qresolve.com/signup" className="audience-card" style={{ position: "relative" }}>
+          <a href="https://relay.qresolve.com/signup" className="audience-card" style={{ position: "relative" }}>
             <div style={{ position: "absolute", top: 18, right: 18, fontSize: "0.7rem", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, opacity: 0.75 }}>QResolve Relay</div>
             <div className="audience-label">I&apos;m a service provider</div>
             <h3>Grow with Relay</h3>
@@ -248,7 +248,7 @@ export default function HomePage() {
             </ul>
 
             <div style={{ marginTop: 24 }}>
-              <a href="https://app.qresolve.com/signup" className="btn btn-accent" style={{ width: "100%", justifyContent: "center" }}>Start Free with Relay →</a>
+              <a href="https://relay.qresolve.com/signup" className="btn btn-accent" style={{ width: "100%", justifyContent: "center" }}>Start Free with Relay →</a>
               <a href="/demo" className="btn btn-ghost" style={{ width: "100%", justifyContent: "center", marginTop: 12, border: "1px solid var(--border)" }}>
                 <Play size={16} style={{ marginRight: 6 }} /> Try the Demo
               </a>
@@ -268,7 +268,7 @@ export default function HomePage() {
               <li><ChevronRight size={16} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} /> <span>Confidence-scored — every insight ranked by AI confidence %</span></li>
             </ul>
 
-            <a href="https://app.qresolve.com/login" className="btn btn-accent" style={{ width: "100%", justifyContent: "center", marginTop: 24 }}>Explore AI Insights →</a>
+            <a href="https://relay.qresolve.com/login" className="btn btn-accent" style={{ width: "100%", justifyContent: "center", marginTop: 24 }}>Explore AI Insights →</a>
           </div>
         </div>
       </section>
@@ -414,7 +414,7 @@ export default function HomePage() {
               description: "Get found by facility managers, coworking spaces, and asset owners actively searching for maintenance providers in your city.",
               features: ["Category & city placement", "Company profile with service details", "Direct repair requests from asset owners", "Customer reviews & ratings", "\"Claim Your Profile\" badge"],
               cta: "Claim Your Free Profile",
-              href: "https://app.qresolve.com/signup"
+              href: "https://relay.qresolve.com/signup"
             },
             {
               name: "Relay Starter",
@@ -423,7 +423,7 @@ export default function HomePage() {
               description: "One missed message = one lost client. Relay gives every fault report a ticket, every ticket a technician, and every resolution a timestamp your clients can verify.",
               features: ["QR-based fault reporting (no app, no login — anyone can report)", "Operations dashboard with triage & prioritisation", "One-tap technician dispatch", "Immutable audit trail (tamper-proof resolution history)", "\"Verified by Relay\" trust badge on QResolve listing", "Up to 100 managed assets"],
               cta: "Start 14-Day Free Trial",
-              href: "https://app.qresolve.com/signup"
+              href: "https://relay.qresolve.com/signup"
             },
             {
               name: "Relay Pro",
@@ -432,7 +432,7 @@ export default function HomePage() {
               description: "Pro turns your fault data into the competitive advantage that wins renewals and new contracts. Built for providers managing across multiple clients, cities, and verticals.",
               features: ["Everything in Starter", "Unlimited assets & multi-city operations", "Procurement Intelligence reports (predict part failures before they happen)", "Vendor Reliability scoring (prove SLA performance, not just promise it)", "Priority lead placement on QResolve directory", "Dedicated onboarding support"],
               cta: "Start 14-Day Free Trial",
-              href: "https://app.qresolve.com/signup",
+              href: "https://relay.qresolve.com/signup",
               featured: true
             },
           ].map((plan, i) => (
@@ -527,7 +527,7 @@ export default function HomePage() {
               <ul className="footer-links">
                 <li><a href="#products">Directory</a></li>
                 <li><a href="#relay-pillar">Relay OS</a></li>
-                <li><a href="https://app.qresolve.com/login">AI Insights</a></li>
+                <li><a href="https://relay.qresolve.com/login">AI Insights</a></li>
               </ul>
             </div>
 
@@ -535,7 +535,7 @@ export default function HomePage() {
             <div>
               <h4 className="footer-col-title">Company</h4>
               <ul className="footer-links">
-                <li><a href="https://app.qresolve.com/signup">List Your Business</a></li>
+                <li><a href="https://relay.qresolve.com/signup">List Your Business</a></li>
                 <li><a href="#relay">Relay Features</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="#early-access">Founding Provider Program</a></li>

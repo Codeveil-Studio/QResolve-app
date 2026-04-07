@@ -55,7 +55,7 @@ export function Navbar() {
                     </li>
                 ))}
                 <li>
-                    <a href="https://app.qresolve.com/signup" className="nav-cta" target="_blank" rel="noreferrer">
+                    <a href="https://relay.qresolve.com/signup" className="nav-cta" target="_blank" rel="noreferrer">
                         List Your Business
                     </a>
                 </li>
@@ -78,7 +78,7 @@ export function Navbar() {
                     { href: "/#verified", label: "Why Verified" },
                     { href: "/#relay", label: "For Providers" },
                     { href: "/demo", label: "Interactive Demo" },
-                    { href: "https://app.qresolve.com/login", label: "Login", external: true },
+                    { href: "https://relay.qresolve.com/login", label: "Login", external: true },
                     ] as { href: string; label: string; external?: boolean }[]
                 ).map((item) =>
                     item.external ? (
@@ -98,7 +98,7 @@ export function Navbar() {
                     )
                 )}
                 <a
-                    href="https://app.qresolve.com/signup"
+                    href="https://relay.qresolve.com/signup"
                     className="mobile-cta"
                     target="_blank"
                     rel="noreferrer"
