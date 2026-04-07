@@ -43,6 +43,7 @@ import { Asset, AssetStatus, Issue } from '@/lib/supabase-types';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { getPlan } from '@/lib/subscription';
 
 type AssetTypeOption = {
   id: string;
@@ -62,6 +63,7 @@ export default function Assets() {
   const [assets, setAssets] = useState<AssetWithType[]>([]);
   const [loading, setLoading] = useState(true);
   const [issuesLoading, setIssuesLoading] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -117,22 +119,35 @@ export default function Assets() {
     setAssetTypes(data || []);
   }, [organization]);
 
+  const fetchSubscription = useCallback(async () => {
+    if (!organization) return;
+    const { data } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('org_id', organization.id)
+      .maybeSingle();
+    setSubscription(data);
+  }, [organization]);
+
   useEffect(() => {
     if (organization) {
       fetchAssets();
       fetchAssetTypes();
+      fetchSubscription();
     }
-  }, [organization, fetchAssets, fetchAssetTypes]);
+  }, [organization, fetchAssets, fetchAssetTypes, fetchSubscription]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!organization || !user) return;
 
-    if (formData.issue_types.length === 0) {
+    // Check Plan Limits
+    const currentPlan = getPlan(subscription?.status, assets.length);
+    if (assets.length >= currentPlan.maxAssets) {
       toast({
         variant: 'destructive',
-        title: 'Missing Information',
-        description: 'Please add at least one Issue Type tag.',
+        title: 'Limit Reached',
+        description: `Your ${subscription?.status || 'trial'} plan is limited to ${currentPlan.maxAssets} assets. Please upgrade in Settings to add more.`,
       });
       return;
     }
@@ -146,7 +161,7 @@ export default function Assets() {
         location: formData.location,
         serial_number: formData.serial_number,
         status: formData.status,
-        issue_types: formData.issue_types, // Save the dynamic tags
+        issue_types: formData.issue_types.includes('Others') ? formData.issue_types : [...formData.issue_types, 'Others'], // Save the dynamic tags (always include Others)
         org_id: organization.id,
         created_by: user.id,
       };
@@ -196,6 +211,24 @@ export default function Assets() {
     });
   };
 
+  const handleAssetTypeChange = async (assetTypeId: string) => {
+    setFormData(prev => ({ ...prev, asset_type_id: assetTypeId }));
+    if (!assetTypeId) return;
+
+    try {
+      const { data } = await supabase
+        .from('asset_types')
+        .select('issue_types')
+        .eq('id', assetTypeId)
+        .single();
+
+      if (data?.issue_types?.length > 0) {
+        setFormData(prev => ({ ...prev, issue_types: data.issue_types }));
+      }
+    } catch (error) {
+      console.error('Error fetching asset type templates:', error);
+    }
+  };
 
   const handleDelete = async (asset: AssetWithType) => {
     if (!confirm('Are you sure you want to delete this asset?')) return;
@@ -629,7 +662,7 @@ export default function Assets() {
                 <Label htmlFor="asset_type">Asset Type</Label>
                 <Select
                   value={formData.asset_type_id}
-                  onValueChange={(val) => setFormData({ ...formData, asset_type_id: val })}
+                  onValueChange={handleAssetTypeChange}
                 >
                   <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder="Select Asset Type" />
@@ -785,12 +818,13 @@ export default function Assets() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-3xl">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle>Asset Details</DialogTitle>
             <DialogDescription>{selectedAsset?.name}</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-6 sm:grid-cols-[1fr_1.2fr]">
+          <div className="overflow-y-auto scrollbar-hide min-h-0 flex-1">
+          <div className="grid gap-6 sm:grid-cols-[220px_minmax(0,1fr)]">
             <div className="rounded-xl border border-border/50 bg-card p-4">
               <div className="space-y-4">
                 <div>
@@ -819,13 +853,13 @@ export default function Assets() {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Description</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground break-words">
                     {selectedAsset?.description || 'No description'}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border border-border/50 bg-card p-4">
+            <div className="min-w-0 rounded-xl border border-border/50 bg-card p-4">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-semibold">Reported Issues</p>
                 <span className="text-xs text-muted-foreground">{assetIssues.length}</span>
@@ -863,6 +897,7 @@ export default function Assets() {
                 </div>
               )}
             </div>
+          </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -920,15 +955,21 @@ export default function Assets() {
             <DialogTitle>Asset QR Code</DialogTitle>
             <DialogDescription>{selectedAsset?.name}</DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col items-center py-6">
+          <div className="flex flex-col items-center py-4">
             {selectedAsset && (
               <>
-                <div className="rounded-xl border border-border bg-background p-4">
-                  <QRCodeSVG
-                    value={selectedAsset ? generateReportUrl(selectedAsset) : ''}
-                    size={200}
-                    level="H"
-                  />
+                {/* Outer styled ring — purely decorative, never clips the QR */}
+                <div className="rounded-xl border border-border bg-muted p-3">
+                  {/* Inner white quiet-zone container — white background is required by QR spec */}
+                  <div className="rounded-md bg-white p-4">
+                    <QRCodeSVG
+                      value={selectedAsset ? generateReportUrl(selectedAsset) : ''}
+                      size={200}
+                      level="H"
+                      bgColor="#ffffff"
+                      fgColor="#000000"
+                    />
+                  </div>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground text-center">
                   Scan to report issues for this asset

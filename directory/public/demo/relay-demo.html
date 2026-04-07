@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Relay by QResolve — Interactive Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f0d;
+    --surface: #0f1613;
+    --surface-2: #131c18;
+    --surface-3: #1a2521;
+    --surface-4: #243530;
+    --border: #243530;
+    --border-light: #2d4038;
+    --text: #e8efe9;
+    --text-2: #8fa89a;
+    --text-3: #5c7a6b;
+    --text-4: #3d5548;
+    --accent: #34d399;
+    --accent-bright: #34d399;
+    --accent-dim: #2bb885;
+    --accent-glow: rgba(52, 211, 153, 0.12);
+    --accent-glow-strong: rgba(52, 211, 153, 0.25);
+    --red: #F43F5E;
+    --red-dim: rgba(244, 63, 94, 0.10);
+    --amber: #F59E0B;
+    --amber-dim: rgba(245, 158, 11, 0.10);
+    --blue: #3B82F6;
+    --blue-dim: rgba(59, 130, 246, 0.10);
+    --violet: #8B5CF6;
+    --violet-dim: rgba(139, 92, 246, 0.10);
+    --radius: 16px;
+    --radius-sm: 12px;
+    --radius-xs: 8px;
+    --font: 'DM Sans', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * {
+    margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  *::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* Container */
+  .demo-container {
+    max-width: 440px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Screens */
+  .screen {
+    display: none;
+    flex-direction: column;
+    min-height: 100dvh;
+    padding: 0 22px 36px;
+    animation: screenIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .screen.active { display: flex; }
+
+  @keyframes screenIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========== SCREEN 0: INDUSTRY PICKER ========== */
+  .intro-screen {
+    display: none;
+    flex-direction: column;
+    min-height: 100dvh;
+    padding: 0 22px 36px;
+    animation: screenIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .intro-screen.active { display: flex; }
+
+  .intro-header {
+    padding: 40px 0 8px;
+    text-align: center;
+  }
+
+  .intro-logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .intro-logo .relay-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: logoPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes logoPulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow-strong); }
+    50% { box-shadow: 0 0 0 8px transparent; }
+  }
+
+  .intro-title {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+
+  .intro-title .highlight {
+    background: linear-gradient(135deg, #34d399, #2aac7c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .intro-subtitle {
+    font-size: 15px;
+    color: var(--text-2);
+    line-height: 1.5;
+    margin-bottom: 32px;
+  }
+
+  .intro-subtitle strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+  }
+
+  /* Industry cards — 2-col grid for all 11 */
+  .industry-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .industry-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .industry-card:active { transform: scale(0.98); }
+  .industry-card:hover { border-color: var(--border-light); background: var(--surface-2); }
+  .industry-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+  .industry-card.selected::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+  }
+
+  .industry-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--surface-3);
+    color: var(--accent);
+  }
+  .industry-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .industry-info { flex: 1; width: 100%; }
+  .industry-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; line-height: 1.3; }
+  .industry-example { font-size: 11px; color: var(--text-3); line-height: 1.3; }
+
+  .industry-check {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .industry-card.selected .industry-check {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .industry-card.selected .industry-check::after {
+    content: '✓';
+    color: var(--bg);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .start-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+    margin-top: auto;
+  }
+  .start-btn:active { transform: scale(0.98); }
+  .start-btn:disabled { background: var(--surface-3); color: var(--text-4); cursor: not-allowed; }
+
+  .demo-tag {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-4);
+    font-family: var(--mono);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 16px 0 0;
+  }
+
+  /* ========== QR SCAN SCREEN ========== */
+  .scan-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 40px 22px;
+    animation: screenIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .scan-screen.active { display: flex; }
+
+  .scan-context {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .scan-context-label {
+    font-size: 12px;
+    color: var(--text-3);
+    font-family: var(--mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .scan-context-asset {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .scan-viewfinder {
+    width: 200px;
+    height: 200px;
+    border-radius: 24px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 60px var(--accent-glow), inset 0 0 40px var(--accent-glow);
+    animation: scanPulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes scanPulse {
+    0%, 100% { box-shadow: 0 0 40px var(--accent-glow), inset 0 0 30px var(--accent-glow); }
+    50% { box-shadow: 0 0 80px var(--accent-glow-strong), inset 0 0 50px var(--accent-glow); }
+  }
+
+  /* Corner brackets */
+  .scan-corner {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: var(--accent-bright);
+    border-style: solid;
+    border-width: 0;
+  }
+  .scan-corner.tl { top: 12px; left: 12px; border-top-width: 3px; border-left-width: 3px; border-radius: 4px 0 0 0; }
+  .scan-corner.tr { top: 12px; right: 12px; border-top-width: 3px; border-right-width: 3px; border-radius: 0 4px 0 0; }
+  .scan-corner.bl { bottom: 12px; left: 12px; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 4px; }
+  .scan-corner.br { bottom: 12px; right: 12px; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 4px 0; }
+
+  .scan-line {
+    position: absolute;
+    top: 15%;
+    left: 12%;
+    right: 12%;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+    animation: scanMove 2s ease-in-out infinite;
+    box-shadow: 0 0 16px var(--accent);
+  }
+
+  @keyframes scanMove {
+    0%, 100% { top: 15%; opacity: 0.8; }
+    50% { top: 80%; opacity: 1; }
+  }
+
+  .scan-qr-icon {
+    width: 60px;
+    height: 60px;
+    opacity: 0.2;
+  }
+
+  .scan-instruction {
+    font-size: 15px;
+    color: var(--text-2);
+    margin-bottom: 6px;
+  }
+
+  .scan-sub {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-bottom: 36px;
+  }
+
+  .scan-btn {
+    padding: 14px 36px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 100px;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 24px var(--accent-glow-strong);
+  }
+  .scan-btn:active { transform: scale(0.96); }
+
+  /* ========== TOP BAR ========== */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+
+  .top-bar-back {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .top-bar-back:active { transform: scale(0.92); background: var(--surface-3); }
+  .top-bar-back svg { width: 18px; height: 18px; color: var(--text-2); }
+  .top-bar-title { font-size: 15px; font-weight: 600; }
+  .top-bar-step { font-size: 12px; color: var(--text-3); font-family: var(--mono); }
+
+  /* ========== PROGRESS BAR ========== */
+  .progress-bar {
+    height: 3px;
+    background: var(--surface-3);
+    border-radius: 2px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-bright));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ========== ASSET CARD ========== */
+  .asset-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .asset-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-bright));
+  }
+
+  .asset-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-dim);
+    color: var(--accent-bright);
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--mono);
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+  }
+  .asset-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .asset-name { font-size: 19px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+  .asset-id { font-size: 12px; font-family: var(--mono); color: var(--text-3); margin-bottom: 16px; letter-spacing: 0.5px; }
+
+  .asset-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .asset-meta-item { background: var(--surface-2); border-radius: var(--radius-xs); padding: 10px 12px; }
+  .asset-meta-label { font-size: 10px; color: var(--text-4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+  .asset-meta-value { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  /* ========== FAULT GRID ========== */
+  .fault-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+
+  .fault-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    position: relative;
+  }
+  .fault-card:active { transform: scale(0.96); }
+  .fault-card.selected { border-color: var(--accent); background: var(--accent-glow); }
+  .fault-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 20px; height: 20px;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .fault-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .fault-icon.red { background: var(--red-dim); color: var(--red); }
+  .fault-icon.amber { background: var(--amber-dim); color: var(--amber); }
+  .fault-icon.blue { background: var(--blue-dim); color: var(--blue); }
+  .fault-icon.violet { background: var(--violet-dim); color: var(--violet); }
+  .fault-icon svg {
+    width: 18px; height: 18px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ========== PHOTO + NOTES ========== */
+  .photo-upload {
+    background: var(--surface);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+  }
+  .photo-upload:active { border-color: var(--accent); background: var(--accent-glow); }
+  .photo-upload.has-photo { border-style: solid; border-color: var(--accent); background: var(--accent-glow); }
+
+  .photo-upload-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    color: var(--text-3);
+  }
+  .photo-upload.has-photo .photo-upload-icon { color: var(--accent); }
+  .photo-upload-icon svg { width: 28px; height: 28px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .photo-upload-text { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .photo-upload-hint { font-size: 12px; color: var(--text-3); }
+
+  .note-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 24px;
+  }
+  .note-input:focus { border-color: var(--accent); }
+  .note-input::placeholder { color: var(--text-4); }
+
+  /* ========== BUTTONS ========== */
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { background: var(--surface-3); color: var(--text-4); cursor: not-allowed; }
+
+  /* ========== SUCCESS ========== */
+  .success-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px 0;
+  }
+
+  .success-check {
+    width: 76px; height: 76px;
+    border-radius: 50%;
+    background: var(--accent-glow);
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    animation: successPop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes successPop {
+    from { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.15); }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .success-check svg { width: 34px; height: 34px; color: var(--accent); }
+
+  .success-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .success-subtitle { font-size: 14px; color: var(--text-2); margin-bottom: 28px; line-height: 1.5; max-width: 320px; }
+
+  /* Ticket */
+  .ticket-card {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: left;
+    margin-bottom: 20px;
+  }
+
+  .ticket-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .ticket-id { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--accent); }
+  .ticket-status {
+    font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 100px;
+    background: var(--amber-dim); color: var(--amber);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .ticket-rows { display: flex; flex-direction: column; gap: 10px; }
+  .ticket-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .ticket-row-label { font-size: 12px; color: var(--text-3); }
+  .ticket-row-value { font-size: 13px; font-weight: 600; color: var(--text); text-align: right; max-width: 60%; }
+
+  .ticket-divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  .ticket-trail-label { font-size: 10px; font-weight: 600; color: var(--text-4); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+  .trail-item { display: flex; align-items: flex-start; gap: 10px; padding: 5px 0; }
+  .trail-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .trail-text { font-size: 12px; color: var(--text-2); line-height: 1.4; }
+  .trail-text strong { color: var(--text); font-weight: 600; }
+
+  /* Timer bar */
+  .timer-bar {
+    width: 100%;
+    background: var(--surface-2);
+    border-radius: var(--radius-xs);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .timer-icon { display: flex; align-items: center; color: var(--accent); }
+  .timer-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .timer-text { font-size: 13px; color: var(--text-2); flex: 1; }
+  .timer-value { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent-bright); }
+
+  .restart-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--surface-2);
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .restart-btn:active { transform: scale(0.98); background: var(--surface-3); }
+  .restart-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Watermark */
+  .watermark {
+    text-align: center;
+    padding: 20px 0 8px;
+    font-size: 12px;
+    color: var(--text-4);
+    margin-top: auto;
+  }
+  .watermark a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+  /* Summary mini */
+  .summary-mini { padding: 14px 18px; }
+
+  /* Animation helpers */
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  button, .fault-card, .photo-upload, .industry-card { -webkit-user-select: none; user-select: none; }
+
+  .loading-dots span { animation: loadDot 1.4s infinite; opacity: 0; }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes loadDot { 0%, 80%, 100% { opacity: 0; } 40% { opacity: 1; } }
+
+  /* CTA section at the end */
+  .cta-section {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent-glow-strong), var(--surface));
+    border: 1px solid var(--accent-dim);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .cta-text { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .cta-sub { font-size: 13px; color: var(--text-2); margin-bottom: 14px; }
+  .cta-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 100px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .cta-btn:active { transform: scale(0.96); }
+
+</style>
+</head>
+<body>
+
+<div class="demo-container">
+
+  <!-- ===== SCREEN 0: PICK YOUR INDUSTRY ===== -->
+  <div class="intro-screen active" id="screen-intro">
+    <div class="intro-header">
+      <div class="intro-logo"><span class="relay-dot"></span> RELAY BY QRESOLVE</div>
+      <div class="intro-title">See how <span class="highlight">30 seconds</span> replaces your entire fault reporting process</div>
+      <div class="intro-subtitle">Pick your industry. We'll show you exactly what your <strong>customers, tenants, or drivers</strong> would experience.</div>
+    </div>
+
+    <div class="section-label">Your Industry</div>
+    <div class="industry-grid" id="industry-grid">
+
+      <!-- 1. Vending & Automated Retail -->
+      <div class="industry-card" onclick="selectIndustry(this, 'vending')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M10 7h4"/><path d="M10 11h4"/><path d="M10 15h4"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">Vending &amp; Retail</div>
+          <div class="industry-example">Smart vending, unattended retail</div>
+        </div>
+      </div>
+
+      <!-- 2. EV Charger Maintenance -->
+      <div class="industry-card" onclick="selectIndustry(this, 'ev')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">EV Charger</div>
+          <div class="industry-example">CPOs, charging networks</div>
+        </div>
+      </div>
+
+      <!-- 3. Lift & Escalator -->
+      <div class="industry-card" onclick="selectIndustry(this, 'lift')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><path d="M8 6v12"/><path d="M16 6v12"/><path d="M4 6h16"/><path d="M4 18h16"/><path d="M9 10l3-3 3 3"/><path d="M9 14l3 3 3-3"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">Lift &amp; Escalator</div>
+          <div class="industry-example">Elevators, escalators, lifts</div>
+        </div>
+      </div>
+
+      <!-- 4. HVAC & Refrigeration -->
+      <div class="industry-card" onclick="selectIndustry(this, 'hvac')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-5 0v-15A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 8A2.5 2.5 0 0 1 17 10.5v9a2.5 2.5 0 0 1-5 0v-9A2.5 2.5 0 0 1 14.5 8z"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">HVAC &amp; Refrigeration</div>
+          <div class="industry-example">Air systems, cooling units</div>
+        </div>
+      </div>
+
+      <!-- 5. Commercial Cleaning -->
+      <div class="industry-card" onclick="selectIndustry(this, 'cleaning')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 3h18v4H3z"/><path d="M19 7v14H5V7"/><path d="M9 11v6"/><path d="M15 11v6"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">Commercial Cleaning</div>
+          <div class="industry-example">Cleaning equipment, FM</div>
+        </div>
+      </div>
+
+      <!-- 6. Fire Safety Systems -->
+      <div class="industry-card" onclick="selectIndustry(this, 'fire')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2c0 6-8 6-8 12a8 8 0 0 0 16 0c0-6-8-6-8-12z"/><path d="M12 22v-4"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">Fire Safety</div>
+          <div class="industry-example">Panels, detectors, sprinklers</div>
+        </div>
+      </div>
+
+      <!-- 7. Security & Access -->
+      <div class="industry-card" onclick="selectIndustry(this, 'security')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">Security &amp; Access</div>
+          <div class="industry-example">Access control, CCTV, gates</div>
+        </div>
+      </div>
+
+      <!-- 8. Solar & Energy -->
+      <div class="industry-card" onclick="selectIndustry(this, 'solar')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">Solar &amp; Energy</div>
+          <div class="industry-example">Solar panels, inverters</div>
+        </div>
+      </div>
+
+      <!-- 9. Electrical Services -->
+      <div class="industry-card" onclick="selectIndustry(this, 'electrical')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">Electrical Services</div>
+          <div class="industry-example">Panels, circuits, lighting</div>
+        </div>
+      </div>
+
+      <!-- 10. Plumbing & Water -->
+      <div class="industry-card" onclick="selectIndustry(this, 'plumbing')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><path d="M15 7h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1"/><path d="M6 7H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h1"/><path d="m9 2-1 2"/><path d="m15 2 1 2"/><path d="M9 22v-4h6v4"/><path d="M9 18a3 3 0 0 1 6 0"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">Plumbing &amp; Water</div>
+          <div class="industry-example">Pipes, drains, water systems</div>
+        </div>
+      </div>
+
+      <!-- 11. Car Repair Services -->
+      <div class="industry-card" onclick="selectIndustry(this, 'car')">
+        <div class="industry-check"></div>
+        <div class="industry-icon">
+          <svg viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-3"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+        </div>
+        <div class="industry-info">
+          <div class="industry-name">Car Repair</div>
+          <div class="industry-example">Fleet vehicles, garages</div>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="start-btn" id="btn-start" disabled onclick="startDemo()">Start Demo
+      <span style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </span>
+    </button>
+    <div class="demo-tag">Interactive demo · No signup required</div>
+  </div>
+
+  <!-- ===== SCREEN 1: QR SCAN ===== -->
+  <div class="scan-screen" id="screen-scan">
+    <div class="scan-context">
+      <div class="scan-context-label" id="scan-context-label">—</div>
+      <div class="scan-context-asset" id="scan-context-asset">—</div>
+    </div>
+    <div class="scan-viewfinder">
+      <div class="scan-corner tl"></div>
+      <div class="scan-corner tr"></div>
+      <div class="scan-corner bl"></div>
+      <div class="scan-corner br"></div>
+      <div class="scan-line"></div>
+      <svg class="scan-qr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="color: var(--accent);">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="3" height="3"/>
+        <path d="M21 14h-3v3"/><path d="M14 21v-3h3"/>
+      </svg>
+    </div>
+    <div class="scan-instruction">Scanning QR code on the asset...</div>
+    <div class="scan-sub" id="scan-sub">Point your camera at the QR code</div>
+    <button class="scan-btn" onclick="completeScan()">Tap to Simulate Scan</button>
+  </div>
+
+  <!-- ===== SCREEN 2: REPORT ===== -->
+  <div class="screen" id="screen-report">
+    <div class="top-bar">
+      <div class="top-bar-back" onclick="goBack('scan')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="top-bar-title">Report an Issue</div>
+      <div class="top-bar-step">1 / 2</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width: 50%"></div></div>
+
+    <div class="asset-card" id="asset-card">
+      <!-- Populated dynamically -->
+    </div>
+
+    <div class="section-label">What's the issue?</div>
+    <div class="fault-grid" id="fault-grid">
+      <!-- Populated dynamically -->
+    </div>
+
+    <button class="submit-btn" id="btn-next" disabled onclick="goToDetails()">Continue</button>
+    <div class="watermark">Powered by <a href="https://qresolve.com" target="_blank">Relay by QResolve</a></div>
+  </div>
+
+  <!-- ===== SCREEN 3: DETAILS ===== -->
+  <div class="screen" id="screen-details">
+    <div class="top-bar">
+      <div class="top-bar-back" onclick="goBack('report')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="top-bar-title">Add Details</div>
+      <div class="top-bar-step">2 / 2</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width: 100%"></div></div>
+
+    <div class="asset-card summary-mini">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:12px;color:var(--text-3);">Reporting</div>
+          <div style="font-size:15px;font-weight:700;" id="detail-fault">—</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-3);font-family:var(--mono);" id="detail-id">—</div>
+      </div>
+    </div>
+
+    <div class="section-label">Attach a Photo</div>
+    <div class="photo-upload" id="photo-upload" onclick="simulatePhoto()">
+      <div class="photo-upload-icon" id="photo-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <div class="photo-upload-text" id="photo-text">Tap to take a photo</div>
+      <div class="photo-upload-hint" id="photo-hint">Helps the maintenance team diagnose the issue faster</div>
+    </div>
+
+    <div class="section-label">Additional Notes <span style="color:var(--text-4);text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></div>
+    <textarea class="note-input" id="note-input" rows="3" placeholder=""></textarea>
+
+    <button class="submit-btn" id="btn-submit" onclick="submitReport()">Submit Report</button>
+    <div class="watermark">Powered by <a href="https://qresolve.com" target="_blank">Relay by QResolve</a></div>
+  </div>
+
+  <!-- ===== SCREEN 4: SUCCESS ===== -->
+  <div class="screen" id="screen-success">
+    <div class="success-container">
+      <div class="success-check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <div class="success-title">Issue Reported</div>
+      <div class="success-subtitle" id="success-subtitle">—</div>
+
+      <div class="timer-bar">
+        <div class="timer-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="timer-text">Total time to report</div>
+        <div class="timer-value" id="timer-value">—</div>
+      </div>
+
+      <div class="ticket-card">
+        <div class="ticket-header">
+          <div class="ticket-id" id="ticket-id">—</div>
+          <div class="ticket-status">Dispatched</div>
+        </div>
+        <div class="ticket-rows" id="ticket-rows">
+          <!-- Populated dynamically -->
+        </div>
+        <div class="ticket-divider"></div>
+        <div class="ticket-trail-label">Audit Trail</div>
+        <div id="ticket-trail">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <div class="cta-section">
+        <div class="cta-text">That's the entire experience.</div>
+        <div class="cta-sub">No app download. No login. No training required.</div>
+        <a class="cta-btn" href="https://app.qresolve.com/signup" target="_blank" rel="noopener noreferrer">Get Relay for Your Assets
+          <span style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </span>
+        </a>
+      </div>
+
+      <button class="restart-btn" onclick="restart()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        Try a Different Industry
+      </button>
+    </div>
+    <div class="watermark">Powered by <a href="https://qresolve.com" target="_blank">Relay by QResolve</a></div>
+  </div>
+
+</div>
+
+<script>
+// ===== SVG ICON HELPERS =====
+function svgIcon(paths) {
+  return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>';
+}
+
+const ICONS = {
+  // ban / blocked
+  ban:        svgIcon('<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>'),
+  // credit-card
+  creditCard: svgIcon('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>'),
+  // monitor/display
+  monitor:    svgIcon('<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'),
+  // thermometer
+  thermometer:svgIcon('<path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>'),
+  // door-open (use log-out shape)
+  door:       svgIcon('<path d="M13 4h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3"/><polyline points="15 8 19 12 15 16"/><line x1="19" y1="12" x2="7" y2="12"/>'),
+  // wifi-off / signal
+  wifi:       svgIcon('<path d="M1 6C1 6 5 2 12 2s11 4 11 4"/><path d="M5 10a7 7 0 0 1 14 0"/><path d="M8.5 14a3.5 3.5 0 0 1 7 0"/><circle cx="12" cy="18" r="1"/>'),
+  // zap
+  zap:        svgIcon('<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'),
+  // lock
+  lock:       svgIcon('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'),
+  // lock-open
+  lockOpen:   svgIcon('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>'),
+  // smartphone
+  smartphone: svgIcon('<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>'),
+  // alert-triangle
+  alertTriangle: svgIcon('<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'),
+  // turtle/slow — use activity
+  slow:       svgIcon('<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'),
+  // volume-2
+  volume:     svgIcon('<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>'),
+  // hash / floor number
+  hash:       svgIcon('<line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>'),
+  // phone
+  phone:      svgIcon('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.77 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>'),
+  // scale / weight
+  scale:      svgIcon('<line x1="12" y1="3" x2="12" y2="21"/><path d="M3 9l9-7 9 7"/><path d="M3 15h18"/>'),
+  // activity / slow movement
+  activity:   svgIcon('<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'),
+  // snowflake
+  snowflake:  svgIcon('<line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5l-5 5-5-5"/><path d="M7 19l5-5 5 5"/><path d="M2 12l5-5 5 5-5 5z"/><path d="M22 12l-5-5-5 5 5 5z"/>'),
+  // droplets / water
+  droplets:   svgIcon('<path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/>'),
+  // nose / smell — use wind icon
+  wind:       svgIcon('<path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>'),
+  // wind / filter
+  airVent:    svgIcon('<path d="M6 12H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 8h12"/><path d="M18.3 17.7a2.5 2.5 0 0 1-3.16 3.83 2.53 2.53 0 0 1-1.14-2V12"/><path d="M6.6 15.6A2 2 0 1 0 10 17v-5"/>'),
+  // plug / power
+  plug:       svgIcon('<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8H6a2 2 0 0 0-2 2v3a7 7 0 0 0 14 0v-3a2 2 0 0 0-2-2z"/>'),
+  // wind / suction
+  suction:    svgIcon('<path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>'),
+  // flask / chemical
+  flask:      svgIcon('<path d="M9 3h6l1 7H8z"/><path d="M8 10l-2 8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1l-2-8"/>'),
+  // refresh-cw
+  refresh:    svgIcon('<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>'),
+  // alert-circle / alarm
+  alertCircle: svgIcon('<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'),
+  // lightbulb
+  lightbulb:  svgIcon('<line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>'),
+  // droplet / sprinkler
+  droplet:    svgIcon('<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>'),
+  // settings / gear
+  settings:   svgIcon('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'),
+  // camera
+  camera:     svgIcon('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'),
+  // bell
+  bell:       svgIcon('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'),
+  // barrier / construction
+  barrier:    svgIcon('<line x1="2" y1="12" x2="22" y2="12"/><path d="M2 8l4 4-4 4"/><path d="M22 8l-4 4 4 4"/>'),
+  // trending-down
+  trendingDown: svgIcon('<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>'),
+  // battery
+  battery:    svgIcon('<rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/>'),
+  // bar-chart
+  barChart:   svgIcon('<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>'),
+  // square / window / panel
+  square:     svgIcon('<rect x="3" y="3" width="18" height="18" rx="2"/>'),
+  // wrench
+  wrench:     svgIcon('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),
+  // stop-circle / brake
+  stopCircle: svgIcon('<circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6"/>'),
+  // flame / fire
+  flame:      svgIcon('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/>'),
+  // oil / droplet for leak
+  oilCan:     svgIcon('<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>'),
+  // toilet — use archive
+  archive:    svgIcon('<polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>'),
+  // flame / steam for water heater
+  steam:      svgIcon('<path d="M12 2c0 6-8 6-8 12a8 8 0 0 0 16 0c0-6-8-6-8-12z"/>'),
+  // check
+  check:      svgIcon('<polyline points="20 6 9 17 4 12"/>'),
+};
+
+// ===== INDUSTRY DATA =====
+const industries = {
+  vending: {
+    scanLabel: 'APPROACHING MACHINE',
+    scanAsset: 'Smart Vending Machine',
+    scanSub: 'Point your camera at the QR code on the machine',
+    assetName: 'Smart Vending Machine — V200',
+    assetId: 'VND-DL-1087',
+    meta: [
+      { label: 'Location', value: 'Corporate Lobby, 1F' },
+      { label: 'Operator', value: 'VendCo Solutions' },
+      { label: 'Type', value: 'Snacks & Beverages' },
+      { label: 'Last Refill', value: '28 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.ban,        color: 'red',    label: 'Machine Not Dispensing' },
+      { icon: ICONS.creditCard, color: 'amber',  label: 'Payment System Error' },
+      { icon: ICONS.monitor,    color: 'blue',   label: 'Display Screen Blank' },
+      { icon: ICONS.thermometer,color: 'amber',  label: 'Refrigeration Failure' },
+      { icon: ICONS.door,       color: 'red',    label: 'Door Stuck / Jammed' },
+      { icon: ICONS.wifi,       color: 'violet', label: 'Connectivity Issue' }
+    ],
+    notePlaceholder: 'E.g. Selected Coca-Cola but machine dispensed nothing, money deducted...',
+    photoFile: 'vending_machine_fault.jpg',
+    successText: 'Your report has been received. The vending operator has been notified with exact machine and fault details.',
+    ticketAsset: 'Smart Vending — V200',
+    ticketLocation: 'Corporate Lobby, 1F',
+    reporter: 'Customer (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Customer scanned QR on vending machine' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to VendCo field technician' },
+      { color: 'var(--text-3)', text: 'Awaiting technician acknowledgement...' }
+    ]
+  },
+  ev: {
+    scanLabel: 'APPROACHING CHARGER',
+    scanAsset: 'EV Charging Station — Bay 2',
+    scanSub: 'Point your camera at the QR code on the charger',
+    assetName: 'EV Charging Station — 60kW',
+    assetId: 'CHG-MH-0294',
+    meta: [
+      { label: 'Location', value: 'Highway Service Plaza' },
+      { label: 'Network', value: 'ChargePoint CPO' },
+      { label: 'Connector', value: 'CCS2 + Type 2' },
+      { label: 'Last Serviced', value: '22 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.plug,          color: 'red',    label: 'Charger Not Powering On' },
+      { icon: ICONS.lock,          color: 'amber',  label: 'Connector Not Locking' },
+      { icon: ICONS.creditCard,    color: 'blue',   label: 'Payment Terminal Error' },
+      { icon: ICONS.alertTriangle, color: 'amber',  label: 'Cable Damaged' },
+      { icon: ICONS.smartphone,    color: 'red',    label: 'App Not Connecting' },
+      { icon: ICONS.activity,      color: 'violet', label: 'Slow Charging Speed' }
+    ],
+    notePlaceholder: "E.g. CCS2 connector is loose, won't click into vehicle port...",
+    photoFile: 'charger_bay2_fault.jpg',
+    successText: 'Your report has been received. The O&M team has been notified and the network operator can track resolution in real time.',
+    ticketAsset: 'EV Charging Station — Bay 2',
+    ticketLocation: 'Highway Service Plaza',
+    reporter: 'Driver (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Driver scanned QR on Bay 2 charger' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to regional O&M team' },
+      { color: 'var(--text-3)', text: 'Awaiting technician assignment...' }
+    ]
+  },
+  lift: {
+    scanLabel: 'INSIDE THE ELEVATOR',
+    scanAsset: 'Lift / Elevator — Car B',
+    scanSub: 'Point your camera at the QR code inside the lift',
+    assetName: 'Passenger Elevator — Car B',
+    assetId: 'LFT-GGN-T2-B',
+    meta: [
+      { label: 'Location', value: 'Tower 2, Main Lobby' },
+      { label: 'Building', value: 'Skyline Business Park' },
+      { label: 'FM Provider', value: 'ProServ FM' },
+      { label: 'Last Inspected', value: '20 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.door,          color: 'red',    label: 'Doors Not Closing' },
+      { icon: ICONS.volume,        color: 'amber',  label: 'Unusual Noise' },
+      { icon: ICONS.hash,          color: 'blue',   label: 'Floor Indicator Broken' },
+      { icon: ICONS.phone,         color: 'amber',  label: 'Emergency Phone Fault' },
+      { icon: ICONS.scale,         color: 'red',    label: 'Overload Sensor Issue' },
+      { icon: ICONS.activity,      color: 'violet', label: 'Slow Movement' }
+    ],
+    notePlaceholder: 'E.g. Elevator door takes 15 seconds to close, makes scraping noise on 4th floor...',
+    photoFile: 'elevator_door_fault.jpg',
+    successText: 'Your report has been received. The FM team and building management have been notified instantly.',
+    ticketAsset: 'Passenger Elevator — Car B',
+    ticketLocation: 'Skyline Business Park, Tower 2',
+    reporter: 'Tenant (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Occupant scanned QR inside elevator' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to ProServ FM maintenance team' },
+      { color: '#EC4899', text: '<strong>Building mgmt notified</strong> — Tower 2 property manager alerted' },
+      { color: 'var(--text-3)', text: 'Awaiting technician assignment...' }
+    ]
+  },
+  hvac: {
+    scanLabel: 'AT THE HVAC UNIT',
+    scanAsset: 'HVAC Unit — Zone 3',
+    scanSub: 'Point your camera at the QR code on the unit',
+    assetName: 'HVAC Unit — Carrier 36kBTU',
+    assetId: 'HVAC-BKC-Z3-01',
+    meta: [
+      { label: 'Location', value: 'Zone 3 — Server Room' },
+      { label: 'Building', value: 'Tech Park, Block C' },
+      { label: 'FM Provider', value: 'CoolServ India' },
+      { label: 'Last Serviced', value: '15 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.snowflake,     color: 'red',    label: 'Not Cooling / Heating' },
+      { icon: ICONS.volume,        color: 'amber',  label: 'Strange Noise' },
+      { icon: ICONS.droplets,      color: 'blue',   label: 'Water Leaking' },
+      { icon: ICONS.wind,          color: 'amber',  label: 'Foul Smell' },
+      { icon: ICONS.wifi,          color: 'red',    label: 'Remote Not Working' },
+      { icon: ICONS.airVent,       color: 'violet', label: 'Filter Needs Cleaning' }
+    ],
+    notePlaceholder: 'E.g. Unit is running but room temperature keeps rising, unusual dripping sound...',
+    photoFile: 'hvac_unit_fault.jpg',
+    successText: 'Your report has been received. The HVAC service provider and facilities manager have been notified.',
+    ticketAsset: 'HVAC Unit — Zone 3',
+    ticketLocation: 'Tech Park Block C, Zone 3',
+    reporter: 'Staff (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Staff scanned QR on HVAC unit' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to CoolServ India technician' },
+      { color: 'var(--text-3)', text: 'Awaiting service acknowledgement...' }
+    ]
+  },
+  cleaning: {
+    scanLabel: 'WITH CLEANING EQUIPMENT',
+    scanAsset: 'Floor Scrubber — Unit 4',
+    scanSub: 'Point your camera at the QR code on the machine',
+    assetName: 'Floor Scrubber — Tennant T5',
+    assetId: 'CLN-MUM-T5-004',
+    meta: [
+      { label: 'Location', value: 'Warehouse Floor B' },
+      { label: 'Operator', value: 'CleanPro Services' },
+      { label: 'Type', value: 'Auto Scrubber' },
+      { label: 'Last Serviced', value: '18 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.plug,          color: 'red',    label: 'Machine Not Starting' },
+      { icon: ICONS.suction,       color: 'amber',  label: 'Suction Loss' },
+      { icon: ICONS.flask,         color: 'blue',   label: 'Chemical Dispenser Blocked' },
+      { icon: ICONS.alertTriangle, color: 'amber',  label: 'Cable / Cord Damaged' },
+      { icon: ICONS.droplets,      color: 'red',    label: 'Water Tank Leak' },
+      { icon: ICONS.refresh,       color: 'violet', label: 'Brush / Roller Worn Out' }
+    ],
+    notePlaceholder: 'E.g. Machine starts but stops after 2 minutes, suction seems blocked...',
+    photoFile: 'floor_scrubber_fault.jpg',
+    successText: 'Your report has been received. The cleaning equipment supplier and site supervisor have been notified.',
+    ticketAsset: 'Floor Scrubber — Unit 4',
+    ticketLocation: 'Warehouse Floor B',
+    reporter: 'Operator (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Operator scanned QR on floor scrubber' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to CleanPro maintenance team' },
+      { color: 'var(--text-3)', text: 'Awaiting engineer assignment...' }
+    ]
+  },
+  fire: {
+    scanLabel: 'AT FIRE SAFETY PANEL',
+    scanAsset: 'Fire Safety Panel — Block A',
+    scanSub: 'Point your camera at the QR code on the panel',
+    assetName: 'Fire Safety Panel — Notifier NFS2',
+    assetId: 'FSP-HYD-BLK-A-01',
+    meta: [
+      { label: 'Location', value: 'Block A — Ground Floor' },
+      { label: 'Building', value: 'Hitech City Complex' },
+      { label: 'Service Co.', value: 'FireGuard Systems' },
+      { label: 'Last Tested', value: '10 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.alertCircle,   color: 'red',    label: 'False Alarm Triggered' },
+      { icon: ICONS.lightbulb,     color: 'amber',  label: 'Detector Light Flashing' },
+      { icon: ICONS.droplet,       color: 'blue',   label: 'Sprinkler Head Damaged' },
+      { icon: ICONS.monitor,       color: 'amber',  label: 'Panel Error Code' },
+      { icon: ICONS.door,          color: 'red',    label: 'Emergency Exit Blocked' },
+      { icon: ICONS.settings,      color: 'violet', label: 'Suppression System Fault' }
+    ],
+    notePlaceholder: 'E.g. Panel showing zone 4 fault code E-07, detector in corridor blinking red...',
+    photoFile: 'fire_panel_fault.jpg',
+    successText: 'Your report has been received. The fire safety contractor and building safety officer have been notified immediately.',
+    ticketAsset: 'Fire Safety Panel — Block A',
+    ticketLocation: 'Hitech City Complex, Block A',
+    reporter: 'Safety Officer (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Officer scanned QR on fire panel' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to FireGuard Systems' },
+      { color: '#EC4899', text: '<strong>Safety officer alerted</strong> — Building safety lead notified' },
+      { color: 'var(--text-3)', text: 'Awaiting technician confirmation...' }
+    ]
+  },
+  security: {
+    scanLabel: 'AT ACCESS CONTROL POINT',
+    scanAsset: 'Access Control System — Gate 1',
+    scanSub: 'Point your camera at the QR code on the reader',
+    assetName: 'Access Control — HID Reader',
+    assetId: 'SEC-DEL-GATE1-HID',
+    meta: [
+      { label: 'Location', value: 'Main Entrance, Gate 1' },
+      { label: 'Building', value: 'DLF Cybercity Tower' },
+      { label: 'Vendor', value: 'SecureNet Solutions' },
+      { label: 'Last Tested', value: '25 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.lockOpen,      color: 'red',    label: 'Door Not Unlocking' },
+      { icon: ICONS.creditCard,    color: 'amber',  label: 'Card Reader Unresponsive' },
+      { icon: ICONS.camera,        color: 'blue',   label: 'Camera Offline' },
+      { icon: ICONS.phone,         color: 'amber',  label: 'Intercom Not Working' },
+      { icon: ICONS.bell,          color: 'red',    label: 'Alarm Not Triggering' },
+      { icon: ICONS.barrier,       color: 'violet', label: 'Barrier / Gate Stuck' }
+    ],
+    notePlaceholder: 'E.g. Card reader at Gate 1 not scanning any cards since this morning...',
+    photoFile: 'access_control_fault.jpg',
+    successText: 'Your report has been received. The security contractor and site security manager have been notified.',
+    ticketAsset: 'Access Control — Gate 1',
+    ticketLocation: 'DLF Cybercity Tower, Main Entrance',
+    reporter: 'Security Staff (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Staff scanned QR on access reader' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to SecureNet Solutions' },
+      { color: 'var(--text-3)', text: 'Awaiting on-site response...' }
+    ]
+  },
+  solar: {
+    scanLabel: 'AT SOLAR INSTALLATION',
+    scanAsset: 'Solar Panel System — Roof A',
+    scanSub: 'Point your camera at the QR code on the inverter',
+    assetName: 'Solar Panel System — 50kWp',
+    assetId: 'SOL-CHN-ROOFA-01',
+    meta: [
+      { label: 'Location', value: 'Rooftop — Block A' },
+      { label: 'Building', value: 'Chennai Tech Park' },
+      { label: 'EPC Partner', value: 'SunRise Energy' },
+      { label: 'Last Inspected', value: '12 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.trendingDown,  color: 'red',    label: 'Panels Not Generating' },
+      { icon: ICONS.zap,           color: 'amber',  label: 'Inverter Fault' },
+      { icon: ICONS.battery,       color: 'blue',   label: 'Battery Not Charging' },
+      { icon: ICONS.barChart,      color: 'amber',  label: 'Monitoring System Down' },
+      { icon: ICONS.square,        color: 'red',    label: 'Physical Damage to Panel' },
+      { icon: ICONS.plug,          color: 'violet', label: 'Connection / Wiring Issue' }
+    ],
+    notePlaceholder: 'E.g. Inverter showing fault code F-12, generation dropped from 40kW to 5kW today...',
+    photoFile: 'solar_panel_fault.jpg',
+    successText: 'Your report has been received. The solar EPC partner and energy manager have been notified.',
+    ticketAsset: 'Solar Panel System — Roof A',
+    ticketLocation: 'Chennai Tech Park, Rooftop Block A',
+    reporter: 'Facility Staff (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Staff scanned QR on solar inverter' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to SunRise Energy EPC team' },
+      { color: 'var(--text-3)', text: 'Awaiting engineer assignment...' }
+    ]
+  },
+  electrical: {
+    scanLabel: 'AT ELECTRICAL PANEL',
+    scanAsset: 'Electrical Panel — Sub-Board 3',
+    scanSub: 'Point your camera at the QR code on the panel',
+    assetName: 'Electrical Panel — SB3',
+    assetId: 'ELE-BAN-SB3-01',
+    meta: [
+      { label: 'Location', value: 'Sub-Board 3 — Level 2' },
+      { label: 'Building', value: 'Bengaluru Tech Hub' },
+      { label: 'Contractor', value: 'PowerLine Electricals' },
+      { label: 'Last Inspected', value: '08 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.zap,           color: 'red',    label: 'Circuit Breaker Tripping' },
+      { icon: ICONS.plug,          color: 'amber',  label: 'Power Outage in Zone' },
+      { icon: ICONS.flame,         color: 'red',    label: 'Sparking or Burning Smell' },
+      { icon: ICONS.lightbulb,     color: 'blue',   label: 'Lights Flickering' },
+      { icon: ICONS.plug,          color: 'amber',  label: 'Socket Not Working' },
+      { icon: ICONS.alertCircle,   color: 'violet', label: 'Emergency Lighting Fault' }
+    ],
+    notePlaceholder: 'E.g. Breaker for rows 4-6 keeps tripping every 30 minutes, burning smell near panel...',
+    photoFile: 'electrical_panel_fault.jpg',
+    successText: 'Your report has been received. The electrical contractor and facilities manager have been notified immediately.',
+    ticketAsset: 'Electrical Panel — SB3',
+    ticketLocation: 'Bengaluru Tech Hub, Level 2',
+    reporter: 'Facility Staff (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Staff scanned QR on electrical panel' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to PowerLine Electricals' },
+      { color: '#EC4899', text: '<strong>Facilities alerted</strong> — Building manager notified' },
+      { color: 'var(--text-3)', text: 'Awaiting electrician on-site...' }
+    ]
+  },
+  plumbing: {
+    scanLabel: 'AT PLUMBING POINT',
+    scanAsset: 'Plumbing System — Level 3',
+    scanSub: 'Point your camera at the QR code on the fitting',
+    assetName: 'Plumbing System — L3 Riser',
+    assetId: 'PLM-PNQ-L3-RSR',
+    meta: [
+      { label: 'Location', value: 'Level 3 — Utilities Room' },
+      { label: 'Building', value: 'Pune Business Centre' },
+      { label: 'Contractor', value: 'AquaFix Plumbing' },
+      { label: 'Last Serviced', value: '19 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.droplets,      color: 'red',    label: 'Pipe Leaking' },
+      { icon: ICONS.droplet,       color: 'amber',  label: 'Drain Blocked' },
+      { icon: ICONS.thermometer,   color: 'blue',   label: 'No Hot Water' },
+      { icon: ICONS.trendingDown,  color: 'amber',  label: 'Low Water Pressure' },
+      { icon: ICONS.archive,       color: 'red',    label: 'Toilet Not Flushing' },
+      { icon: ICONS.steam,         color: 'violet', label: 'Water Heater Fault' }
+    ],
+    notePlaceholder: 'E.g. Riser pipe on Level 3 dripping since morning, water collecting on floor...',
+    photoFile: 'plumbing_leak_fault.jpg',
+    successText: 'Your report has been received. The plumbing contractor and building maintenance team have been notified.',
+    ticketAsset: 'Plumbing System — L3 Riser',
+    ticketLocation: 'Pune Business Centre, Level 3',
+    reporter: 'Facility Staff (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Staff scanned QR on plumbing riser' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to AquaFix Plumbing team' },
+      { color: 'var(--text-3)', text: 'Awaiting plumber assignment...' }
+    ]
+  },
+  car: {
+    scanLabel: 'AT THE VEHICLE',
+    scanAsset: 'Fleet Vehicle — MH 12 AB 3456',
+    scanSub: 'Point your camera at the QR code on the windscreen',
+    assetName: 'Fleet Vehicle — Tata Ace EV',
+    assetId: 'FLT-MUM-ACE-047',
+    meta: [
+      { label: 'Reg. No.', value: 'MH 12 AB 3456' },
+      { label: 'Fleet', value: 'Zomato Delivery Fleet' },
+      { label: 'Garage', value: 'Andheri Service Hub' },
+      { label: 'Last Serviced', value: '21 Mar 2026' }
+    ],
+    faults: [
+      { icon: ICONS.alertTriangle, color: 'red',    label: 'Engine Warning Light' },
+      { icon: ICONS.battery,       color: 'amber',  label: 'Battery Not Starting' },
+      { icon: ICONS.wrench,        color: 'blue',   label: 'Tyre Puncture' },
+      { icon: ICONS.stopCircle,    color: 'red',    label: 'Brakes Not Responding' },
+      { icon: ICONS.snowflake,     color: 'amber',  label: 'AC Not Working' },
+      { icon: ICONS.oilCan,        color: 'violet', label: 'Oil Leak Detected' }
+    ],
+    notePlaceholder: 'E.g. Engine warning light came on during delivery, vehicle pulling left when braking...',
+    photoFile: 'fleet_vehicle_fault.jpg',
+    successText: 'Your report has been received. The fleet manager and nearest garage have been notified to dispatch support.',
+    ticketAsset: 'Fleet Vehicle — MH 12 AB 3456',
+    ticketLocation: 'Andheri Service Hub, Mumbai',
+    reporter: 'Driver (no login required)',
+    trail: [
+      { color: 'var(--accent)', text: '<strong>Report created</strong> — Driver scanned QR on vehicle windscreen' },
+      { color: 'var(--amber)', text: '<strong>Ticket dispatched</strong> — Routed to Andheri Service Hub' },
+      { color: '#EC4899', text: '<strong>Fleet manager notified</strong> — Zomato fleet ops alerted' },
+      { color: 'var(--text-3)', text: 'Awaiting mechanic assignment...' }
+    ]
+  }
+};
+
+// ===== STATE =====
+let currentIndustry = null;
+let selectedFault = null;
+let photoAttached = false;
+let demoStartTime = null;
+
+// ===== INDUSTRY PICKER =====
+function selectIndustry(el, key) {
+  document.querySelectorAll('.industry-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  currentIndustry = key;
+  document.getElementById('btn-start').disabled = false;
+}
+
+function startDemo() {
+  if (!currentIndustry) return;
+  const data = industries[currentIndustry];
+  demoStartTime = Date.now();
+
+  // Populate scan screen
+  document.getElementById('scan-context-label').textContent = data.scanLabel;
+  document.getElementById('scan-context-asset').textContent = data.scanAsset;
+  document.getElementById('scan-sub').textContent = data.scanSub;
+
+  switchScreen('screen-scan');
+}
+
+// ===== QR SCAN =====
+function completeScan() {
+  const data = industries[currentIndustry];
+
+  // Populate asset card
+  document.getElementById('asset-card').innerHTML = `
+    <div class="asset-badge"><span class="dot"></span> ASSET IDENTIFIED</div>
+    <div class="asset-name">${data.assetName}</div>
+    <div class="asset-id">${data.assetId}</div>
+    <div class="asset-meta">
+      ${data.meta.map(m => `
+        <div class="asset-meta-item">
+          <div class="asset-meta-label">${m.label}</div>
+          <div class="asset-meta-value">${m.value}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Populate fault grid
+  document.getElementById('fault-grid').innerHTML = data.faults.map(f => `
+    <div class="fault-card" onclick="selectFault(this, '${f.label.replace(/'/g, "\\'")}')">
+      <div class="fault-icon ${f.color}">${f.icon}</div>
+      <div class="fault-label">${f.label}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('btn-next').disabled = true;
+  selectedFault = null;
+
+  switchScreen('screen-report');
+}
+
+// ===== FAULT SELECTION =====
+function selectFault(el, name) {
+  document.querySelectorAll('.fault-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedFault = name;
+  document.getElementById('btn-next').disabled = false;
+}
+
+// ===== DETAILS SCREEN =====
+function goToDetails() {
+  if (!selectedFault) return;
+  const data = industries[currentIndustry];
+
+  document.getElementById('detail-fault').textContent = selectedFault;
+  document.getElementById('detail-id').textContent = data.assetId;
+  document.getElementById('note-input').placeholder = data.notePlaceholder;
+
+  // Reset photo
+  photoAttached = false;
+  const upload = document.getElementById('photo-upload');
+  upload.classList.remove('has-photo');
+  document.getElementById('photo-icon').innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+  document.getElementById('photo-text').textContent = 'Tap to take a photo';
+  document.getElementById('photo-hint').textContent = 'Helps the maintenance team diagnose the issue faster';
+
+  switchScreen('screen-details');
+}
+
+function simulatePhoto() {
+  if (!photoAttached) {
+    const data = industries[currentIndustry];
+    document.getElementById('photo-upload').classList.add('has-photo');
+    document.getElementById('photo-icon').innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    document.getElementById('photo-text').textContent = 'Photo attached';
+    document.getElementById('photo-hint').textContent = data.photoFile + ' — 1.3 MB';
+    photoAttached = true;
+  }
+}
+
+// ===== SUBMIT =====
+function submitReport() {
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.innerHTML = 'Submitting<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>';
+
+  setTimeout(() => {
+    const data = industries[currentIndustry];
+    const elapsed = Math.round((Date.now() - demoStartTime) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+
+    // Success text
+    document.getElementById('success-subtitle').textContent = data.successText;
+
+    // Timer
+    document.getElementById('timer-value').textContent = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+
+    // Ticket
+    const now = new Date();
+    const timeStr = now.toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+
+    const ticketNum = 'RLY-' + now.toISOString().slice(2,10).replace(/-/g,'') + '-' + Math.random().toString(36).substr(2,4).toUpperCase();
+    document.getElementById('ticket-id').textContent = ticketNum;
+
+    const checkSvg = '<span style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:2px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>';
+
+    document.getElementById('ticket-rows').innerHTML = `
+      <div class="ticket-row"><div class="ticket-row-label">Asset</div><div class="ticket-row-value">${data.ticketAsset}</div></div>
+      <div class="ticket-row"><div class="ticket-row-label">Location</div><div class="ticket-row-value">${data.ticketLocation}</div></div>
+      <div class="ticket-row"><div class="ticket-row-label">Issue</div><div class="ticket-row-value">${selectedFault}</div></div>
+      <div class="ticket-row"><div class="ticket-row-label">Reported</div><div class="ticket-row-value" style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${timeStr}</div></div>
+      <div class="ticket-row"><div class="ticket-row-label">Photo</div><div class="ticket-row-value" style="color:var(--accent);">${photoAttached ? '1 attached ' + checkSvg : 'None'}</div></div>
+      <div class="ticket-row"><div class="ticket-row-label">Reported By</div><div class="ticket-row-value">${data.reporter}</div></div>
+    `;
+
+    document.getElementById('ticket-trail').innerHTML = data.trail.map(t => `
+      <div class="trail-item">
+        <div class="trail-dot" style="background:${t.color};"></div>
+        <div class="trail-text"${t.color === 'var(--text-3)' ? ' style="color:var(--text-3);"' : ''}>${t.text}</div>
+      </div>
+    `).join('');
+
+    switchScreen('screen-success');
+  }, 1500);
+}
+
+// ===== NAVIGATION =====
+function switchScreen(id) {
+  document.querySelectorAll('.screen, .intro-screen, .scan-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goBack(target) {
+  if (target === 'scan') switchScreen('screen-scan');
+  else if (target === 'report') switchScreen('screen-report');
+}
+
+function restart() {
+  currentIndustry = null;
+  selectedFault = null;
+  photoAttached = false;
+  demoStartTime = null;
+
+  document.querySelectorAll('.industry-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('btn-submit').disabled = false;
+  document.getElementById('btn-submit').textContent = 'Submit Report';
+  document.getElementById('note-input').value = '';
+
+  switchScreen('screen-intro');
+}
+</script>
+
+</body>
+</html>

@@ -9,7 +9,9 @@ import {
   MessageSquare,
   ArrowUpRight,
   ExternalLink,
-  Edit3
+  Edit3,
+  QrCode,
+  AlertCircle
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -17,14 +19,21 @@ import { StatCard } from '@/components/ui/stat-card';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { AssetInsights } from '@/components/dashboard/AssetInsights';
 
 export default function OwnerDashboard() {
   const { user, organization, profile } = useAuth();
   const [provider, setProvider] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    assets: 0,
+    openIssues: 0,
+    todayScans: 0
+  });
 
   const fetchProviderData = useCallback(async () => {
-    if (!user) return;
+    if (!user || !organization) return;
     
     try {
       const { data, error } = await supabase
@@ -35,12 +44,25 @@ export default function OwnerDashboard() {
       
       if (error) throw error;
       setProvider(data);
+
+      // Fetch stats
+      const [assetsRes, issuesRes] = await Promise.all([
+        supabase.from('assets').select('id', { count: 'exact', head: true }).eq('org_id', organization.id),
+        supabase.from('issues').select('id', { count: 'exact', head: true }).eq('org_id', organization.id).eq('status', 'open')
+      ]);
+
+      setStats({
+        assets: assetsRes.count || 0,
+        openIssues: issuesRes.count || 0,
+        todayScans: 0 // Placeholder for scan analytics
+      });
+
     } catch (error) {
       console.error('Error fetching provider data:', error);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, organization]);
 
   useEffect(() => {
     fetchProviderData();
@@ -90,11 +112,23 @@ export default function OwnerDashboard() {
           title={`Welcome, ${profile?.full_name?.split(' ')[0] || 'Owner'}!`}
           description={`Managing ${provider.provider_name}`}
         />
-        <Link to="/edit-business-profile">
-          <Button variant="outline" className="gap-2">
-            <Edit3 size={16} /> Edit Business Profile
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/edit-business-profile">
+            <Button variant="outline" className="gap-2">
+              <Edit3 size={16} /> Edit Profile
+            </Button>
+          </Link>
+          <Link to="/assets">
+            <Button variant="default" className="gap-2 bg-accent hover:bg-accent/90">
+              <QrCode size={16} /> Manage Assets
+            </Button>
+          </Link>
+          <Link to="/issues">
+            <Button variant="outline" className="gap-2">
+              <AlertCircle size={16} /> View Tickets
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Verification Status */}
@@ -119,35 +153,39 @@ export default function OwnerDashboard() {
         <StatCard
           title="Trust Score"
           value={`${provider.trust_score || 85}%`}
-          description="Based on verifications"
-          icon={ShieldCheck}
+          description="Directory authority"
+          icon={Award}
           variant="primary"
           delay={0}
         />
         <StatCard
-          title="Avg. Response"
-          value={`${provider.response_time_avg || 120}m`}
-          description="Scan to technician"
-          icon={Clock}
+          title="Registered Assets"
+          value={stats.assets.toString()}
+          description="Equipment in Relay"
+          icon={QrCode}
           variant="success"
           delay={0.1}
         />
         <StatCard
-          title="Conversion Rate"
-          value="42%"
-          description="Profile views to leads"
-          icon={TrendingUp}
+          title="Open Tickets"
+          value={stats.openIssues.toString()}
+          description="Requires attention"
+          icon={AlertCircle}
           variant="warning"
           delay={0.2}
         />
         <StatCard
-          title="Active Contracts"
-          value="12"
-          description="Verified Relay users"
-          icon={Users}
+          title="Avg. Resolution"
+          value="2.4h"
+          description="Since last month"
+          icon={Clock}
           variant="primary"
           delay={0.3}
         />
+      </div>
+
+      <div className="mb-8">
+        <AssetInsights />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3 mb-8">
@@ -200,18 +238,4 @@ export default function OwnerDashboard() {
   );
 }
 
-// Sub-component Helper
-function Button({ children, variant, className, onClick }: any) {
-  const variants: any = {
-    primary: "bg-primary text-primary-foreground hover:bg-primary/90",
-    outline: "border border-border bg-transparent hover:bg-muted text-foreground",
-  };
-  return (
-    <button 
-      onClick={onClick}
-      className={`px-4 py-2 rounded-md font-medium transition-colors inline-flex items-center ${variants[variant] || ""} ${className}`}
-    >
-      {children}
-    </button>
-  );
-}
+

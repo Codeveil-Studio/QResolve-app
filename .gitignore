@@ -28,3 +28,7 @@ dist-ssr
 /.gemini/
 /brain/
 node_modules/
+
+# Claude Code internals
+.claude/
+Claude.md

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShieldCheck, ArrowRight, Building2, Mail, Phone, MessageSquare, Loader2 } from 'lucide-react';
+import { ShieldCheck, ArrowRight, Building2, Mail, Phone, MessageSquare, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ export default function CompleteClaim() {
   const [searchParams] = useSearchParams();
   const claimId = searchParams.get('claim_id');
   const [provider, setProvider] = useState<any>(null);
+  const [existingClaim, setExistingClaim] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -40,15 +41,27 @@ export default function CompleteClaim() {
         return;
       }
 
-      const { data, error } = await supabase
+      // Check if this user already has an active (pending/approved) claim
+      const { data: activeClaim } = await supabase
+        .from('profile_claims')
+        .select('id, status, provider_id, providers:providers(provider_name)')
+        .eq('user_id', user.id)
+        .in('status', ['pending', 'approved'])
+        .maybeSingle();
+
+      if (activeClaim) {
+        setExistingClaim(activeClaim);
+        setLoading(false);
+        return;
+      }
+
+      const { data } = await supabase
         .from('providers')
         .select('*')
         .eq('id', claimId)
         .maybeSingle();
 
-      if (data) {
-        setProvider(data);
-      }
+      if (data) setProvider(data);
       setLoading(false);
     }
 
@@ -97,6 +110,29 @@ export default function CompleteClaim() {
       <DashboardLayout>
         <div className="flex h-[60vh] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (existingClaim) {
+    const providerName = existingClaim.providers?.provider_name || 'a business';
+    const isPending = existingClaim.status === 'pending';
+    return (
+      <DashboardLayout>
+        <div className="flex h-[60vh] flex-col items-center justify-center text-center px-4">
+          <div className="rounded-full bg-warning/10 p-4 mb-4">
+            <AlertTriangle className="h-10 w-10 text-warning" />
+          </div>
+          <h2 className="text-2xl font-semibold tracking-tight">Claim Already Exists</h2>
+          <p className="mt-2 text-muted-foreground max-w-md">
+            {isPending
+              ? `You already have a pending claim for "${providerName}". Each account can only manage one business listing. Please wait for admin review before submitting another claim.`
+              : `Your claim for "${providerName}" has already been approved. Each account can only manage one business listing.`}
+          </p>
+          <Button className="mt-8" onClick={() => navigate('/dashboard')}>
+            Go to Dashboard
+          </Button>
         </div>
       </DashboardLayout>
     );

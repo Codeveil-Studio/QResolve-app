@@ -12,12 +12,12 @@ import { Button } from '@/components/ui/button';
 import { Asset } from '@/lib/supabase-types';
 import { Package, MapPin, Building2, User, Calendar, Tag, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface AdminAssetDetailsDialogProps {
-  asset: (Asset & { 
-    organization?: { name: string }; 
-    creator?: { full_name: string; email: string } 
+  asset: (Asset & {
+    organization?: { name: string };
+    creator?: { full_name: string; email: string }
   }) | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,22 +36,24 @@ export function AdminAssetDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md md:max-w-lg bg-[#0f172a] border-slate-800 text-slate-200">
+      <DialogContent className="sm:max-w-md md:max-w-lg bg-card border-border text-foreground">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
-              <DialogTitle className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                <Package className="h-5 w-5 text-emerald-400" />
+              <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" />
                 {asset.name}
               </DialogTitle>
-              <DialogDescription className="text-slate-400 mt-1">
+              <DialogDescription className="text-muted-foreground mt-1">
                 Asset Details & Management
               </DialogDescription>
             </div>
             <div className={`px-2.5 py-1 rounded-full text-xs font-medium uppercase tracking-wider border ${
-              asset.status === 'active' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-900/50' :
-              asset.status === 'maintenance' ? 'bg-amber-900/30 text-amber-400 border-amber-900/50' :
-              'bg-slate-800 text-slate-400 border-slate-700'
+              asset.status === 'active'
+                ? 'bg-accent/10 text-accent border-accent/20'
+                : asset.status === 'maintenance'
+                ? 'bg-warning/10 text-warning border-warning/20'
+                : 'bg-muted text-muted-foreground border-border'
             }`}>
               {asset.status}
             </div>
@@ -61,70 +63,70 @@ export function AdminAssetDetailsDialog({
         <div className="space-y-6 py-4">
           {/* Description */}
           {asset.description && (
-            <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-800">
-              <p className="text-sm text-slate-300 italic">"{asset.description}"</p>
+            <div className="p-3 bg-muted/30 rounded-lg border border-border">
+              <p className="text-sm text-foreground/80 italic">"{asset.description}"</p>
             </div>
           )}
 
           {/* Details Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <span className="text-xs text-slate-500 font-medium uppercase flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground font-medium uppercase flex items-center gap-1.5">
                 <MapPin className="h-3 w-3" /> Location
               </span>
-              <p className="text-sm font-medium text-slate-200 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {asset.location || 'Not specified'}
               </p>
             </div>
 
             <div className="space-y-1">
-              <span className="text-xs text-slate-500 font-medium uppercase flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground font-medium uppercase flex items-center gap-1.5">
                 <Tag className="h-3 w-3" /> Type
               </span>
-              <p className="text-sm font-medium text-slate-200 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {asset.type || 'Generic Asset'}
               </p>
             </div>
 
             <div className="space-y-1">
-              <span className="text-xs text-slate-500 font-medium uppercase flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground font-medium uppercase flex items-center gap-1.5">
                 <Building2 className="h-3 w-3" /> Organization
               </span>
-              <p className="text-sm font-medium text-slate-200 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {asset.organization?.name || 'Unknown Org'}
               </p>
-              <p className="text-[10px] text-slate-500 font-mono truncate">
+              <p className="text-[10px] text-muted-foreground font-mono truncate">
                 {asset.org_id}
               </p>
             </div>
 
             <div className="space-y-1">
-              <span className="text-xs text-slate-500 font-medium uppercase flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground font-medium uppercase flex items-center gap-1.5">
                 <User className="h-3 w-3" /> Created By
               </span>
-              <p className="text-sm font-medium text-slate-200 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {asset.creator?.full_name || 'Unknown User'}
               </p>
-              <p className="text-[10px] text-slate-500 truncate">
+              <p className="text-[10px] text-muted-foreground truncate">
                 {asset.creator?.email}
               </p>
             </div>
 
             <div className="space-y-1">
-              <span className="text-xs text-slate-500 font-medium uppercase flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground font-medium uppercase flex items-center gap-1.5">
                 <Calendar className="h-3 w-3" /> Added On
               </span>
-              <p className="text-sm font-medium text-slate-200">
+              <p className="text-sm font-medium text-foreground">
                 {format(new Date(asset.created_at), 'MMM d, yyyy')}
               </p>
             </div>
 
             {asset.serial_number && (
               <div className="space-y-1">
-                <span className="text-xs text-slate-500 font-medium uppercase flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground font-medium uppercase flex items-center gap-1.5">
                   <Tag className="h-3 w-3" /> Serial Number
                 </span>
-                <p className="text-sm font-medium text-slate-200 font-mono">
+                <p className="text-sm font-medium text-foreground font-mono">
                   {asset.serial_number}
                 </p>
               </div>
@@ -132,48 +134,48 @@ export function AdminAssetDetailsDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:justify-between gap-3 border-t border-slate-800 pt-4 mt-2">
+        <DialogFooter className="flex-col sm:justify-between gap-3 border-t border-border pt-4 mt-2">
           {!showDeleteConfirm ? (
             <div className="flex w-full justify-between items-center">
-               <div className="text-xs text-slate-500">
+               <div className="text-xs text-muted-foreground">
                   Asset ID: <span className="font-mono">{asset.id.slice(0, 8)}...</span>
                </div>
-               <Button 
-                  variant="destructive" 
+               <Button
+                  variant="outline"
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="bg-red-900/20 text-red-400 hover:bg-red-900/40 border border-red-900/50"
+                  className="bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/30"
                 >
                   Delete Asset
                 </Button>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full bg-red-950/30 border border-red-900/50 rounded-lg p-3"
+              className="w-full bg-destructive/10 border border-destructive/30 rounded-lg p-3"
             >
-              <div className="flex items-center gap-3 mb-3 text-red-400">
+              <div className="flex items-center gap-3 mb-3 text-destructive">
                 <ShieldAlert className="h-5 w-5" />
                 <p className="text-sm font-medium">Permanently delete this asset?</p>
               </div>
               <div className="flex gap-2 justify-end">
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="sm"
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted"
                 >
                   Cancel
                 </Button>
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   size="sm"
                   onClick={() => {
                     onDelete(asset);
                     setShowDeleteConfirm(false);
                     onOpenChange(false);
                   }}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                 >
                   Confirm Delete
                 </Button>
