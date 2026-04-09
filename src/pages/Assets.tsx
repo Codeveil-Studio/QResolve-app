@@ -52,6 +52,8 @@ type AssetTypeOption = {
 
 type AssetWithType = Asset & {
   asset_type?: { name: string } | null;
+  asset_type_id?: string | null;
+  issue_types?: string[] | null;
 };
 
 type QRTemplateId = 'classic' | 'minimal' | 'bold';
@@ -69,6 +71,7 @@ export default function Assets() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [assetDialogOpen, setAssetDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<AssetWithType | null>(null);
   const [assetIssues, setAssetIssues] = useState<Issue[]>([]);
   const [formData, setFormData] = useState({
@@ -141,37 +144,54 @@ export default function Assets() {
     e.preventDefault();
     if (!organization || !user) return;
 
-    // Check Plan Limits
-    const currentPlan = getPlan(subscription?.status, assets.length);
-    if (assets.length >= currentPlan.maxAssets) {
-      toast({
-        variant: 'destructive',
-        title: 'Limit Reached',
-        description: `Your ${subscription?.status || 'trial'} plan is limited to ${currentPlan.maxAssets} assets. Please upgrade in Settings to add more.`,
-      });
-      return;
+    // Check Plan Limits only for new assets
+    if (!editingAssetId) {
+      const currentPlan = getPlan(subscription?.status, assets.length);
+      if (assets.length >= currentPlan.maxAssets) {
+        toast({
+          variant: 'destructive',
+          title: 'Limit Reached',
+          description: `Your ${subscription?.status || 'trial'} plan is limited to ${currentPlan.maxAssets} assets. Please upgrade in Settings to add more.`,
+        });
+        return;
+      }
     }
 
     try {
       const assetData = {
         name: formData.name,
-        description: formData.description.trim() || null, // Optional: Save as null if empty
-        type: formData.type, // We keep type for backward compatibility or generic classification
-        asset_type_id: formData.asset_type_id || null, // Link to asset_types table
+        description: formData.description.trim() || null,
+        type: formData.type,
+        asset_type_id: formData.asset_type_id || null,
         location: formData.location,
         serial_number: formData.serial_number,
         status: formData.status,
-        issue_types: formData.issue_types.includes('Others') ? formData.issue_types : [...formData.issue_types, 'Others'], // Save the dynamic tags (always include Others)
-        org_id: organization.id,
-        created_by: user.id,
+        issue_types: formData.issue_types.includes('Others') ? formData.issue_types : [...formData.issue_types, 'Others'],
       };
 
-      const { error } = await supabase.from('assets').insert(assetData);
+      if (editingAssetId) {
+        // Update existing asset
+        const { error } = await supabase
+          .from('assets')
+          .update(assetData)
+          .eq('id', editingAssetId);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast({ title: 'Asset updated successfully' });
+      } else {
+        // Create new asset
+        const { error } = await supabase.from('assets').insert({
+          ...assetData,
+          org_id: organization.id,
+          created_by: user.id,
+        });
 
-      toast({ title: 'Asset created successfully' });
+        if (error) throw error;
+        toast({ title: 'Asset created successfully' });
+      }
+
       setDialogOpen(false);
+      setEditingAssetId(null);
       setFormData({
         name: '',
         description: '',
@@ -186,7 +206,7 @@ export default function Assets() {
     } catch (error: unknown) {
       toast({
         variant: 'destructive',
-        title: 'Failed to create asset',
+        title: editingAssetId ? 'Failed to update asset' : 'Failed to create asset',
         description: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -245,6 +265,22 @@ export default function Assets() {
         description: error instanceof Error ? error.message : 'Unknown error',
       });
     }
+  };
+
+  const openEditDialog = (asset: AssetWithType) => {
+    setEditingAssetId(asset.id);
+    setFormData({
+      name: asset.name,
+      description: asset.description || '',
+      type: asset.type || '',
+      location: asset.location || '',
+      serial_number: asset.serial_number || '',
+      status: asset.status,
+      issue_types: asset.issue_types || [],
+      asset_type_id: asset.asset_type_id || '',
+    });
+    setCurrentIssueType('');
+    setDialogOpen(true);
   };
 
   const showQRCode = (asset: AssetWithType) => {
@@ -605,7 +641,12 @@ export default function Assets() {
               <Printer className="mr-2 h-4 w-4" />
               Print QR Code
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={(event) => event.stopPropagation()}>
+            <DropdownMenuItem
+              onClick={(event) => {
+                event.stopPropagation();
+                openEditDialog(asset);
+              }}
+            >
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
@@ -631,7 +672,26 @@ export default function Assets() {
         title="Inventory"
         description="Manage and track all your organization's assets"
       >
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog 
+          open={dialogOpen} 
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+              setEditingAssetId(null);
+              setFormData({
+                name: '',
+                description: '',
+                type: '',
+                location: '',
+                serial_number: '',
+                status: 'active',
+                issue_types: [],
+                asset_type_id: '',
+              });
+              setCurrentIssueType('');
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -640,9 +700,9 @@ export default function Assets() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Add New Asset</DialogTitle>
+              <DialogTitle>{editingAssetId ? 'Edit Asset' : 'Add New Asset'}</DialogTitle>
               <DialogDescription>
-                Create a new asset to track in your inventory
+                {editingAssetId ? 'Update the asset details' : 'Create a new asset to track in your inventory'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -741,6 +801,20 @@ export default function Assets() {
                 />
               </div>
               <div>
+                <Label htmlFor="status">Status</Label>
+                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as AssetStatus })}>
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="retired">Retired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label htmlFor="description">Description <span className="text-xs font-normal text-muted-foreground">(Optional)</span></Label>
                 <Textarea
                   id="description"
@@ -755,7 +829,7 @@ export default function Assets() {
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Create Asset</Button>
+                <Button type="submit">{editingAssetId ? 'Update Asset' : 'Create Asset'}</Button>
               </div>
             </form>
           </DialogContent>
