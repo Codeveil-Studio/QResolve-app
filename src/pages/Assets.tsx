@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit, Download, Printer, X as XIcon } from 'lucide-react';
+import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit, Download, Printer, X as XIcon, Loader } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import html2pdf from 'html2pdf.js';
 import { createRoot } from 'react-dom/client';
@@ -62,9 +62,11 @@ type QRTemplateAction = 'download' | 'print';
 export default function Assets() {
   const { organization, user } = useAuth();
   const { toast } = useToast();
+  const dialogContentRef = useRef<HTMLDivElement>(null);
   const [assets, setAssets] = useState<AssetWithType[]>([]);
   const [loading, setLoading] = useState(true);
   const [issuesLoading, setIssuesLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -157,6 +159,8 @@ export default function Assets() {
       }
     }
 
+    setIsSubmitting(true);
+
     try {
       const assetData = {
         name: formData.name,
@@ -209,6 +213,8 @@ export default function Assets() {
         title: editingAssetId ? 'Failed to update asset' : 'Failed to create asset',
         description: error instanceof Error ? error.message : 'Unknown error',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -281,6 +287,13 @@ export default function Assets() {
     });
     setCurrentIssueType('');
     setDialogOpen(true);
+
+    // Trigger scroll animation after dialog opens
+    setTimeout(() => {
+      if (dialogContentRef.current) {
+        dialogContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const showQRCode = (asset: AssetWithType) => {
@@ -698,13 +711,18 @@ export default function Assets() {
               Add Asset
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{editingAssetId ? 'Edit Asset' : 'Add New Asset'}</DialogTitle>
-              <DialogDescription>
-                {editingAssetId ? 'Update the asset details' : 'Create a new asset to track in your inventory'}
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent ref={dialogContentRef} className="sm:max-w-md">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <DialogHeader>
+                <DialogTitle>{editingAssetId ? 'Edit Asset' : 'Add New Asset'}</DialogTitle>
+                <DialogDescription>
+                  {editingAssetId ? 'Update the asset details' : 'Create a new asset to track in your inventory'}
+                </DialogDescription>
+              </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="name">Asset Name</Label>
@@ -826,12 +844,16 @@ export default function Assets() {
                 />
               </div>
               <div className="flex justify-end gap-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={isSubmitting}>
                   Cancel
                 </Button>
-                <Button type="submit">{editingAssetId ? 'Update Asset' : 'Create Asset'}</Button>
+                <Button type="submit" disabled={isSubmitting} className="gap-2">
+                  {isSubmitting && <Loader className="h-4 w-4 animate-spin" />}
+                  {editingAssetId ? 'Update Asset' : 'Create Asset'}
+                </Button>
               </div>
             </form>
+            </motion.div>
           </DialogContent>
         </Dialog>
       </PageHeader>
