@@ -56,14 +56,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
 }
 
-async function fetchCategoryData(categorySlug: string, citySlug: string) {
-    const supabase = await createClient();
-    const query = supabase.from("providers").select("*").eq("category_slug", categorySlug);
-    if (citySlug !== "india") query.eq("city_slug", citySlug);
-    const { data: providers } = await query;
-    return providers;
-}
-
 export default async function CategoryCityPage({ params }: PageProps) {
     const { category, city } = await params;
     const providers = await fetchCategoryData(category, city);

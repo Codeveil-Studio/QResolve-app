@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 
@@ -13,6 +13,13 @@ const fraunces = Fraunces({
   subsets: ["latin"],
   axes: ["opsz"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1.0,
+  maximumScale: 5.0,
+  userScalable: true,
+};
 
 export const metadata: Metadata = {
   title: "QResolve — India's Verified Maintenance Provider Directory | Best Service Providers",
@@ -70,7 +77,6 @@ export const metadata: Metadata = {
   
   // Additional SEO
   metadataBase: new URL("https://qresolve.com"),
-  canonica: "https://qresolve.com",
   robots: {
     index: true,
     follow: true,
@@ -108,7 +114,6 @@ export const metadata: Metadata = {
     title: "QResolve",
   },
   manifest: "/manifest.json",
-  viewport: "width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes",
 };
 
 export default function RootLayout({

@@ -1,6 +1,5 @@
 "use client";
 
-import type { Metadata } from "next";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -20,18 +19,6 @@ import {
 } from "lucide-react";
 import { categories as categoriesData, citySlugMap } from "@/data/categories";
 import { HeroSearch } from "@/components/HeroSearch";
-
-// Note: This metadata export is processed at build time by Next.js, even though this is a client component
-export const metadata = {
-  title: "QResolve — Find Verified Maintenance Providers & Track Warranty with QR",
-  description: "Discover verified maintenance service providers across India. Track warranties with QR codes, get real performance data, and find the best providers for your assets.",
-  openGraph: {
-    title: "QResolve — Verified Maintenance Provider Directory",
-    description: "Find verified service providers for vending machines, EV chargers, lifts, HVAC, and more across India.",
-    url: "https://qresolve.com",
-    type: "website",
-  },
-};
 
 const iconMap: Record<string, React.ReactNode> = {
   "vending-and-automated-retail": <Store size={22} />,
