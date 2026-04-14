@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { Phone, MapPin, Star, Building, CheckCircle2, ArrowLeft, Calendar, Shield, ExternalLink, Mail, Clock } from "lucide-react";
 
@@ -10,6 +11,50 @@ interface PageProps {
 
 const capitalize = (s: string) =>
     s ? s.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : "";
+
+// Generate metadata for provider pages
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { slug } = await params;
+    const supabase = await createClient();
+
+    const { data: provider } = await supabase
+        .from("providers")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+
+    if (!provider) return { title: "Provider Not Found" };
+
+    const title = `${provider.provider_name} — Verified ${provider.category} Service Provider | QResolve`;
+    const description = `${provider.provider_name} is a verified ${provider.category} service provider in ${capitalize(provider.city_slug)}. Rating: ${provider.rating}/5. Contact for maintenance and repair services.`;
+    const url = `https://qresolve.com/provider/${slug}`;
+
+    return {
+        title,
+        description,
+        keywords: [
+            provider.provider_name,
+            provider.category,
+            capitalize(provider.city_slug),
+            `${provider.category} service`,
+            "verified provider",
+        ],
+        openGraph: {
+            title,
+            description,
+            url,
+            type: "website",
+        },
+        twitter: {
+            title,
+            description,
+            card: "summary_large_image",
+        },
+        alternates: {
+            canonical: url,
+        },
+    };
+}
 
 export default async function ProviderPage({ params }: PageProps) {
     const { slug } = await params;
@@ -28,8 +73,41 @@ export default async function ProviderPage({ params }: PageProps) {
     const initials = provider.provider_name?.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase() || "P";
     const listedDate = new Date(provider.created_at).toLocaleDateString("en-IN", { year: "numeric", month: "long" });
 
+    // JSON-LD Schema for business
+    const businessSchema = {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        name: provider.provider_name,
+        description: `${provider.provider_name} provides verified ${provider.category} services in ${cityName}, India.`,
+        url: `https://qresolve.com/provider/${slug}`,
+        telephone: provider.contact_number || undefined,
+        email: provider.email || undefined,
+        address: {
+            "@type": "PostalAddress",
+            streetAddress: provider.sub_locality || "",
+            addressLocality: cityName,
+            addressCountry: "IN",
+        },
+        aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: provider.rating,
+            ratingCount: provider.review_count || 1,
+        },
+        image: "https://qresolve.com/icon.svg",
+        priceRange: "$$",
+        areaServed: {
+            "@type": "AdministrativeArea",
+            name: cityName,
+        },
+    };
+
     return (
         <div className="qresolve-page">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(businessSchema) }}
+                suppressHydrationWarning
+            />
             <Navbar />
 
             {/* ── HERO BANNER ── */}

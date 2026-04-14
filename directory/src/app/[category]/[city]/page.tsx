@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProviderResults } from "@/components/ProviderResults";
 import Link from "next/link";
@@ -19,6 +20,50 @@ async function fetchCategoryData(categorySlug: string, citySlug: string) {
     return providers;
 }
 
+// SEO Metadata for dynamic pages
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { category, city } = await params;
+    const categoryName = capitalize(category);
+    const cityName = city === "india" ? "India" : capitalize(city);
+    const title = `Top ${categoryName} Service Providers in ${cityName} | QResolve`;
+    const description = `Find ${categoryName.toLowerCase()} service providers in ${cityName}. Ranked by verified performance data, response times, and customer reviews. Compare verified ${categoryName.toLowerCase()} specialists.`;
+    const url = `https://qresolve.com/${category}/${city}`;
+
+    return {
+        title,
+        description,
+        keywords: [
+            `${categoryName.toLowerCase()} in ${cityName}`,
+            `best ${categoryName.toLowerCase()} providers ${cityName}`,
+            `verified ${categoryName.toLowerCase()} ${cityName}`,
+            `${categoryName.toLowerCase()} service`,
+            `${cityName} services`,
+        ],
+        openGraph: {
+            title,
+            description,
+            url,
+            type: "website",
+        },
+        twitter: {
+            title,
+            description,
+            card: "summary_large_image",
+        },
+        alternates: {
+            canonical: url,
+        },
+    };
+}
+
+async function fetchCategoryData(categorySlug: string, citySlug: string) {
+    const supabase = await createClient();
+    const query = supabase.from("providers").select("*").eq("category_slug", categorySlug);
+    if (citySlug !== "india") query.eq("city_slug", citySlug);
+    const { data: providers } = await query;
+    return providers;
+}
+
 export default async function CategoryCityPage({ params }: PageProps) {
     const { category, city } = await params;
     const providers = await fetchCategoryData(category, city);
@@ -28,8 +73,34 @@ export default async function CategoryCityPage({ params }: PageProps) {
 
     if (providers === null) notFound();
 
+    // JSON-LD Schema for category page
+    const schemaData = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: `${categoryName} Services in ${cityName}`,
+        description: `Find verified ${categoryName.toLowerCase()} service providers in ${cityName}. Ranked by performance and verified customer reviews.`,
+        url: `https://qresolve.com/${category}/${city}`,
+        provider: {
+            "@type": "LocalBusiness",
+            name: "QResolve",
+            url: "https://qresolve.com",
+        },
+        itemListElement: (providers || []).slice(0, 10).map((provider: any, index: number) => ({
+            "@type": "LocalBusiness",
+            position: index + 1,
+            name: provider.provider_name,
+            telephone: provider.contact_number,
+            url: `https://qresolve.com/provider/${provider.slug}`,
+        })),
+    };
+
     return (
         <div className="qresolve-page">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+                suppressHydrationWarning
+            />
             <Navbar />
 
             {/* INNER HERO */}

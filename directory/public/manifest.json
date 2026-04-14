@@ -1,0 +1,62 @@
+{
+  "name": "QResolve — Verified Maintenance Provider Directory",
+  "short_name": "QResolve",
+  "description": "Find verified maintenance service providers in India ranked by real performance data",
+  "start_url": "https://qresolve.com",
+  "scope": "https://qresolve.com",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#06d6a0",
+  "background_color": "#ffffff",
+  "categories": ["business", "directory"],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-2.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find Service Providers",
+      "short_name": "Find Providers",
+      "description": "Search for verified service providers",
+      "url": "/",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "List Your Business",
+      "short_name": "List Business",
+      "description": "Grow your service business with QResolve",
+      "url": "https://relay.qresolve.com/signup",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+    }
+  ]
+}
