@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
+import { MetaPixel } from "@/components/MetaPixel";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -172,6 +173,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${dmSans.variable} ${fraunces.variable} antialiased`} suppressHydrationWarning>
+        <MetaPixel />
         {children}
       </body>
     </html>
