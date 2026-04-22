@@ -711,19 +711,20 @@ export default function Assets() {
               Add Asset
             </Button>
           </DialogTrigger>
-          <DialogContent ref={dialogContentRef} className="sm:max-w-md">
+          <DialogContent ref={dialogContentRef} className="sm:max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
+              className="flex flex-col overflow-y-auto max-h-[calc(85vh-60px)]"
             >
-              <DialogHeader>
+              <DialogHeader className="shrink-0 pr-6">
                 <DialogTitle>{editingAssetId ? 'Edit Asset' : 'Add New Asset'}</DialogTitle>
                 <DialogDescription>
                   {editingAssetId ? 'Update the asset details' : 'Create a new asset to track in your inventory'}
                 </DialogDescription>
               </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 px-4" id={editingAssetId ? "edit-asset-form" : "create-asset-form"}>
               <div>
                 <Label htmlFor="name">Asset Name</Label>
                 <Input
@@ -760,7 +761,18 @@ export default function Assets() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="serial">Serial Number</Label>
+                  <Input
+                    id="serial"
+                    value={formData.serial_number}
+                    onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
+                    placeholder="e.g., SN123456"
+                    className="mt-1.5"
+                    required
+                  />
+                </div>
                 <div>
                   <Label htmlFor="issue_types">Issue Types (Tags)</Label>
                   <div className="flex gap-2 mt-1.5">
@@ -794,17 +806,6 @@ export default function Assets() {
                       <span className="text-xs text-muted-foreground italic">No issue types added</span>
                     )}
                   </div>
-                </div>
-                <div>
-                  <Label htmlFor="serial">Serial Number</Label>
-                  <Input
-                    id="serial"
-                    value={formData.serial_number}
-                    onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
-                    placeholder="e.g., SN123456"
-                    className="mt-1.5"
-                    required
-                  />
                 </div>
               </div>
               <div>
@@ -843,17 +844,17 @@ export default function Assets() {
                   rows={3}
                 />
               </div>
-              <div className="flex justify-end gap-3 pt-4">
+            </form>
+            </motion.div>
+              <div className="flex justify-end gap-3 pt-4 shrink-0 border-t border-border mt-4">
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={isSubmitting}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="gap-2">
+                <Button type="submit" disabled={isSubmitting} className="gap-2" form={editingAssetId ? "edit-asset-form" : "create-asset-form"}>
                   {isSubmitting && <Loader className="h-4 w-4 animate-spin" />}
                   {editingAssetId ? 'Update Asset' : 'Create Asset'}
                 </Button>
               </div>
-            </form>
-            </motion.div>
           </DialogContent>
         </Dialog>
       </PageHeader>
