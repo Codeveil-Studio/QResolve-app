@@ -47,6 +47,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTierManagement } from '@/components/admin/AdminTierManagement';
+import { AdminDangerZone } from '@/components/admin/AdminDangerZone';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -1232,25 +1233,8 @@ function AdminSettingsTab() {
             {/* Account Tier Management Section */}
             <AdminTierManagement />
 
-            {/* System Settings Section */}
-            <Card className="border-border bg-card shadow-md max-w-2xl">
-                <CardHeader>
-                    <CardTitle className="text-foreground font-serif">System Settings</CardTitle>
-                    <CardDescription className="text-muted-foreground">Global configurations for the platform.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="space-y-2 border-b border-border pb-5">
-                        <h4 className="font-semibold text-foreground">Maintenance Mode</h4>
-                        <p className="text-sm text-muted-foreground">Prevent users from logging in during scheduled database updates.</p>
-                        <Button variant="outline" className="mt-3 text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive">Enable Maintenance Mode</Button>
-                    </div>
-                    <div className="space-y-2">
-                        <h4 className="font-semibold text-foreground">Admin Email Notifications</h4>
-                        <p className="text-sm text-muted-foreground">Receive an email when a new organization is created.</p>
-                        <Button variant="secondary" className="mt-3 bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors" disabled>Notifications Configured Locally</Button>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Admin Danger Zone Section */}
+            <AdminDangerZone />
         </div>
     );
 }
