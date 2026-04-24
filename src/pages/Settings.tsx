@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { getPlan, PLAN_LIMITS } from '@/lib/subscription';
+import { getPlan, PLAN_LIMITS, getCustomAssetLimit } from '@/lib/subscription';
 import { cn } from '@/lib/utils';
 import { QrCode, AlertCircle, Users, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -37,18 +37,21 @@ export default function Settings() {
   });
   const [subscription, setSubscription] = useState<any>(null);
   const [assetCount, setAssetCount] = useState(0);
+  const [customAssetLimit, setCustomAssetLimit] = useState<number | null>(null);
 
   React.useEffect(() => {
     const fetchData = async () => {
       if (!organization) return;
       
-      const [subRes, assetsRes] = await Promise.all([
+      const [subRes, assetsRes, customLimit] = await Promise.all([
         supabase.from('subscriptions').select('*').eq('org_id', organization.id).maybeSingle(),
-        supabase.from('assets').select('id', { count: 'exact', head: true }).eq('org_id', organization.id)
+        supabase.from('assets').select('id', { count: 'exact', head: true }).eq('org_id', organization.id),
+        getCustomAssetLimit(organization.id)
       ]);
 
       setSubscription(subRes.data);
       setAssetCount(assetsRes.count || 0);
+      setCustomAssetLimit(customLimit);
     };
     fetchData();
   }, [organization]);
@@ -345,17 +348,22 @@ export default function Settings() {
               <h4 className="font-medium">Plan Usage</h4>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-lg bg-muted/50 p-4 border border-border">
-                  <p className="text-sm text-muted-foreground mb-1">Assets Used</p>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm text-muted-foreground">Assets Used</p>
+                    {customAssetLimit !== null && (
+                      <Badge variant="secondary" className="text-xs">Custom Tier</Badge>
+                    )}
+                  </div>
                   <div className="flex items-end justify-between">
                     <p className="text-2xl font-bold">{assetCount}</p>
                     <p className="text-xs text-muted-foreground mb-1">
-                      Limit: {currentPlan.maxAssets === Infinity ? 'Unlimited' : currentPlan.maxAssets}
+                      Limit: {customAssetLimit !== null ? customAssetLimit : (currentPlan.maxAssets === Infinity ? 'Unlimited' : currentPlan.maxAssets)}
                     </p>
                   </div>
                   <div className="h-1.5 w-full bg-border rounded-full mt-2 overflow-hidden">
                     <div 
                       className="h-full bg-primary" 
-                      style={{ width: `${Math.min((assetCount / (currentPlan.maxAssets === Infinity ? assetCount : currentPlan.maxAssets)) * 100, 100)}%` }} 
+                      style={{ width: `${Math.min((assetCount / (customAssetLimit !== null ? customAssetLimit : (currentPlan.maxAssets === Infinity ? assetCount : currentPlan.maxAssets))) * 100, 100)}%` }} 
                     />
                   </div>
                 </div>

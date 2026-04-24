@@ -43,7 +43,7 @@ import { Asset, AssetStatus, Issue } from '@/lib/supabase-types';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { getPlan } from '@/lib/subscription';
+import { getPlan, getEffectiveAssetLimit } from '@/lib/subscription';
 
 type AssetTypeOption = {
   id: string;
@@ -148,12 +148,25 @@ export default function Assets() {
 
     // Check Plan Limits only for new assets
     if (!editingAssetId) {
-      const currentPlan = getPlan(subscription?.status, assets.length);
-      if (assets.length >= currentPlan.maxAssets) {
+      try {
+        const effectiveLimit = await getEffectiveAssetLimit(organization.id, subscription?.status);
+        if (assets.length >= effectiveLimit) {
+          const tierInfo = effectiveLimit === getPlan(subscription?.status).maxAssets
+            ? `Your ${subscription?.status || 'trial'} plan`
+            : 'Your custom tier';
+          toast({
+            variant: 'destructive',
+            title: 'Limit Reached',
+            description: `${tierInfo} is limited to ${effectiveLimit} assets. Please contact support or upgrade to add more.`,
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking asset limit:', error);
         toast({
           variant: 'destructive',
-          title: 'Limit Reached',
-          description: `Your ${subscription?.status || 'trial'} plan is limited to ${currentPlan.maxAssets} assets. Please upgrade in Settings to add more.`,
+          title: 'Error',
+          description: 'Failed to check asset limit. Please try again.',
         });
         return;
       }

@@ -1,4 +1,5 @@
 import { SubscriptionStatus } from './supabase-types';
+import { supabase } from '@/integrations/supabase/client';
 
 export const PLAN_LIMITS = {
   trial: {
@@ -29,4 +30,47 @@ export function getPlan(status: SubscriptionStatus | string | null, assetCount: 
     return PLAN_LIMITS.starter;
   }
   return PLAN_LIMITS.trial;
+}
+
+/**
+ * Get custom asset limit for an organization from the account_tiers table
+ * Returns null if no custom tier is set
+ */
+export async function getCustomAssetLimit(orgId: string): Promise<number | null> {
+  try {
+    const { data, error } = await supabase
+      .from('account_tiers')
+      .select('max_assets')
+      .eq('org_id', orgId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching custom asset limit:', error);
+      return null;
+    }
+
+    return data?.max_assets ?? null;
+  } catch (err) {
+    console.error('Error in getCustomAssetLimit:', err);
+    return null;
+  }
+}
+
+/**
+ * Get the effective asset limit for an organization
+ * Checks custom limit first, then falls back to plan limit
+ */
+export async function getEffectiveAssetLimit(
+  orgId: string,
+  subscriptionStatus: SubscriptionStatus | string | null
+): Promise<number> {
+  // Check for custom limit first
+  const customLimit = await getCustomAssetLimit(orgId);
+  if (customLimit !== null) {
+    return customLimit;
+  }
+
+  // Fall back to plan limit
+  const plan = getPlan(subscriptionStatus);
+  return plan.maxAssets;
 }
