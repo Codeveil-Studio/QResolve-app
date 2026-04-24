@@ -15,13 +15,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Shield, AlertTriangle, Eye, EyeOff, Loader } from 'lucide-react';
+import { Shield, AlertTriangle, Eye, EyeOff, Loader, Edit2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface AdminInfo {
   id: string;
   email: string;
   created_at: string;
+  updated_at: string;
   full_name?: string;
 }
 
@@ -30,7 +31,9 @@ export function AdminDangerZone() {
   const [adminInfo, setAdminInfo] = useState<AdminInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isUpdatingInfo, setIsUpdatingInfo] = useState(false);
   const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -39,10 +42,20 @@ export function AdminDangerZone() {
     confirmPassword: '',
   });
 
+  const [editForm, setEditForm] = useState({
+    email: '',
+    full_name: '',
+  });
+
   const [passwordErrors, setPasswordErrors] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
+  });
+
+  const [editErrors, setEditErrors] = useState({
+    email: '',
+    full_name: '',
   });
 
   useEffect(() => {
@@ -59,7 +72,7 @@ export function AdminDangerZone() {
       const [adminRes, profileRes] = await Promise.all([
         supabase
           .from('admins')
-          .select('id, email, created_at')
+          .select('id, email, created_at, updated_at')
           .eq('id', user.id)
           .single(),
         supabase
@@ -70,9 +83,14 @@ export function AdminDangerZone() {
       ]);
 
       if (adminRes.data) {
-        setAdminInfo({
+        const adminData = {
           ...adminRes.data,
           full_name: profileRes.data?.full_name || 'Not set',
+        };
+        setAdminInfo(adminData);
+        setEditForm({
+          email: adminRes.data.email,
+          full_name: profileRes.data?.full_name || '',
         });
       }
     } catch (error) {
@@ -156,6 +174,81 @@ export function AdminDangerZone() {
     }
   };
 
+  const validateEditForm = (): boolean => {
+    const errors = { email: '', full_name: '' };
+    let isValid = true;
+
+    if (!editForm.email.trim()) {
+      errors.email = 'Email is required';
+      isValid = false;
+    } else if (!editForm.email.includes('@')) {
+      errors.email = 'Please enter a valid email';
+      isValid = false;
+    }
+
+    if (!editForm.full_name.trim()) {
+      errors.full_name = 'Full name is required';
+      isValid = false;
+    } else if (editForm.full_name.trim().length < 2) {
+      errors.full_name = 'Full name must be at least 2 characters';
+      isValid = false;
+    }
+
+    setEditErrors(errors);
+    return isValid;
+  };
+
+  const handleUpdateInfo = async () => {
+    if (!validateEditForm()) return;
+
+    setIsUpdatingInfo(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      // Update profile (full name)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editForm.full_name.trim(),
+        })
+        .eq('user_id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Update admin email (trigger will automatically update updated_at)
+      const { error: adminError } = await supabase
+        .from('admins')
+        .update({
+          email: editForm.email.trim(),
+        })
+        .eq('id', user.id);
+
+      if (adminError) throw adminError;
+
+      toast({
+        title: 'Success',
+        description: 'Admin information updated successfully',
+      });
+
+      setIsEditDialogOpen(false);
+      
+      // Wait a moment for the database to sync, then refresh
+      setTimeout(() => {
+        fetchAdminInfo();
+      }, 500);
+    } catch (error) {
+      console.error('Error updating admin info:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update admin information',
+      });
+    } finally {
+      setIsUpdatingInfo(false);
+    }
+  };
+
   if (loading) {
     return (
       <Card className="border-red-500/50 bg-card shadow-md">
@@ -182,10 +275,21 @@ export function AdminDangerZone() {
       <CardContent className="space-y-6 pt-6">
         {/* Admin Account Info */}
         <div className="space-y-4">
-          <h3 className="font-semibold text-foreground flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Admin Account Information
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Admin Account Information
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditDialogOpen(true)}
+              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 gap-2"
+            >
+              <Edit2 className="h-4 w-4" />
+              Edit
+            </Button>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg bg-muted/40 p-4 border border-border">
             <div>
@@ -226,6 +330,74 @@ export function AdminDangerZone() {
           </Button>
         </div>
       </CardContent>
+
+      {/* Edit Information Dialog */}
+      <AlertDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif">Edit Admin Information</AlertDialogTitle>
+            <AlertDialogDescription>
+              Update your email and full name
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Email Field */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-email" className="text-foreground">
+                Email Address *
+              </Label>
+              <Input
+                id="admin-email"
+                type="email"
+                placeholder="Enter email address"
+                value={editForm.email}
+                onChange={(e) => {
+                  setEditForm({ ...editForm, email: e.target.value });
+                  if (editErrors.email) setEditErrors({ ...editErrors, email: '' });
+                }}
+                className={editErrors.email ? 'border-red-500' : ''}
+              />
+              {editErrors.email && (
+                <p className="text-xs text-red-500">{editErrors.email}</p>
+              )}
+            </div>
+
+            {/* Full Name Field */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-name" className="text-foreground">
+                Full Name *
+              </Label>
+              <Input
+                id="admin-name"
+                type="text"
+                placeholder="Enter your full name"
+                value={editForm.full_name}
+                onChange={(e) => {
+                  setEditForm({ ...editForm, full_name: e.target.value });
+                  if (editErrors.full_name) setEditErrors({ ...editErrors, full_name: '' });
+                }}
+                className={editErrors.full_name ? 'border-red-500' : ''}
+              />
+              {editErrors.full_name && (
+                <p className="text-xs text-red-500">{editErrors.full_name}</p>
+              )}
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleUpdateInfo}
+              disabled={isUpdatingInfo}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isUpdatingInfo && <Loader className="h-4 w-4 mr-2 animate-spin inline" />}
+              {isUpdatingInfo ? 'Updating...' : 'Update'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Change Password Dialog */}
       <AlertDialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
