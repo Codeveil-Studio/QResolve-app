@@ -31,7 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Search, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Search, Plus, Trash2, Edit2, Loader } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 
 interface AccountTier {
@@ -55,6 +55,7 @@ export function AdminTierManagement() {
   const [tiers, setTiers] = useState<AccountTier[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -152,6 +153,7 @@ export function AdminTierManagement() {
       return;
     }
 
+    setIsSaving(true);
     try {
       if (selectedTier) {
         // Update existing tier
@@ -198,6 +200,8 @@ export function AdminTierManagement() {
         title: 'Error',
         description: 'Failed to save account tier',
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -329,11 +333,16 @@ export function AdminTierManagement() {
                       <Button
                         variant="outline"
                         onClick={() => setIsDialogOpen(false)}
+                        disabled={isSaving}
                       >
                         Cancel
                       </Button>
-                      <Button onClick={handleSave}>
-                        {selectedTier ? 'Update' : 'Create'}
+                      <Button 
+                        onClick={handleSave}
+                        disabled={isSaving}
+                      >
+                        {isSaving && <Loader className="h-4 w-4 mr-2 animate-spin inline" />}
+                        {isSaving ? (selectedTier ? 'Updating...' : 'Creating...') : (selectedTier ? 'Update' : 'Create')}
                       </Button>
                     </div>
                   </div>
