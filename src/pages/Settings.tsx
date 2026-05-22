@@ -13,10 +13,43 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { getPlan, PLAN_LIMITS, getCustomAssetLimit } from '@/lib/subscription';
+import type { Subscription } from '@/lib/supabase-types';
+import { getPlan, getCustomAssetLimit, fetchPaymentPlans, formatPlanPrice, type PaymentPlan } from '@/lib/subscription';
+import { useRazorpayCheckout } from '@/hooks/useRazorpayCheckout';
 import { cn } from '@/lib/utils';
-import { QrCode, AlertCircle, Users, CheckCircle } from 'lucide-react';
+import { QrCode, AlertCircle, Users, CheckCircle, Loader2, Sparkles, AlertTriangle, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { buttonVariants } from '@/components/ui/button';
+import { format } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+// The Starter plan is highlighted as the recommended option in the pricing grid.
+const RECOMMENDED_PLAN_KEY = 'starter';
+
+// Plan card visual treatment — varies by tier to give weight to the higher tier.
+function getPlanCardEmphasis(planKey: string) {
+  return planKey === 'pro'
+    ? { priceClass: 'text-4xl', accentTone: 'emerald-strong' as const }
+    : { priceClass: 'text-3xl', accentTone: 'emerald' as const };
+}
+
+function safeFormatDate(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return format(d, 'd MMM yyyy');
+}
 
 export default function Settings() {
   const { user, profile, organization } = useAuth();
@@ -35,28 +68,65 @@ export default function Settings() {
     weeklyReports: false,
     criticalOnly: false,
   });
-  const [subscription, setSubscription] = useState<any>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [assetCount, setAssetCount] = useState(0);
   const [customAssetLimit, setCustomAssetLimit] = useState<number | null>(null);
+  const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const { activePlanKey: checkoutPlanKey, cancelling, startCheckout, cancelSubscription } = useRazorpayCheckout();
+
+  const refreshSubscription = React.useCallback(async () => {
+    if (!organization) return;
+    const subRes = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('org_id', organization.id)
+      .maybeSingle();
+    setSubscription(subRes.data);
+  }, [organization]);
 
   React.useEffect(() => {
     const fetchData = async () => {
       if (!organization) return;
-      
-      const [subRes, assetsRes, customLimit] = await Promise.all([
+      setPlansLoading(true);
+
+      const [subRes, assetsRes, customLimit, plansRes] = await Promise.all([
         supabase.from('subscriptions').select('*').eq('org_id', organization.id).maybeSingle(),
         supabase.from('assets').select('id', { count: 'exact', head: true }).eq('org_id', organization.id),
-        getCustomAssetLimit(organization.id)
+        getCustomAssetLimit(organization.id),
+        fetchPaymentPlans(),
       ]);
 
       setSubscription(subRes.data);
       setAssetCount(assetsRes.count || 0);
       setCustomAssetLimit(customLimit);
+      setPaymentPlans(plansRes);
+      setPlansLoading(false);
     };
     fetchData();
   }, [organization]);
 
+  const handleUpgrade = async (planKey: string) => {
+    await startCheckout(planKey, {
+      onSuccess: () => {
+        // The webhook is the source of truth, but poll once after payment authorisation
+        // so the UI updates quickly if the webhook has already fired.
+        setTimeout(refreshSubscription, 2000);
+      },
+    });
+  };
+
+  const handleCancel = async () => {
+    await cancelSubscription({ immediate: false });
+    setTimeout(refreshSubscription, 1500);
+  };
+
   const currentPlan = getPlan(subscription?.status, assetCount);
+  const activePlanKey: string | null = subscription?.plan_key ?? null;
+  const isCancellationScheduled =
+    subscription?.status === 'active' && !!subscription?.cancelled_at;
+  const cancellationDate = safeFormatDate(subscription?.cancelled_at);
+  const nextBillingDate = safeFormatDate(subscription?.current_period_end);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -299,49 +369,222 @@ export default function Settings() {
             <h3 className="text-lg font-semibold mb-1">Billing & Subscription</h3>
             <p className="text-sm text-muted-foreground mb-6">Manage your subscription and payment methods</p>
 
-            <div className="grid gap-6 lg:grid-cols-3 mb-8">
-              {Object.entries(PLAN_LIMITS).map(([key, plan]) => {
-                const isCurrent = (subscription?.status === key) || (key === 'trial' && (!subscription || subscription.status === 'trialing'));
-                
-                return (
-                  <div 
-                    key={key} 
+            {/* Inline notice when subscription is mid-cancellation */}
+            {isCancellationScheduled && (
+              <div
+                role="status"
+                className="mb-6 flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4"
+              >
+                <AlertTriangle className="h-5 w-5 shrink-0 text-warning mt-0.5" aria-hidden="true" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">Cancellation scheduled</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Your subscription will remain active
+                    {nextBillingDate ? ` until ${nextBillingDate}` : ' until the end of the current billing period'}
+                    {cancellationDate && nextBillingDate !== cancellationDate ? ` (requested on ${cancellationDate})` : ''}.
+                  </p>
+                </div>
+                {/* TODO: wire up a razorpay-resume-subscription edge function so this can actually undo the cancel */}
+                <Button variant="outline" size="sm" disabled title="Resume requires admin action — coming soon">
+                  Resume plan
+                </Button>
+              </div>
+            )}
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+              {/* Skeleton loaders while plans fetch */}
+              {plansLoading ? (
+                <>
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={`skeleton-${i}`}
+                      className="relative rounded-xl border border-border bg-card p-6"
+                    >
+                      <Skeleton className="h-6 w-20 mb-3" />
+                      <Skeleton className="h-9 w-32 mb-5" />
+                      <div className="space-y-2 mb-6">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                        <Skeleton className="h-4 w-4/6" />
+                      </div>
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <>
+                  {/* Trial card — baseline */}
+                  <div
                     className={cn(
-                      "relative rounded-xl border p-6 transition-all",
-                      isCurrent 
-                        ? "border-primary bg-primary/5 ring-1 ring-primary" 
-                        : "border-border bg-card hover:border-primary/50"
+                      'relative rounded-xl border p-6 transition-all duration-200',
+                      !subscription || subscription.status === 'trialing'
+                        ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                        : 'border-border bg-card',
                     )}
                   >
-                    {isCurrent && (
+                    {(!subscription || subscription.status === 'trialing') && (
                       <Badge className="absolute -top-3 left-4 bg-primary text-primary-foreground">
                         Current Plan
                       </Badge>
                     )}
-                    <h4 className="text-xl font-bold capitalize mb-1">{key}</h4>
-                    <p className="text-3xl font-bold mb-4">
-                      {plan.price === 0 ? 'Free' : `₹${plan.price.toLocaleString()}`}
-                      <span className="text-sm font-normal text-muted-foreground"> /mo</span>
+                    <h4 className="text-xl font-bold mb-1">Trial</h4>
+                    <p className="mb-4 flex items-baseline gap-1">
+                      <span className="text-3xl font-bold">Free</span>
+                      <span className="text-sm font-normal text-muted-foreground">/month</span>
                     </p>
                     <ul className="space-y-2 mb-6">
-                      {plan.features.map((f, i) => (
+                      {['QR Reporting', 'Basic Dashboard', 'Dispatch'].map((f, i) => (
                         <li key={i} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-primary" />
+                          <CheckCircle className="h-4 w-4 text-primary shrink-0" />
                           {f}
                         </li>
                       ))}
                     </ul>
-                    <Button 
-                      variant={isCurrent ? "outline" : "default"} 
+                    <Button
+                      variant="outline"
                       className="w-full"
-                      disabled={isCurrent}
-                      onClick={() => toast({ title: "Redirecting to Stripe...", description: "Secure checkout opening soon." })}
+                      disabled
+                      aria-label="Trial is your default plan; no action available"
                     >
-                      {isCurrent ? "Manage" : "Upgrade"}
+                      Default
                     </Button>
                   </div>
-                );
-              })}
+
+                  {/* DB-driven paid plans */}
+                  {paymentPlans.map((plan) => {
+                    const isCurrent =
+                      subscription?.status === 'active' &&
+                      (activePlanKey === plan.plan_key ||
+                        (!activePlanKey && plan.plan_key === 'starter'));
+                    const isRecommended =
+                      !isCurrent &&
+                      plan.plan_key === RECOMMENDED_PLAN_KEY &&
+                      // Only show "Most Popular" if user isn't already on a paid plan
+                      subscription?.status !== 'active';
+                    const notSyncedYet = !plan.razorpay_plan_id;
+                    const isThisPlanLoading = checkoutPlanKey === plan.plan_key;
+                    const anyCheckoutInFlight = checkoutPlanKey !== null;
+                    const { priceClass } = getPlanCardEmphasis(plan.plan_key);
+
+                    return (
+                      <div
+                        key={plan.id}
+                        className={cn(
+                          'relative rounded-xl border p-6 transition-all duration-200',
+                          isCurrent
+                            ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                            : isRecommended
+                              ? 'border-primary/60 bg-card hover:border-primary'
+                              : 'border-border bg-card hover:border-primary/50',
+                        )}
+                      >
+                        {isCurrent && (
+                          <Badge className="absolute -top-3 left-4 bg-primary text-primary-foreground">
+                            Current Plan
+                          </Badge>
+                        )}
+                        {isRecommended && (
+                          <Badge
+                            className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground gap-1 px-2.5 py-0.5"
+                          >
+                            <Sparkles className="h-3 w-3" aria-hidden="true" />
+                            Most Popular
+                          </Badge>
+                        )}
+                        <h4 className="text-xl font-bold mb-1">{plan.name}</h4>
+                        <p className="mb-4 flex items-baseline gap-1">
+                          <span className={cn('font-bold', priceClass)}>
+                            {formatPlanPrice(plan.amount, plan.currency)}
+                          </span>
+                          <span className="text-sm font-normal text-muted-foreground">/month</span>
+                        </p>
+                        <ul className="space-y-2 mb-6">
+                          {plan.features.map((f, i) => (
+                            <li key={i} className="flex items-center gap-2 text-sm">
+                              <CheckCircle className="h-4 w-4 text-primary shrink-0" />
+                              {f}
+                            </li>
+                          ))}
+                        </ul>
+
+                        {/* Next-billing line for active subscribers */}
+                        {isCurrent && nextBillingDate && !isCancellationScheduled && (
+                          <p className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                            Next billing: {nextBillingDate}
+                          </p>
+                        )}
+
+                        {isCurrent ? (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
+                                disabled={cancelling || isCancellationScheduled}
+                              >
+                                {isCancellationScheduled
+                                  ? 'Cancellation pending'
+                                  : cancelling
+                                    ? 'Cancelling...'
+                                    : 'Cancel Subscription'}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Your {plan.name} plan will remain active until the end of the
+                                  current billing period
+                                  {nextBillingDate ? ` (${nextBillingDate})` : ''}. You won't be
+                                  charged again.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Keep plan</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={handleCancel}
+                                  className={cn(
+                                    buttonVariants({ variant: 'destructive' }),
+                                  )}
+                                >
+                                  Cancel at period end
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        ) : (
+                          <div className="space-y-2">
+                            <Button
+                              className="w-full"
+                              disabled={anyCheckoutInFlight || notSyncedYet}
+                              aria-busy={isThisPlanLoading}
+                              onClick={() => handleUpgrade(plan.plan_key)}
+                            >
+                              {isThisPlanLoading && (
+                                <Loader2
+                                  className="mr-2 h-4 w-4 animate-spin"
+                                  aria-label="Loading"
+                                />
+                              )}
+                              {notSyncedYet
+                                ? 'Unavailable'
+                                : isThisPlanLoading
+                                  ? 'Opening checkout...'
+                                  : 'Upgrade'}
+                            </Button>
+                            {notSyncedYet && (
+                              <p className="text-xs text-muted-foreground text-center">
+                                Plan not yet available — admin sync pending
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
+              )}
             </div>
 
             <div className="space-y-4">

@@ -45,6 +45,15 @@ export interface Subscription {
   current_period_end: string | null;
   created_at: string;
   updated_at: string;
+  // Razorpay fields (added in 20260521_razorpay_integration.sql)
+  razorpay_subscription_id?: string | null;
+  razorpay_customer_id?: string | null;
+  razorpay_plan_id?: string | null;
+  plan_key?: string | null;
+  short_url?: string | null;
+  payment_provider?: string | null;
+  last_webhook_event_id?: string | null;
+  cancelled_at?: string | null;
 }
 
 export interface Asset {

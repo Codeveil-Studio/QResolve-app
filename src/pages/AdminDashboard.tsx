@@ -48,6 +48,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AdminTierManagement } from '@/components/admin/AdminTierManagement';
 import { AdminDangerZone } from '@/components/admin/AdminDangerZone';
+import { AdminPaymentPlans } from '@/components/admin/AdminPaymentPlans';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -1230,6 +1231,9 @@ function AdminIssuesTab() {
 function AdminSettingsTab() {
     return (
         <div className="space-y-6">
+            {/* Razorpay payment plans management */}
+            <AdminPaymentPlans />
+
             {/* Account Tier Management Section */}
             <AdminTierManagement />
 

@@ -1,6 +1,14 @@
 import { SubscriptionStatus } from './supabase-types';
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * Hardcoded plan fallback. Used by:
+ *   - Trial users (no DB plan to point at)
+ *   - Older code paths that pass a status string directly
+ *
+ * The authoritative pricing now lives in the `payment_plans` table.
+ * Use `fetchPaymentPlans()` to render pricing cards.
+ */
 export const PLAN_LIMITS = {
   trial: {
     maxAssets: 5,
@@ -25,11 +33,68 @@ export const PLAN_LIMITS = {
 export function getPlan(status: SubscriptionStatus | string | null, assetCount: number = 0) {
   if (!status || status === 'trialing') return PLAN_LIMITS.trial;
   if (status === 'active') {
-    // We might need a 'plan_type' column in the database eventually.
-    // For now, let's assume 'active' is Starter unless specified.
     return PLAN_LIMITS.starter;
   }
   return PLAN_LIMITS.trial;
+}
+
+// ============================================
+// DB-driven plans (payment_plans table)
+// ============================================
+
+export interface PaymentPlan {
+  id: string;
+  plan_key: string;
+  name: string;
+  description: string | null;
+  amount: number;             // in paise
+  currency: string;
+  interval: string;
+  interval_count: number;
+  max_assets: number | null;
+  max_issues: number | null;
+  features: string[];
+  razorpay_plan_id: string | null;
+  is_active: boolean;
+  sort_order: number;
+}
+
+/**
+ * Fetch active payment plans from the DB.
+ * Returns plans in the admin-defined sort_order.
+ */
+export async function fetchPaymentPlans(): Promise<PaymentPlan[]> {
+  const { data, error } = await supabase
+    .from('payment_plans' as never)
+    .select('id, plan_key, name, description, amount, currency, interval, interval_count, max_assets, max_issues, features, razorpay_plan_id, is_active, sort_order')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    console.error('fetchPaymentPlans error:', error);
+    return [];
+  }
+  return (data ?? []) as unknown as PaymentPlan[];
+}
+
+/**
+ * Convert paise (smallest unit) to a display-friendly rupee number.
+ */
+export function paiseToRupees(paise: number): number {
+  return Math.round(paise) / 100;
+}
+
+/**
+ * Format an amount in paise as ₹ display string. Example: 499900 → "₹4,999".
+ */
+export function formatPlanPrice(amountInPaise: number, currency: string = 'INR'): string {
+  const rupees = paiseToRupees(amountInPaise);
+  const formatter = new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  });
+  return formatter.format(rupees);
 }
 
 /**
