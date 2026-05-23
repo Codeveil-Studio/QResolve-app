@@ -21,7 +21,18 @@ import CompleteClaim from "./pages/CompleteClaim";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import EditBusinessProfile from "./pages/EditBusinessProfile";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Don't refetch every time the user switches tabs and comes back.
+      // The data isn't real-time critical and refetching causes skeleton flashes.
+      refetchOnWindowFocus: false,
+      // Keep data fresh for 1 minute before considering it stale. This prevents
+      // re-fetches from happening between page transitions in the same session.
+      staleTime: 60_000,
+    },
+  },
+});
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, organization, loading } = useAuth();

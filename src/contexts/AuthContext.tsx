@@ -69,47 +69,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, fetchOrganization]);
 
   useEffect(() => {
-    // Set up auth state listener
+    // Loads/refreshes the user's profile, organization, and admin status.
+    // Pulled into a named helper so we can call it from both the initial
+    // session check and the SIGNED_IN event (but NOT TOKEN_REFRESHED — see below).
+    const hydrateUserContext = async (userId: string) => {
+      const userProfile = await fetchProfile(userId);
+      setProfile(userProfile);
+
+      const org = await fetchOrganization(userId);
+      setOrganization(org);
+
+      const { data: adminData } = await supabase
+        .from('admins')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+      setIsAdmin(!!adminData);
+
+      setLoading(false);
+    };
+
+    // Set up auth state listener.
+    //
+    // IMPORTANT: only refetch profile/org/admin on actual sign-in or sign-out
+    // events — NOT on TOKEN_REFRESHED (which Supabase fires when the JWT rotates
+    // every ~1hr AND every time the tab regains focus). Refetching on those
+    // events causes any child component with useEffect([organization]) to
+    // re-run and flash its loading skeleton on tab switch, which is jarring UX.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
 
-      if (session?.user) {
-        // Use setTimeout to prevent potential race conditions
-        setTimeout(async () => {
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
-
-          const org = await fetchOrganization(session.user.id);
-          setOrganization(org);
-
-          // Check if admin
-          const { data: adminData } = await supabase
-            .from('admins')
-            .select('id')
-            .eq('id', session.user.id)
-            .maybeSingle();
-          setIsAdmin(!!adminData);
-
-          setLoading(false);
-        }, 0);
-      } else {
+      if (event === 'SIGNED_OUT' || !session?.user) {
         setProfile(null);
         setOrganization(null);
         setMembership(null);
         setIsAdmin(false);
         setLoading(false);
+        return;
       }
+
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') {
+        // Defer with setTimeout to avoid race conditions with React 18 batching
+        setTimeout(() => hydrateUserContext(session.user.id), 0);
+      }
+      // TOKEN_REFRESHED, PASSWORD_RECOVERY, etc. → leave profile/org/admin as-is.
     });
 
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (!session) {
-        setLoading(false);
-      }
-    });
+    // Note: we don't call supabase.auth.getSession() separately — the listener
+    // above fires INITIAL_SESSION on mount with the existing session (if any),
+    // so hydrateUserContext is called exactly once on load.
 
     return () => subscription.unsubscribe();
   }, [fetchProfile, fetchOrganization]);

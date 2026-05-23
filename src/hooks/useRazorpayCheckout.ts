@@ -121,14 +121,23 @@ export function useRazorpayCheckout(): UseRazorpayCheckoutResult {
     async (opts: { immediate?: boolean } = {}) => {
       setCancelling(true)
       try {
-        const { error } = await supabase.functions.invoke('razorpay-cancel-subscription', {
+        const { data, error } = await supabase.functions.invoke<{
+          status: string
+          cancel_at_cycle_end?: boolean
+          note?: string
+        }>('razorpay-cancel-subscription', {
           body: { immediate: !!opts.immediate },
         })
         if (error) throw error
+
+        // Decide tone based on what actually happened:
+        //   - If response says cancel_at_cycle_end=true, the user keeps access until period end
+        //   - Otherwise it ended immediately (either user asked, or sub was never charged)
+        const endedImmediately = !data?.cancel_at_cycle_end
         toast({
-          title: opts.immediate ? 'Subscription cancelled' : 'Cancellation scheduled',
-          description: opts.immediate
-            ? 'Access has ended.'
+          title: endedImmediately ? 'Subscription cancelled' : 'Cancellation scheduled',
+          description: endedImmediately
+            ? 'Your subscription has ended.'
             : 'Your plan will remain active until the end of the current billing period.',
         })
       } catch (err) {
