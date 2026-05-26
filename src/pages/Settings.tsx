@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Building2, Bell, Shield, CreditCard, Save, Upload } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -17,11 +17,11 @@ import type { Subscription } from '@/lib/supabase-types';
 import { getPlan, getCustomAssetLimit, fetchPaymentPlans, formatPlanPrice, type PaymentPlan } from '@/lib/subscription';
 import { useRazorpayCheckout } from '@/hooks/useRazorpayCheckout';
 import { cn } from '@/lib/utils';
-import { QrCode, AlertCircle, Users, CheckCircle, Loader2, Sparkles, AlertTriangle, Calendar } from 'lucide-react';
+import { QrCode, AlertCircle, Users, CheckCircle, Loader2, Sparkles, AlertTriangle, Calendar, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { buttonVariants } from '@/components/ui/button';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,6 +73,9 @@ export default function Settings() {
   const [customAssetLimit, setCustomAssetLimit] = useState<number | null>(null);
   const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
+  const [downgradeInfo, setDowngradeInfo] = useState<any>(null);
+  const [checkingDowngrade, setCheckingDowngrade] = useState(false);
+  const [countdown, setCountdown] = useState<string>('');
   const { activePlanKey: checkoutPlanKey, cancelling, startCheckout, cancelSubscription } = useRazorpayCheckout();
 
   const refreshSubscription = React.useCallback(async () => {
@@ -101,10 +104,62 @@ export default function Settings() {
       setAssetCount(assetsRes.count || 0);
       setCustomAssetLimit(customLimit);
       setPaymentPlans(plansRes);
+      
+      // Check downgrade compatibility
+      if (subRes.data?.status === 'active' && subRes.data?.cancelled_at) {
+        await checkDowngradeCompatibility(organization.id);
+      }
+      
       setPlansLoading(false);
     };
     fetchData();
   }, [organization]);
+
+  // Countdown timer for cancellation date
+  React.useEffect(() => {
+    if (!subscription?.current_period_end) {
+      setCountdown('');
+      return;
+    }
+
+    const updateCountdown = () => {
+      try {
+        const target = new Date(subscription.current_period_end as string);
+        const now = new Date();
+        if (target > now) {
+          setCountdown(formatDistanceToNow(target, { addSuffix: true }));
+        } else {
+          setCountdown('Expires today');
+        }
+      } catch {
+        setCountdown('');
+      }
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, [subscription?.current_period_end]);
+
+  const checkDowngradeCompatibility = async (orgId: string) => {
+    setCheckingDowngrade(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-subscription-assets', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+      
+      if (error) throw error;
+      if (data) {
+        setDowngradeInfo(data);
+      }
+    } catch (err) {
+      console.error('Failed to check downgrade compatibility:', err);
+    } finally {
+      setCheckingDowngrade(false);
+    }
+  };
 
   const handleUpgrade = async (planKey: string) => {
     await startCheckout(planKey, {
@@ -371,23 +426,67 @@ export default function Settings() {
 
             {/* Inline notice when subscription is mid-cancellation */}
             {isCancellationScheduled && (
-              <div
-                role="status"
-                className="mb-6 flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4"
-              >
-                <AlertTriangle className="h-5 w-5 shrink-0 text-warning mt-0.5" aria-hidden="true" />
-                <div className="flex-1">
-                  <p className="font-medium text-sm">Cancellation scheduled</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    Your subscription will remain active
-                    {nextBillingDate ? ` until ${nextBillingDate}` : ' until the end of the current billing period'}
-                    {cancellationDate && nextBillingDate !== cancellationDate ? ` (requested on ${cancellationDate})` : ''}.
-                  </p>
+              <div className="mb-6 space-y-4">
+                {/* Cancellation scheduled notice */}
+                <div
+                  role="status"
+                  className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/5 p-4"
+                >
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-warning mt-0.5" aria-hidden="true" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">Cancellation scheduled</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Your subscription will remain active
+                      {nextBillingDate ? ` until ${nextBillingDate}` : ' until the end of the current billing period'}
+                      {cancellationDate && nextBillingDate !== cancellationDate ? ` (requested on ${cancellationDate})` : ''}.
+                    </p>
+                    {countdown && (
+                      <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Expires {countdown}
+                      </p>
+                    )}
+                  </div>
+                  {/* TODO: wire up a razorpay-resume-subscription edge function so this can actually undo the cancel */}
+                  <Button variant="outline" size="sm" disabled title="Resume requires admin action — coming soon">
+                    Resume plan
+                  </Button>
                 </div>
-                {/* TODO: wire up a razorpay-resume-subscription edge function so this can actually undo the cancel */}
-                <Button variant="outline" size="sm" disabled title="Resume requires admin action — coming soon">
-                  Resume plan
-                </Button>
+
+                {/* Asset compatibility warning */}
+                {downgradeInfo?.future_state?.will_have_incompatible_assets && (
+                  <div
+                    role="alert"
+                    className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4"
+                  >
+                    <AlertCircle className="h-5 w-5 shrink-0 text-destructive mt-0.5" aria-hidden="true" />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-destructive">Asset limit will be exceeded</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        You have <strong>{downgradeInfo.current_state.asset_count}</strong> assets, but the Trial plan only allows <strong>5</strong>. 
+                        When your subscription expires {nextBillingDate}, {downgradeInfo.future_state.excess_assets_count} of your assets will need to be archived.
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Delete {downgradeInfo.future_state.excess_assets_count} asset(s) before cancellation to avoid this.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* What happens message */}
+                {downgradeInfo?.recommendations && (
+                  <div className="rounded-lg bg-muted/30 border border-border p-3">
+                    <p className="text-xs font-medium text-muted-foreground uppercase">What happens on {nextBillingDate}</p>
+                    <ul className="mt-2 space-y-1">
+                      {downgradeInfo.recommendations.map((rec: string, idx: number) => (
+                        <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                          <span className="text-primary mt-1">•</span>
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
@@ -557,9 +656,10 @@ export default function Settings() {
                           <div className="space-y-2">
                             <Button
                               className="w-full"
-                              disabled={anyCheckoutInFlight || notSyncedYet}
+                              disabled={anyCheckoutInFlight || notSyncedYet || subscription?.status === 'active'}
                               aria-busy={isThisPlanLoading}
                               onClick={() => handleUpgrade(plan.plan_key)}
+                              title={subscription?.status === 'active' ? 'Cancel your current plan first before upgrading' : undefined}
                             >
                               {isThisPlanLoading && (
                                 <Loader2
@@ -569,6 +669,8 @@ export default function Settings() {
                               )}
                               {notSyncedYet
                                 ? 'Unavailable'
+                                : subscription?.status === 'active'
+                                  ? 'Cancel plan to upgrade'
                                 : isThisPlanLoading
                                   ? 'Opening checkout...'
                                   : 'Upgrade'}
@@ -576,6 +678,11 @@ export default function Settings() {
                             {notSyncedYet && (
                               <p className="text-xs text-muted-foreground text-center">
                                 Plan not yet available — admin sync pending
+                              </p>
+                            )}
+                            {subscription?.status === 'active' && plan.plan_key !== activePlanKey && (
+                              <p className="text-xs text-amber-600 text-center">
+                                Cancel your current plan first to upgrade
                               </p>
                             )}
                           </div>
@@ -589,6 +696,17 @@ export default function Settings() {
 
             <div className="space-y-4">
               <h4 className="font-medium">Plan Usage</h4>
+              
+              {/* Asset limit warning when approaching limit */}
+              {subscription?.status === 'active' && assetCount >= (customAssetLimit || getPlan(subscription?.status).maxAssets) * 0.8 && (
+                <div className="rounded-lg border border-warning/50 bg-warning/5 p-3">
+                  <p className="text-xs font-medium text-warning">Approaching asset limit</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    You have {assetCount} of {customAssetLimit !== null ? customAssetLimit : (getPlan(subscription?.status).maxAssets === Infinity ? '∞' : getPlan(subscription?.status).maxAssets)} assets. Upgrade your plan to add more.
+                  </p>
+                </div>
+              )}
+
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-lg bg-muted/50 p-4 border border-border">
                   <div className="flex items-center justify-between mb-1">

@@ -104,7 +104,20 @@ export function useRazorpayCheckout(): UseRazorpayCheckoutResult {
           },
         })
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Failed to start checkout'
+        // Extract error message from Supabase error response
+        let msg = 'Failed to start checkout'
+        if (err instanceof Error) {
+          msg = err.message
+        }
+        // Supabase may include the actual response body in the error
+        if (typeof err === 'object' && err !== null && 'context' in err) {
+          const context = (err as any).context
+          if (context?.error?.message) {
+            msg = context.error.message
+          } else if (typeof context === 'string') {
+            msg = context
+          }
+        }
         toast({
           variant: 'destructive',
           title: 'Could not start checkout',

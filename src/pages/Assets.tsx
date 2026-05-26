@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit, Download, Printer, X as XIcon, Loader } from 'lucide-react';
+import { Plus, Search, Filter, QrCode, MapPin, MoreHorizontal, Trash2, Edit, Download, Printer, X as XIcon, Loader, AlertTriangle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import html2pdf from 'html2pdf.js';
 import { createRoot } from 'react-dom/client';
@@ -41,6 +41,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Asset, AssetStatus, Issue } from '@/lib/supabase-types';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscriptionValidation } from '@/hooks/useSubscriptionValidation';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { getPlan, getEffectiveAssetLimit } from '@/lib/subscription';
@@ -62,6 +63,7 @@ type QRTemplateAction = 'download' | 'print';
 export default function Assets() {
   const { organization, user } = useAuth();
   const { toast } = useToast();
+  const { validation, isDegraded, hasWarnings } = useSubscriptionValidation(organization?.id ?? null);
   const dialogContentRef = useRef<HTMLDivElement>(null);
   const [assets, setAssets] = useState<AssetWithType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,6 +147,18 @@ export default function Assets() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!organization || !user) return;
+
+    // Check subscription status - prevent operations if past_due or canceled
+    if (subscription?.status === 'past_due' || subscription?.status === 'canceled') {
+      toast({
+        variant: 'destructive',
+        title: 'Subscription Issue',
+        description: subscription.status === 'past_due'
+          ? 'Your subscription payment failed. Please update your payment method to continue.'
+          : 'Your subscription has ended. Please renew to continue creating assets.',
+      });
+      return;
+    }
 
     // Check Plan Limits only for new assets
     if (!editingAssetId) {
@@ -694,6 +708,39 @@ export default function Assets() {
 
   return (
     <DashboardLayout>
+      {/* Subscription degradation warning */}
+      {isDegraded && (
+        <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-destructive mt-0.5" aria-hidden="true" />
+          <div className="flex-1">
+            <p className="font-medium text-sm text-destructive">
+              {validation?.current_subscription.status === 'past_due'
+                ? 'Subscription payment failed'
+                : 'Subscription has ended'}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {validation?.current_subscription.status === 'past_due'
+                ? 'Your subscription payment failed. You cannot create new assets until you update your payment method. Go to Settings > Billing to fix this.'
+                : 'Your subscription has ended. Renew to continue creating and editing assets.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Asset compatibility warning when subscription is being cancelled */}
+      {hasWarnings && (
+        <div className="mb-6 rounded-lg border border-warning/30 bg-warning/5 p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-warning mt-0.5" aria-hidden="true" />
+          <div className="flex-1">
+            <p className="font-medium text-sm">Asset limit will be exceeded</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Your subscription is scheduled to end with {validation?.current_state.asset_count} assets. 
+              The Trial plan allows only 5 assets. Delete {validation?.future_state.excess_assets_count} asset(s) before your subscription expires to avoid complications.
+            </p>
+          </div>
+        </div>
+      )}
+
       <PageHeader
         title="Inventory"
         description="Manage and track all your organization's assets"
@@ -719,7 +766,7 @@ export default function Assets() {
           }}
         >
           <DialogTrigger asChild>
-            <Button>
+            <Button disabled={isDegraded} title={isDegraded ? 'Renew subscription to create assets' : undefined}>
               <Plus className="mr-2 h-4 w-4" />
               Add Asset
             </Button>
